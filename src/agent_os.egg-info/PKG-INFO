@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: agent-os
+Version: 0.1.0
+Summary: Cross-tool agent operating system for Claude, Codex, and Cursor
+Requires-Python: >=3.10

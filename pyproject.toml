@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-os"
+version = "0.1.0"
+description = "Cross-tool agent operating system for Claude, Codex, and Cursor"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+agent-os-internal = "agent_os.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

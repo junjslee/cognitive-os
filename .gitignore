@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+labs/skills/*/candidate/
+labs/skills/*/runs/
+labs/skills/*/tmp/
