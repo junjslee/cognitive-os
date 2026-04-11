@@ -161,9 +161,17 @@ def _render_user_claude_md() -> str:
 
 
 def _agent_os_settings() -> dict:
-    block_hook = REPO_ROOT / "core" / "hooks" / "block_dangerous.py"
-    checkpoint_hook = REPO_ROOT / "core" / "hooks" / "checkpoint.py"
-    checkpoint_cmd = f"{CONDA_ROOT}/bin/python {checkpoint_hook}"
+    hooks_dir = REPO_ROOT / "core" / "hooks"
+    py = f"{CONDA_ROOT}/bin/python"
+
+    def hook_cmd(script: str, *, async_: bool = False) -> dict:
+        h: dict = {"type": "command", "command": f"{py} {hooks_dir / script}"}
+        if async_:
+            h["async"] = True
+        return h
+
+    checkpoint_cmd = f"{py} {hooks_dir / 'checkpoint.py'}"
+
     return {
         "permissions": {
             "deny": [
@@ -176,36 +184,40 @@ def _agent_os_settings() -> dict:
             ]
         },
         "hooks": {
+            "SessionStart": [
+                {"hooks": [hook_cmd("session_context.py")]}
+            ],
             "PreToolUse": [
                 {
                     "matcher": "Bash",
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": f"{CONDA_ROOT}/bin/python {block_hook}",
-                        }
-                    ],
+                    "hooks": [hook_cmd("block_dangerous.py")],
                 }
+            ],
+            "PostToolUse": [
+                {
+                    "matcher": "Write|Edit|MultiEdit",
+                    "hooks": [hook_cmd("format.py", async_=True)],
+                },
+                {
+                    "matcher": "Write|Edit|MultiEdit",
+                    "hooks": [hook_cmd("test_runner.py")],
+                },
+            ],
+            "PermissionRequest": [
+                {
+                    "matcher": "Read|Glob|Grep",
+                    "hooks": [{"type": "command", "command": "echo '{\"decision\":\"allow\"}'"}],
+                }
+            ],
+            "PreCompact": [
+                {"hooks": [hook_cmd("precompact_backup.py", async_=True)]}
             ],
             "Stop": [
-                {
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": checkpoint_cmd,
-                        }
-                    ]
-                }
+                {"hooks": [hook_cmd("quality_gate.py")]},
+                {"hooks": [{"type": "command", "command": checkpoint_cmd}]},
             ],
             "SubagentStop": [
-                {
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": checkpoint_cmd,
-                        }
-                    ]
-                }
+                {"hooks": [{"type": "command", "command": checkpoint_cmd}]}
             ],
         },
     }
