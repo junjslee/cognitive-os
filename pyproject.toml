@@ -5,12 +5,34 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agent-os"
 version = "0.1.0"
-description = "Cross-tool agent operating system for Claude, Codex, and Cursor"
+description = "Cross-tool AI agent runtime manager — sync memory, skills, and hooks across Claude Code, Codex, Cursor, and Hermes"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
 dependencies = []
+keywords = [
+  "claude-code", "ai-agents", "llm", "developer-tools",
+  "automation", "workflow", "hermes", "codex", "dotfiles"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/junjslee/agent-os"
+Repository = "https://github.com/junjslee/agent-os"
+Issues = "https://github.com/junjslee/agent-os/issues"
 
 [project.scripts]
-agent-os-internal = "agent_os.cli:main"
+agent-os = "agent_os.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
