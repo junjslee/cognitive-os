@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-CONDA_PREFIX = "/Users/junlee/miniconda3"
+CONDA_PREFIX = Path(sys.executable).parent.parent
 TIMEOUT = 30  # seconds
 
 
@@ -41,7 +41,7 @@ def run_pytest() -> tuple[bool, str]:
     if not test_files:
         return True, ""
 
-    pytest = Path(CONDA_PREFIX) / "bin" / "pytest"
+    pytest = CONDA_PREFIX / "bin" / "pytest"
     cmd = (
         [str(pytest), "--tb=short", "-q", "--no-header"]
         if pytest.exists()

@@ -17,7 +17,7 @@ If any of these are missing, stop and ask for them.
 
 ## Hard Refusals
 Refuse the task if `target_candidate_path` points anywhere inside:
-- `skills/house/`
+- `skills/custom/`
 - `skills/vendor/`
 - `~/.claude/skills/`
 - `~/.codex/skills/`

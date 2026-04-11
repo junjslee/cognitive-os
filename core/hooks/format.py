@@ -10,7 +10,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-CONDA_PREFIX = "/Users/junlee/miniconda3"
+# Resolve conda root from the Python used to invoke this hook
+CONDA_PREFIX = Path(sys.executable).parent.parent
 
 
 def get_file_path(payload: dict) -> str | None:
@@ -22,7 +23,7 @@ def get_file_path(payload: dict) -> str | None:
 
 
 def format_python(path: Path) -> None:
-    ruff = Path(CONDA_PREFIX) / "bin" / "ruff"
+    ruff = CONDA_PREFIX / "bin" / "ruff"
     cmd = [str(ruff), "format", "--quiet", str(path)]
     if not ruff.exists():
         cmd = ["ruff", "format", "--quiet", str(path)]
