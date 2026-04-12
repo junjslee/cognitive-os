@@ -45,6 +45,15 @@ agent-os new-project .      # scaffold any existing or new project
 
 That's it. Every agent you open now inherits your memory, skills, and hooks.
 
+To provision the right operating environment for your project type:
+
+```bash
+agent-os detect .                          # analyze repo and recommend a harness
+agent-os harness apply ml-research .       # apply it
+# or in one shot:
+agent-os new-project . --harness auto      # scaffold + auto-detect harness
+```
+
 ---
 
 ## What gets synced
@@ -125,6 +134,10 @@ agent-os update                             pull latest agent-os from git
 agent-os validate                           check manifest — every declared skill needs SKILL.md
 agent-os list                               show agents, skills, plugins, active hooks
 agent-os new-project [path]                 scaffold a new project (alias: bootstrap)
+agent-os new-project [path] --harness TYPE  scaffold and apply a harness (or --harness auto)
+agent-os detect [path]                      detect the best harness type for a project
+agent-os harness list                       show available harness types
+agent-os harness apply <type> [path]        apply a harness to an existing project
 agent-os worktree <type> <name>             create a git worktree for a bounded task
 agent-os start [claude|cursor|codex]        open a tool surface
 agent-os private-skill enable <name>        enable a local experimental skill for Claude
@@ -168,6 +181,43 @@ Edit scripts in `core/hooks/`. All hooks run with your Conda Python — no extra
 ```bash
 export AGENT_OS_CONDA_ROOT=/path/to/your/conda   # default: ~/miniconda3
 ```
+
+---
+
+## Harness system
+
+A **harness** defines the operating environment for a specific project type — execution profile, workflow constraints, safety notes, and recommended agents. Where a generic scaffold gives every project the same shape, a harness gives it the right shape.
+
+```
+agent-os detect .
+```
+
+```
+Analyzing /your/project ...
+
+Harness scores:
+
+  ml-research            score 11  ← recommended
+    · dependency: torch
+    · dependency: transformers
+    · file: **/*.ipynb (3+ found)
+    · directory: checkpoints/
+
+Recommended: ml-research
+  agent-os harness apply ml-research .
+```
+
+Applying a harness writes `HARNESS.md` to the project root and extends `docs/RUN_CONTEXT.md` with profile-specific context — GPU constraints, cost acknowledgment requirements, data safety rules, or dev-server reminders, depending on type.
+
+| Harness | Best for |
+|---|---|
+| `ml-research` | PyTorch / JAX / HuggingFace projects, GPU training, experiment tracking |
+| `python-library` | Packages and libraries intended for distribution or reuse |
+| `web-app` | React / Vue / Next.js frontends with optional backend |
+| `data-pipeline` | ETL, dbt, Airflow, Prefect, analytics workflows |
+| `generic` | Everything else |
+
+Add your own by dropping a JSON file into `core/harnesses/`.
 
 ---
 

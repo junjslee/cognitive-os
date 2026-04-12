@@ -24,9 +24,27 @@ This is the source of truth for:
 - shared skills
 - shared subagent definitions
 - repo templates
+- harness definitions
 - sync and bootstrap scripts
 
-### 2. Shared Project Memory
+### 2. Project Harness
+A harness defines the operating environment for a specific project type.
+It is provisioned once at project creation (or applied to an existing project)
+and lives as `HARNESS.md` in the project root.
+
+A harness specifies:
+- execution profile (`local`, `remote_gpu`, etc.)
+- workflow constraints and safety notes specific to the domain
+- recommended agents and skills
+- extensions to `docs/RUN_CONTEXT.md`
+
+Available harness types: `ml-research`, `python-library`, `web-app`, `data-pipeline`, `generic`.
+Add custom types by dropping a JSON file into `core/harnesses/`.
+
+Detection: `agent-os detect [path]` scores signals in the repo (dependency files, file
+patterns, directory names) and recommends the best match.
+
+### 3. Shared Project Memory
 Every project should keep its canonical truth in repo files such as:
 - `AGENTS.md`
 - `docs/REQUIREMENTS.md`
@@ -37,7 +55,7 @@ Every project should keep its canonical truth in repo files such as:
 
 This layer must remain tool-agnostic.
 
-### 3. Tool Adapters
+### 4. Tool Adapters
 Tool-specific runtime files shape behavior without replacing project memory.
 
 Current adapters:
@@ -47,14 +65,17 @@ Current adapters:
   `AGENTS.md`, `.codex/config.toml`, repo or global skills, and project-local agents if needed
 - Cursor:
   editor and review surface only unless a future repo explicitly promotes it beyond that role
+- Hermes:
+  `~/.hermes/OPERATOR.md` (synced composite), `~/.hermes/SOUL.md` (auto-created on first sync),
+  `~/.hermes/skills/` (managed skills)
 
-### 4. Optional Plugin Or Service Layer
+### 5. Optional Plugin Or Service Layer
 This layer is optional and non-canonical.
 
 Examples:
 - Claude-only plugins such as `claude-mem`
-- future MCP servers
-- future Codex-side memory tooling
+- MCP servers
+- Codex-side memory tooling
 
 These additions may accelerate work, but they must not become the only place where project truth lives.
 

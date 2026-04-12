@@ -1,0 +1,76 @@
+{
+  "name": "ml-research",
+  "label": "ML Research",
+  "description": "Machine learning or deep learning research. Python-heavy, GPU compute, experiment tracking.",
+  "detection": {
+    "file_patterns": [
+      "**/*.ipynb",
+      "**/train.py",
+      "**/evaluate.py",
+      "**/eval.py",
+      "**/*.slurm",
+      "**/*.sbatch",
+      "**/experiment*.py",
+      "**/run_experiment.py",
+      "**/finetune.py",
+      "**/pretrain.py"
+    ],
+    "import_signatures": [
+      "torch",
+      "tensorflow",
+      "jax",
+      "sklearn",
+      "transformers",
+      "datasets",
+      "lightning",
+      "wandb",
+      "mlflow",
+      "optuna",
+      "ray",
+      "accelerate",
+      "diffusers",
+      "peft",
+      "trl"
+    ],
+    "directory_names": [
+      "models",
+      "checkpoints",
+      "experiments",
+      "notebooks",
+      "runs",
+      "outputs",
+      "logs",
+      "configs"
+    ],
+    "config_files": [
+      "train.py",
+      "environment.yml",
+      "environment.yaml"
+    ]
+  },
+  "execution_profile": "remote_gpu",
+  "profile_description": "GPU compute required for training runs. Use hosted or cluster inference for production.",
+  "run_context_additions": [
+    "## GPU / Compute",
+    "- Record for every run: model id, device, backend, batch size, runtime, artifact outputs.",
+    "- Cost acknowledgment required before any paid inference or training run.",
+    "- GPU memory is the primary constraint — log batch size and gradient accumulation settings.",
+    "- Prefer remote GPU or cluster for training; local machine for exploration and debugging only.",
+    "- Use `AGENT_OS_CONDA_ROOT` if running on a cluster that uses environment modules rather than conda."
+  ],
+  "workflow_notes": [
+    "Use the `bounded-loop-runner` skill for hyperparameter sweeps and training loops.",
+    "Log experiment results to `docs/PROGRESS.md` after each significant run.",
+    "Record GPU backend, model id, and quota constraints in `docs/RUN_CONTEXT.md`.",
+    "Keep raw data, model weights, and checkpoints out of Git — add them to `.gitignore`.",
+    "Prefer small smoke-test runs locally before scaling to full compute."
+  ],
+  "safety_notes": [
+    "Cost acknowledgment required before any paid inference or training run.",
+    "Never commit model weights, large datasets, or API keys.",
+    "Protect checkpoints from accidental deletion — verify paths before any `rm`.",
+    "Treat GPU quota as a shared resource — record usage in action_log."
+  ],
+  "recommended_agents": ["planner", "researcher", "implementer"],
+  "recommended_skills": ["bounded-loop-runner", "requirements-to-plan", "research-synthesis"]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "python-library",
+  "label": "Python Library",
+  "description": "Python package or library intended for distribution or internal reuse.",
+  "detection": {
+    "file_patterns": [
+      "**/pyproject.toml",
+      "**/setup.py",
+      "**/setup.cfg",
+      "src/**/__init__.py",
+      "**/MANIFEST.in",
+      "**/*.pyi"
+    ],
+    "import_signatures": [],
+    "directory_names": [
+      "src",
+      "tests",
+      "dist",
+      "build"
+    ],
+    "config_files": [
+      "pyproject.toml",
+      "setup.py",
+      "setup.cfg",
+      "tox.ini",
+      "pytest.ini",
+      ".pytest.ini"
+    ]
+  },
+  "execution_profile": "local",
+  "profile_description": "Local development, testing, and CI. No GPU required.",
+  "run_context_additions": [
+    "## Package Build",
+    "- Install for local development: `pip install -e .`",
+    "- Run tests: `pytest`",
+    "- Lint and format: `ruff check . && ruff format .`",
+    "- Build distribution: `python -m build`"
+  ],
+  "workflow_notes": [
+    "Public API changes require a version bump — treat the public surface as a contract.",
+    "Every new function or class needs a corresponding test.",
+    "Use `agent-os worktree feat/<name>` for any non-trivial feature branch.",
+    "Run `pytest` before every merge.",
+    "Keep the `CHANGELOG` or release notes current."
+  ],
+  "safety_notes": [
+    "Never publish to PyPI without passing a review gate.",
+    "Keep credentials and API keys out of the package and its tests.",
+    "Audit dependencies before adding new ones — supply chain risk applies."
+  ],
+  "recommended_agents": ["planner", "implementer", "reviewer", "test-runner"],
+  "recommended_skills": ["review-gate", "requirements-to-plan", "repo-bootstrap"]
+}

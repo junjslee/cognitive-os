@@ -1,0 +1,72 @@
+{
+  "name": "data-pipeline",
+  "label": "Data Pipeline",
+  "description": "Data engineering, ETL, analytics, or workflow orchestration project.",
+  "detection": {
+    "file_patterns": [
+      "**/dbt_project.yml",
+      "**/dags/**/*.py",
+      "**/airflow/**/*.py",
+      "**/*.sql",
+      "**/pipeline*.py",
+      "**/etl*.py",
+      "**/prefect*.py",
+      "**/dagster*.py"
+    ],
+    "import_signatures": [
+      "airflow",
+      "prefect",
+      "dagster",
+      "dbt",
+      "pyspark",
+      "pandas",
+      "polars",
+      "dask",
+      "sqlalchemy",
+      "great_expectations",
+      "duckdb",
+      "pyarrow"
+    ],
+    "directory_names": [
+      "dags",
+      "pipelines",
+      "etl",
+      "transforms",
+      "sql",
+      "data",
+      "warehouse",
+      "ingest",
+      "models"
+    ],
+    "config_files": [
+      "dbt_project.yml",
+      "profiles.yml",
+      "airflow.cfg"
+    ]
+  },
+  "execution_profile": "remote_gpu",
+  "profile_description": "Pipelines run on remote infrastructure. Local runs for development and smoke testing only.",
+  "run_context_additions": [
+    "## Pipeline Execution",
+    "- Local runs are for development and smoke testing only — not production scale.",
+    "- Record for every production run: trigger, input dataset version, output location, row counts, runtime.",
+    "- Cost acknowledgment required before any large-scale remote execution.",
+    "- Treat data mutations as irreversible — prefer append-only or versioned writes.",
+    "- Always test with a small sample before running at full scale."
+  ],
+  "workflow_notes": [
+    "Design every pipeline step for idempotency — assume it may run more than once.",
+    "Log input and output record counts for every pipeline run in `docs/PROGRESS.md`.",
+    "Use the `bounded-loop-runner` skill for backfill jobs or batch iterations.",
+    "Test with a small data sample before running at full scale.",
+    "Record pipeline run metadata (trigger, duration, row counts) in the action log."
+  ],
+  "safety_notes": [
+    "Data mutations may be irreversible — verify inputs and outputs before any destructive step.",
+    "Cost acknowledgment required before large-scale remote execution.",
+    "Keep credentials, connection strings, and API keys out of code and version control.",
+    "Never run a full-scale pipeline without a passing smoke test on sample data."
+  ],
+  "recommended_agents": ["planner", "researcher", "implementer", "reviewer"],
+  "recommended_skills": ["bounded-loop-runner", "review-gate", "requirements-to-plan"]
+}

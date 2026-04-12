@@ -1,0 +1,25 @@
+{
+  "name": "generic",
+  "label": "General Purpose",
+  "description": "General-purpose project. Use this if no specialized harness fits.",
+  "detection": {
+    "file_patterns": [],
+    "import_signatures": [],
+    "directory_names": [],
+    "config_files": []
+  },
+  "execution_profile": "local",
+  "profile_description": "Local development. Adjust the profile in RUN_CONTEXT.md if remote compute is needed.",
+  "run_context_additions": [],
+  "workflow_notes": [
+    "Define the active objective in `docs/REQUIREMENTS.md` before starting implementation.",
+    "Keep `docs/NEXT_STEPS.md` current as the handoff for the next session.",
+    "Use `agent-os worktree feat/<name>` for non-trivial parallel work."
+  ],
+  "safety_notes": [
+    "Keep credentials and secrets out of version control.",
+    "Review before merge for any logic changes that affect shared state."
+  ],
+  "recommended_agents": ["planner", "implementer", "reviewer"],
+  "recommended_skills": ["requirements-to-plan", "progress-handoff"]
+}
