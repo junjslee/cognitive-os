@@ -381,12 +381,22 @@ Modes:
 Tip: `survey` and `hybrid` support `--answers-file templates/profile_answers.example.json` for non-interactive runs.
 
 Dimensions (all scored 0..3):
+
+**Workstyle Profile:**
 - `planning_strictness`
 - `risk_tolerance`
 - `testing_rigor`
 - `parallelism_preference`
 - `documentation_rigor`
 - `automation_level`
+
+**Cognitive Profile:**
+- `first_principles_depth`
+- `exploration_breadth`
+- `speed_vs_rigor_balance`
+- `challenge_orientation`
+- `uncertainty_tolerance`
+- `autonomy_preference`
 
 Examples:
 
@@ -455,31 +465,7 @@ Answer-file precedence in setup:
 
 This command is designed for end users to self-select setup options instead of editing files manually.
 
-### Deterministic cognitive profile
 
-For philosophy of work, thinking posture, and decision attitude:
-
-Modes:
-- `survey` — explicit cognitive questionnaire
-- `infer` — deterministic repo-signal cognitive scoring
-- `hybrid` — weighted merge (`60% survey + 40% infer`, rounded)
-
-Tip: `survey` and `hybrid` support `--answers-file templates/profile_answers.example.json` for non-interactive runs.
-
-```bash
-cognitive-os cognition survey --answers-file templates/profile_answers.example.json
-cognitive-os cognition infer .
-cognitive-os cognition hybrid . --answers-file templates/profile_answers.example.json --write
-cognitive-os cognition show
-```
-
-Cognitive dimensions (0..3):
-- `first_principles_depth`
-- `exploration_breadth`
-- `speed_vs_rigor_balance`
-- `challenge_orientation`
-- `uncertainty_tolerance`
-- `autonomy_preference`
 
 ---
 
