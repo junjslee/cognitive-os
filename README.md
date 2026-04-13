@@ -192,6 +192,7 @@ agent-os cognition survey [--answers-file JSON] [--write] [--overwrite]       de
 agent-os cognition infer [path] [--write] [--overwrite]                        infer cognitive philosophy scores from repo signals
 agent-os cognition hybrid [path] [--answers-file JSON] [--write] [--overwrite] blend cognitive survey + infer (60/40)
 agent-os cognition show                                                        show latest generated cognitive scorecard
+agent-os setup [path] [--interactive] [--profile-mode ...] [--cognition-mode ...] [--answers-file JSON] [--write] [--overwrite] [--sync] [--doctor]  guided setup for profile+cognition
 agent-os worktree <type> <name>             create a git worktree for a bounded task
 agent-os start [claude|cursor|codex]        open a tool surface
 agent-os private-skill enable <name>        enable a local experimental skill for Claude
@@ -282,7 +283,11 @@ Add your own by dropping a JSON file into `core/harnesses/`.
 - **profile** = how work runs (planning, testing, docs, automation)
 - **cognition** = how decisions are made (reasoning depth, challenge style, uncertainty posture)
 
-`agent-os` now includes a deterministic profile system for onboarding operator working style and compiling policy.
+Important: treat survey/infer outputs as a starting point, not doctrine.
+For long-term quality, manually author your canonical philosophy in `core/memory/global/cognitive_profile.md`
+using a top-down structure (epistemics -> agency -> adaptation -> governance -> operating thesis), then sync.
+
+`agent-os` includes deterministic profiling to bootstrap this process and keep it explainable.
 
 Modes:
 - `survey` — explicit questionnaire, 4-level choices mapped to scores 0..3
@@ -326,6 +331,27 @@ agent-os sync
 agent-os doctor
 ```
 
+### One-command setup wizard
+
+For first-time setup (or reconfiguration), use:
+
+```bash
+# interactive prompts (choose modes, write behavior, sync/doctor)
+agent-os setup . --interactive
+
+# non-interactive defaults (hybrid/hybrid) with explicit post-steps
+agent-os setup . --write --sync --doctor
+
+# fully scripted
+agent-os setup . \
+  --profile-mode hybrid \
+  --cognition-mode infer \
+  --answers-file templates/profile_answers.example.json \
+  --write --overwrite --sync --doctor
+```
+
+This command is designed for end users to self-select setup options instead of editing files manually.
+
 ### Deterministic cognitive profile
 
 For philosophy of work, thinking posture, and decision attitude:
@@ -358,6 +384,11 @@ Generated cognitive artifacts:
 
 With `--write`, output compiles into:
 - `core/memory/global/cognitive_profile.md`
+
+Recommended public-repo pattern:
+- Keep `cognitive_profile.example.md` generic and reusable.
+- Keep your personal `cognitive_profile.md` local/private unless you explicitly want to publish your own philosophy.
+- If publishing, prefer principle-level statements over personal narrative.
 
 Then sync locally:
 

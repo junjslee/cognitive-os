@@ -1,32 +1,39 @@
-# Cognitive Profile
+# Cognitive Profile (Example)
 
-This file captures how the operator thinks, decides, and evaluates trade-offs.
-Use deterministic dimensions so agent behavior stays explainable across tools.
+Use this file to encode your stable decision philosophy, not temporary moods.
+Keep it short, explicit, and tool-agnostic.
 
-## Cognitive Scorecard (0-3)
-- first_principles_depth: 2
-- exploration_breadth: 2
-- speed_vs_rigor_balance: 2
-- challenge_orientation: 2
-- uncertainty_tolerance: 2
-- autonomy_preference: 2
+## Core Philosophy
 
-## Philosophy of Work
-- Build systems, not one-off hacks.
-- Prefer explicit trade-offs over implicit assumptions.
-- Keep canonical truth in shared docs, not transient chats.
+1) Epistemic Core
+- How do you distinguish facts, inference, and preference?
+- What level of uncertainty is acceptable before action?
 
-## Decision Attitude
-- Default to reversible decisions when uncertainty is high.
-- Escalate to stricter review for irreversible/high-impact changes.
-- Prefer bounded experiments before scaling.
+2) Agency Core
+- What are your common noise sources (fear, urgency, social pressure, etc.)?
+- How should an agent detect and neutralize them?
 
-## Collaboration Style
-- Value direct critique of ideas, not people.
-- Expect concise rationale for major choices.
-- Prefer clear ownership boundaries for parallel work.
+3) Adaptation Core
+- Do you prefer top-down or bottom-up by default?
+- What is your preferred learning loop (hypothesis -> test -> update)?
 
-## Risk and Ambiguity Handling
-- If confidence is low, state assumptions and gather evidence.
-- Distinguish facts, inference, and preference explicitly.
-- Keep failure modes visible before execution.
+4) Governance Core
+- Which constraints must always be explicit?
+- What is your default for reversible vs irreversible decisions?
+
+5) Operating Thesis
+- A short statement of your human+agent operating doctrine.
+
+## Decision Protocol (Template)
+1. Objective + success criteria
+2. Constraint regime
+3. Signal/noise split
+4. Assumptions + confidence
+5. Options + trade-offs
+6. Next reversible action
+7. Verification + update
+
+## Collaboration Defaults
+- Critique ideas, not people.
+- Canonical truth in repo docs.
+- Explicit rationale for major decisions.

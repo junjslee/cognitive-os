@@ -98,6 +98,44 @@ class ProfileCognitionTests(unittest.TestCase):
             self.assertGreaterEqual(value, 0)
             self.assertLessEqual(value, 3)
 
+    def test_setup_command_runs_selected_modes_and_post_steps(self):
+        with patch.object(cli, "_resolve_bootstrap_target", return_value=Path(".")), patch.object(
+            cli, "_profile_command", return_value=0
+        ) as profile_cmd, patch.object(cli, "_cognition_command", return_value=0) as cognition_cmd, patch.object(
+            cli, "_sync_user_runtime"
+        ) as sync_cmd, patch.object(cli, "_doctor", return_value=0) as doctor_cmd:
+            rc = cli._setup_command(
+                path_arg=".",
+                profile_mode="hybrid",
+                cognition_mode="infer",
+                write=True,
+                overwrite=False,
+                do_sync=True,
+                do_doctor=True,
+                answers={"planning_strictness": 4},
+                interactive=False,
+            )
+
+        self.assertEqual(rc, 0)
+        profile_cmd.assert_called_once()
+        cognition_cmd.assert_called_once()
+        sync_cmd.assert_called_once()
+        doctor_cmd.assert_called_once()
+
+    def test_setup_command_rejects_invalid_mode(self):
+        rc = cli._setup_command(
+            path_arg=".",
+            profile_mode="bad",
+            cognition_mode="skip",
+            write=False,
+            overwrite=False,
+            do_sync=False,
+            do_doctor=False,
+            answers=None,
+            interactive=False,
+        )
+        self.assertEqual(rc, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
