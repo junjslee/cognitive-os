@@ -85,7 +85,16 @@ Current adapters:
 - OMO / OMX (Oh-My-OpenAgent / Oh-My-Codex):
  Syncs shared skills, agent personas, and structural governance policy to `~/.omo` or `~/.omx`
 
-### 5. Optional Plugin Or Service Layer
+### 5. Managed Runtime Bridges (additive)
+Managed runtimes (for example Anthropic Managed Agents) are execution substrates that can emit durable event logs.
+`cognitive-os` can ingest those events through bridge commands and convert them into Memory Contract envelopes.
+
+Current bridge:
+- `cognitive-os bridge anthropic-managed --input <events.json>`
+  - outputs `memory-contract-v1` envelopes under `core/memory/bridges/anthropic-managed/`
+  - does not modify existing adapter sync behavior
+
+### 6. Optional Plugin Or Service Layer
 This layer is optional and non-authoritative.
 
 Examples:

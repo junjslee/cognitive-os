@@ -78,6 +78,18 @@ Adapters MUST NOT:
 - treat local cache memory as authoritative source of truth
 - drop provenance fields during sync/transform
 
+## Bridge expectations (external runtimes)
+
+Bridge commands that ingest external runtime logs (for example `cognitive-os bridge anthropic-managed`) SHOULD:
+- emit `memory_envelope.json`-compatible payloads (`contract_version=memory-contract-v1`)
+- normalize imported runtime events into `episodic` records with valid `event_type`
+- set `provenance.source_type=imported` and preserve a traceable `source_ref`
+- remain additive (must not alter existing adapter sync outputs by default)
+
+Bridge commands MUST NOT:
+- overwrite authoritative global/project memory automatically
+- discard raw event payloads without preserving them under `details`
+
 ## Schemas
 
 JSON Schemas for this contract:

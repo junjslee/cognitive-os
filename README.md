@@ -118,6 +118,21 @@ Adapters are not the authority. Repo docs + global memory are.
 
 This gives you both: fast local learning and deterministic cross-platform consistency.
 
+### Managed runtime positioning (Anthropic Managed Agents)
+
+`cognitive-os` and managed runtimes are complementary by design.
+
+- Managed runtime (e.g., Anthropic Managed Agents): execution substrate for long-horizon agent work — brain/harness orchestration, sandbox/tool execution, durable runtime session/event logs.
+- `cognitive-os`: cross-runtime cognitive control plane — identity, memory governance, authoritative docs, and deterministic policy sync across tools.
+
+Practical model:
+1. Run long tasks in a managed runtime.
+2. Bridge managed session events into `cognitive-os` memory envelopes.
+3. Promote durable lessons into authoritative global/project docs.
+4. Sync the updated contract back to all local runtimes.
+
+Result: runtime scale + reliability without sacrificing cross-tool continuity or source-of-truth discipline.
+
 ### Demo
 
 Guided setup in one command:
@@ -237,6 +252,7 @@ cognitive-os harness apply <type> [path]
 cognitive-os profile [survey|infer|hybrid] [path] [--write]
 cognitive-os cognition [survey|infer|hybrid] [path] [--write]
 cognitive-os setup [path] [--interactive] [--write] [--sync] [--doctor]
+cognitive-os bridge anthropic-managed --input <managed-events.json> [--project-id <id>] [--dry-run]
 cognitive-os evolve [run|report|promote|rollback] ...
 ```
 
@@ -272,6 +288,7 @@ Includes:
 - required provenance fields (`source_type`, `source_ref`, `captured_at`, `captured_by`, `confidence`)
 - explicit memory classes (`global`, `project`, `episodic`)
 - conflict order (`project > global > episodic`, then status/recency/confidence, with human override)
+- additive bridges for external runtimes (for example: `cognitive-os bridge anthropic-managed`) that transform runtime events into memory-contract envelopes without changing existing sync behavior
 
 ### Evolution Contract v1 (gated self-evolution)
 

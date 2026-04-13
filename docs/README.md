@@ -18,6 +18,10 @@ Use this page as the primary navigation map for cognitive-os documentation.
 - `PRD_WORKSTYLE_PROFILER.md` — deterministic workstyle profiling design
 - `PRD_REASONING_SYNTHESIS.md` — reasoning synthesis design notes
 
+## Runtime bridges
+
+- `ANTHROPIC_MANAGED_AGENTS_BRIDGE.md` — import Anthropic Managed Agents runtime events into Memory Contract v1 episodic envelopes
+
 ## Recommended reading order
 
 1) `../README.md`

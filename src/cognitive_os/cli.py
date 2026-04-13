@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import sys
+import uuid
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Iterable
@@ -380,6 +381,158 @@ def _evolve_rollback(episode_id: str, *, rollback_ref: str) -> int:
     print(f"Rolled back episode: {episode_id}")
     print(f"  - rollback_ref: {rollback_ref}")
     print(f"  - {path}")
+    return 0
+
+
+def _event_type_from_payload(raw_type: str, event: dict) -> str:
+    t = str(raw_type or "").strip().lower()
+    if t in {"decision"}:
+        return "decision"
+    if t in {"error", "exception", "failure"}:
+        return "error"
+    if t in {"verification", "assertion", "check"}:
+        return "verification"
+    if t in {"handoff"}:
+        return "handoff"
+    if t in {"tool_call", "tool_result", "action", "execute", "command", "bash"}:
+        return "action"
+
+    payload = json.dumps(event, ensure_ascii=False).lower()
+    if "error" in payload or "exception" in payload or "failed" in payload:
+        return "error"
+    return "observation"
+
+
+def _load_bridge_events(input_path: Path) -> tuple[str | None, list[dict], dict]:
+    try:
+        raw = json.loads(input_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise FileNotFoundError(f"bridge input not found: {input_path}")
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"bridge input is not valid JSON: {input_path}") from exc
+
+    if isinstance(raw, list):
+        return None, raw, {"root_type": "list"}
+
+    if not isinstance(raw, dict):
+        raise ValueError("bridge input must be a JSON object or array")
+
+    events = raw.get("events")
+    if not isinstance(events, list):
+        raise ValueError("bridge input object must contain an array field `events`")
+
+    return str(raw.get("session_id") or "").strip() or None, events, raw
+
+
+def _bridge_record_from_event(
+    *,
+    session_id: str,
+    project_id: str | None,
+    idx: int,
+    event: dict,
+    source_ref: str,
+    captured_by: str,
+    confidence: str,
+) -> dict:
+    event_type = _event_type_from_payload(str(event.get("type", "")), event)
+    summary = str(event.get("summary") or event.get("message") or event.get("type") or f"event-{idx}").strip()
+    if not summary:
+        summary = f"event-{idx}"
+
+    record = {
+        "id": str(uuid.uuid4()),
+        "memory_class": "episodic",
+        "summary": summary[:500],
+        "details": {
+            "event_index": idx,
+            "event": event,
+        },
+        "provenance": {
+            "source_type": "imported",
+            "source_ref": source_ref,
+            "captured_at": _now_iso(),
+            "captured_by": captured_by,
+            "confidence": confidence,
+            "evidence_refs": [source_ref],
+        },
+        "status": "active",
+        "version": "memory-contract-v1",
+        "session_id": session_id,
+        "event_type": event_type,
+        "tags": ["bridge", "anthropic-managed"],
+    }
+    if project_id:
+        record["related_project_id"] = project_id
+    return record
+
+
+def _bridge_anthropic_managed(
+    *,
+    input_path: Path,
+    output_path: Path | None,
+    session_id: str | None,
+    project_id: str | None,
+    source_ref: str | None,
+    captured_by: str,
+    confidence: str,
+    dry_run: bool,
+) -> int:
+    if confidence not in {"low", "medium", "high"}:
+        print(f"invalid confidence: {confidence} (expected low|medium|high)", file=sys.stderr)
+        return 1
+
+    try:
+        detected_session_id, events, _ = _load_bridge_events(input_path)
+    except (FileNotFoundError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    sid = (session_id or detected_session_id or input_path.stem).strip()
+    if not sid:
+        sid = f"managed-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
+
+    src_ref = source_ref or str(input_path)
+
+    records: list[dict] = []
+    for idx, raw_event in enumerate(events):
+        if not isinstance(raw_event, dict):
+            raw_event = {"value": raw_event, "type": "other"}
+        records.append(
+            _bridge_record_from_event(
+                session_id=sid,
+                project_id=project_id,
+                idx=idx,
+                event=raw_event,
+                source_ref=src_ref,
+                captured_by=captured_by,
+                confidence=confidence,
+            )
+        )
+
+    envelope = {
+        "contract_version": "memory-contract-v1",
+        "records": records,
+    }
+
+    if output_path is None:
+        output_path = REPO_ROOT / "core" / "memory" / "bridges" / "anthropic-managed" / f"{_safe_slug(sid)}.memory-envelope.json"
+
+    if dry_run:
+        print("Bridge dry run complete.")
+        print(f"  - input: {input_path}")
+        print(f"  - session_id: {sid}")
+        print(f"  - records: {len(records)}")
+        print(f"  - would_write: {output_path}")
+        return 0
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(envelope, indent=2) + "\n", encoding="utf-8")
+
+    print("Bridge import complete.")
+    print(f"  - input: {input_path}")
+    print(f"  - output: {output_path}")
+    print(f"  - session_id: {sid}")
+    print(f"  - records: {len(records)}")
     return 0
 
 
@@ -2690,6 +2843,22 @@ def build_parser() -> argparse.ArgumentParser:
     evolve = sub.add_parser("evolve", help="Run and manage gated self-evolution episodes")
     evolve_sub = evolve.add_subparsers(dest="evolve_action", required=True)
 
+    bridge = sub.add_parser("bridge", help="Bridge external runtime event logs into memory-contract envelopes")
+    bridge_sub = bridge.add_subparsers(dest="bridge_action", required=True)
+
+    b_am = bridge_sub.add_parser(
+        "anthropic-managed",
+        help="Transform Anthropic Managed Agents event logs into memory-contract episodic records",
+    )
+    b_am.add_argument("--input", required=True, help="Path to Managed Agents events JSON file")
+    b_am.add_argument("--output", help="Optional output path for memory envelope JSON")
+    b_am.add_argument("--session-id", help="Override session id (otherwise derived from payload/input name)")
+    b_am.add_argument("--project-id", help="Optional related project id for record linkage")
+    b_am.add_argument("--source-ref", help="Optional source reference override for provenance")
+    b_am.add_argument("--captured-by", default="cognitive-os bridge", help="Provenance captured_by value")
+    b_am.add_argument("--confidence", choices=["low", "medium", "high"], default="medium")
+    b_am.add_argument("--dry-run", action="store_true", help="Parse and summarize without writing output")
+
     e_run = evolve_sub.add_parser("run", help="Create a candidate evolution episode")
     e_run.add_argument("--hypothesis", required=True, help="Hypothesis this evolution episode tests")
     e_run.add_argument("--mutation-type", required=True, choices=sorted(ALLOWED_EVOLUTION_MUTATIONS))
@@ -2881,6 +3050,22 @@ def main(argv: Iterable[str] | None = None) -> int:
             return _evolve_promote(args.episode_id, force=getattr(args, "force", False))
         if args.evolve_action == "rollback":
             return _evolve_rollback(args.episode_id, rollback_ref=getattr(args, "ref"))
+        return 0
+    if args.command == "bridge":
+        if args.bridge_action == "anthropic-managed":
+            input_path = Path(getattr(args, "input")).expanduser()
+            output_raw = getattr(args, "output", None)
+            output_path = Path(output_raw).expanduser() if output_raw else None
+            return _bridge_anthropic_managed(
+                input_path=input_path,
+                output_path=output_path,
+                session_id=getattr(args, "session_id", None),
+                project_id=getattr(args, "project_id", None),
+                source_ref=getattr(args, "source_ref", None),
+                captured_by=getattr(args, "captured_by", "cognitive-os bridge"),
+                confidence=getattr(args, "confidence", "medium"),
+                dry_run=bool(getattr(args, "dry_run", False)),
+            )
         return 0
     parser.error(f"unsupported command: {args.command}")
     return 2

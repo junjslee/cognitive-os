@@ -496,6 +496,55 @@ class ProfileCognitionTests(unittest.TestCase):
                 self.assertEqual(rc, 1)
                 self.assertIn("episode not found", fake_stderr.getvalue())
 
+    def test_bridge_parser_has_anthropic_managed_subcommand(self):
+        parser = cli.build_parser()
+        args = parser.parse_args([
+            "bridge",
+            "anthropic-managed",
+            "--input",
+            "events.json",
+        ])
+        self.assertEqual(args.command, "bridge")
+        self.assertEqual(args.bridge_action, "anthropic-managed")
+        self.assertEqual(args.input, "events.json")
+
+    def test_bridge_anthropic_managed_writes_memory_envelope(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            payload = {
+                "session_id": "sess-123",
+                "events": [
+                    {"type": "tool_call", "tool": "bash", "input": {"cmd": "echo hi"}},
+                    {"type": "error", "message": "boom"},
+                ],
+            }
+            input_path = root / "managed-events.json"
+            input_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            with patch.object(cli, "REPO_ROOT", root):
+                rc = cli._bridge_anthropic_managed(
+                    input_path=input_path,
+                    output_path=None,
+                    session_id=None,
+                    project_id="proj-1",
+                    source_ref=None,
+                    captured_by="test-bridge",
+                    confidence="high",
+                    dry_run=False,
+                )
+
+            self.assertEqual(rc, 0)
+            out_path = root / "core" / "memory" / "bridges" / "anthropic-managed" / "sess-123.memory-envelope.json"
+            self.assertTrue(out_path.exists())
+            out = json.loads(out_path.read_text(encoding="utf-8"))
+            self.assertEqual(out["contract_version"], "memory-contract-v1")
+            self.assertEqual(len(out["records"]), 2)
+            self.assertEqual(out["records"][0]["memory_class"], "episodic")
+            self.assertEqual(out["records"][0]["event_type"], "action")
+            self.assertEqual(out["records"][0]["session_id"], "sess-123")
+            self.assertEqual(out["records"][0]["related_project_id"], "proj-1")
+            self.assertEqual(out["records"][0]["provenance"]["source_type"], "imported")
+
 
 if __name__ == "__main__":
     unittest.main()
