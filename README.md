@@ -469,6 +469,19 @@ This command is designed for end users to self-select setup options instead of e
 
 ---
 
+## Command cheat sheet
+
+| Task | Command |
+|---|---|
+| Initialize personal files | `cognitive-os init` |
+| Propagate memory to agents | `cognitive-os sync` |
+| New project from scaffold | `cognitive-os new-project [path]` |
+| Detect/Apply harness | `cognitive-os detect` \| `harness apply <type>` |
+| Deterministic onboarding | `cognitive-os setup . --interactive` |
+| Verify system health | `cognitive-os doctor` |
+
+---
+
 ## Push-readiness checklist
 
 Before publishing:

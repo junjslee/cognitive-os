@@ -968,6 +968,13 @@ def _doctor() -> int:
         print("\nDoctor failed:")
         for item in failures:
             print(f"  - {item}")
+        
+        print("\nTips to fix:")
+        if any("conda" in f.lower() for f in failures):
+            print("  • Ensure Conda is installed and COGNITIVE_OS_CONDA_ROOT is set correctly.")
+            print(f"    Current: export COGNITIVE_OS_CONDA_ROOT={CONDA_ROOT}")
+        if any("git" in f.lower() for f in failures):
+            print("  • Ensure Git is installed and you are inside a repository.")
         return 1
 
     print("\nDoctor passed.")
