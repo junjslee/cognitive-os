@@ -10,51 +10,22 @@
 
 ## System in 20 seconds
 
-![cognitive-os system overview](docs/assets/system-overview.gif)
+<p align="center">
+  <img src="docs/assets/system-overview.gif" alt="cognitive-os system overview" width="100%" />
+</p>
 
-```mermaid
-flowchart LR
-  A["cognitive-os operating system"]
+System map source: `docs/assets/system-overview.svg`
 
-  subgraph O1["Ontological + operational stack"]
-    direction TB
-    L0["L0 Ontology"]
-    L1["L1 Epistemics"]
-    L2["L2 Governance"]
-    L3["L3 Execution"]
-    L4["L4 Orchestration + outcomes"]
-  end
+Structure summary:
+- Ontological + operational stack defines roles and authority boundaries.
+- Canonical memory + policy defines what persists and how conflicts resolve.
+- Workflow + evolution governs execution and safe improvement.
+- `cognitive-os sync` propagates the same operating contract to Claude, Codex, Cursor, and Hermes.
 
-  subgraph M["Canonical memory + policy"]
-    direction TB
-    G["Global memory"]
-    P["Project truth"]
-    E["Episodic evidence"]
-    C["Contracts"]
-    S["Schemas"]
-  end
-
-  subgraph W["Workflow"]
-    direction TB
-    W1["setup/profile/cognition"]
-    W2["detect/harness/new-project"]
-    W3["execute loop"]
-    W4["evolve run/report/promote/rollback"]
-  end
-
-  A --> O1 --> M --> W
-
-  M --> X["cognitive-os sync"]
-  X --> R1["Claude"]
-  X --> R2["Codex"]
-  X --> R3["Cursor"]
-  X --> R4["Hermes"]
-```
-
-## Quick start (60 seconds)
+## Quick start
 
 ```bash
-git clone https://github.com/junjslee/cognitive-os ~/cognitive-os
+git clone https://github.com/junjslee/agent-os ~/cognitive-os
 cd ~/cognitive-os
 pip install -e .
 cognitive-os init
@@ -127,18 +98,6 @@ cognitive-os has four layers:
 Adapters are not the authority. Repo docs + global memory are.
 
 ---
-
-## Quick start
-
-```bash
-git clone https://github.com/junjslee/cognitive-os ~/cognitive-os
-cd ~/cognitive-os
-pip install -e .            # install cognitive-os command
-cognitive-os init           # create personal memory files from templates
-# edit core/memory/global/*.md with your context
-cognitive-os sync           # push everything to all tools
-cognitive-os new-project .  # scaffold any existing or new project
-```
 
 ## Why this architecture wins
 
@@ -264,39 +223,22 @@ settings.local.json  machine-local overrides (gitignored)
 
 ---
 
-## Command reference
+## Command reference (essential)
 
+```bash
+cognitive-os init
+cognitive-os doctor
+cognitive-os sync
+cognitive-os new-project [path] --harness auto
+cognitive-os detect [path]
+cognitive-os harness apply <type> [path]
+cognitive-os profile [survey|infer|hybrid] [path] [--write]
+cognitive-os cognition [survey|infer|hybrid] [path] [--write]
+cognitive-os setup [path] [--interactive] [--write] [--sync] [--doctor]
+cognitive-os evolve [run|report|promote|rollback] ...
 ```
-cognitive-os init                               bootstrap personal memory files from templates
-cognitive-os doctor                             verify Conda, tools, and runtime wiring
-cognitive-os sync                               push all assets to Claude, Codex, Cursor, Hermes
-cognitive-os update                             pull latest cognitive-os from git
-cognitive-os validate                           check manifest — every declared skill needs SKILL.md
-cognitive-os list                               show agents, skills, plugins, active hooks
-cognitive-os new-project [path]                 scaffold a new project (alias: bootstrap)
-cognitive-os new-project [path] --harness TYPE  scaffold and apply a harness (or --harness auto)
-cognitive-os detect [path]                      detect the best harness type for a project
-cognitive-os harness list                       show available harness types
-cognitive-os harness apply <type> [path]        apply a harness to an existing project
-cognitive-os profile survey [--answers-file JSON] [--write] [--overwrite]        deterministic survey-based workstyle scoring
-cognitive-os profile infer [path] [--write] [--overwrite]                         deterministic repository-signal-based scoring
-cognitive-os profile hybrid [path] [--answers-file JSON] [--write] [--overwrite]  blend survey + infer (60/40)
-cognitive-os profile show                                                          show latest generated workstyle scorecard
-cognitive-os cognition survey [--answers-file JSON] [--write] [--overwrite]       deterministic cognitive philosophy survey
-cognitive-os cognition infer [path] [--write] [--overwrite]                        infer cognitive philosophy scores from repo signals
-cognitive-os cognition hybrid [path] [--answers-file JSON] [--write] [--overwrite] blend cognitive survey + infer (60/40)
-cognitive-os cognition show                                                        show latest generated cognitive scorecard
-cognitive-os setup [path] [--interactive] [--profile-mode ...] [--cognition-mode ...] [--answers-file JSON] [--profile-answers-file JSON] [--cognition-answers-file JSON] [--write] [--overwrite] [--sync] [--doctor]  guided setup for profile+cognition (non-interactive defaults: infer/infer; interactive defaults: survey/survey)
-cognitive-os evolve run --hypothesis ... --mutation-type ... --target ... --expected-effect ...   create a candidate evolution episode
-cognitive-os evolve report <episode_id>          inspect episode status and gate reasons
-cognitive-os evolve promote <episode_id> [--force] promote episode after gate checks
-cognitive-os evolve rollback <episode_id> --ref <reason>  mark episode rolled back with reference
-cognitive-os worktree <type> <name>             create a git worktree for a bounded task
-cognitive-os start [claude|cursor|codex]        open a tool surface
-cognitive-os private-skill enable <name>        enable a local experimental skill for Claude
-cognitive-os private-skill disable <name>       disable it
-cognitive-os private-skill status <name>        check its install state
-```
+
+Full command list is available in `docs/README.md`.
 
 ---
 
