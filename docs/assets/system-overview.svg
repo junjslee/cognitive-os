@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <style>
+    .title { font: 700 30px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #111827; }
+    .subtitle { font: 500 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #374151; }
+    .box { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 12; }
+    .box2 { fill: #eef2ff; stroke: #a5b4fc; stroke-width: 2; rx: 12; }
+    .box3 { fill: #ecfeff; stroke: #67e8f9; stroke-width: 2; rx: 12; }
+    .h { font: 700 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #0f172a; }
+    .t { font: 500 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #334155; }
+    .small { font: 500 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; fill: #475569; }
+    .arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead); }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+    </marker>
+  </defs>
+
+  <text x="40" y="50" class="title">cognitive-os system overview</text>
+  <text x="40" y="78" class="subtitle">Operationalizes decision quality, memory governance, execution cognition, and accountable evolution</text>
+
+  <rect x="40" y="110" width="400" height="290" class="box"/>
+  <text x="60" y="140" class="h">Ontological + operational stack</text>
+  <text x="60" y="170" class="t">L0 Ontology: core/agents/ontologist.md</text>
+  <text x="60" y="198" class="t">L1 Epistemics: core/agents/epistemic-auditor.md</text>
+  <text x="60" y="226" class="t">L2 Governance: core/agents/governance-safety.md</text>
+  <text x="60" y="254" class="t">L3 Execution: planner/implementer/reviewer/</text>
+  <text x="95" y="276" class="t">test-runner/docs-handoff</text>
+  <text x="60" y="304" class="t">L4 Orchestration + outcomes:</text>
+  <text x="95" y="326" class="t">orchestrator + domain-owner</text>
+
+  <rect x="500" y="110" width="460" height="290" class="box2"/>
+  <text x="520" y="140" class="h">Canonical memory + policy</text>
+  <text x="520" y="170" class="t">Global memory: core/memory/global/*.md</text>
+  <text x="520" y="198" class="t">Project truth: AGENTS.md + docs/* + HARNESS.md</text>
+  <text x="520" y="226" class="t">Episodic evidence: core/memory/evolution/episodes/*.json</text>
+  <text x="520" y="254" class="t">Contracts: docs/MEMORY_CONTRACT.md,</text>
+  <text x="520" y="276" class="t">docs/EVOLUTION_CONTRACT.md</text>
+  <text x="520" y="304" class="t">Schemas: core/schemas/memory-contract/*.json,</text>
+  <text x="520" y="326" class="t">core/schemas/evolution/*.json</text>
+
+  <rect x="1020" y="110" width="340" height="290" class="box3"/>
+  <text x="1040" y="140" class="h">Workflow lifecycle</text>
+  <text x="1040" y="170" class="t">1) setup / profile / cognition</text>
+  <text x="1040" y="198" class="t">2) detect / harness / new-project</text>
+  <text x="1040" y="226" class="t">3) execute loop:</text>
+  <text x="1065" y="248" class="t">explore -> plan -> implement</text>
+  <text x="1065" y="270" class="t">-> verify -> handoff</text>
+  <text x="1040" y="298" class="t">4) evolve:</text>
+  <text x="1065" y="320" class="t">run -> report -> promote/rollback</text>
+
+  <rect x="180" y="470" width="1040" height="280" class="box"/>
+  <text x="200" y="500" class="h">Runtime propagation (cognitive-os sync)</text>
+
+  <rect x="220" y="535" width="220" height="90" class="box2"/>
+  <text x="295" y="570" class="h">Claude</text>
+  <text x="250" y="594" class="small">hooks + skills + context</text>
+
+  <rect x="470" y="535" width="220" height="90" class="box2"/>
+  <text x="553" y="570" class="h">Codex</text>
+  <text x="503" y="594" class="small">skills + config + docs</text>
+
+  <rect x="720" y="535" width="220" height="90" class="box2"/>
+  <text x="800" y="570" class="h">Cursor</text>
+  <text x="761" y="594" class="small">skills + repo contract</text>
+
+  <rect x="970" y="535" width="220" height="90" class="box2"/>
+  <text x="1056" y="570" class="h">Hermes</text>
+  <text x="1008" y="594" class="small">OPERATOR + skills sync</text>
+
+  <path d="M 440 255 L 500 255" class="arrow"/>
+  <path d="M 960 255 L 1020 255" class="arrow"/>
+  <path d="M 730 400 L 730 470" class="arrow"/>
+</svg>

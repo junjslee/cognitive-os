@@ -29,3 +29,4 @@ Guidelines:
 - Operationalize decision quality, memory governance, execution cognition, and accountable evolution.
 - Encode decision-quality standards (known/unknown/assumptions/disconfirmation).
 - Prefer reversible next actions and explicit verification criteria.
+- When running shell searches manually, prefer `rg` for content search and `fd` for file discovery.

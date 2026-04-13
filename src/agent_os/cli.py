@@ -915,7 +915,7 @@ def _doctor() -> int:
             print(f"[info] local-only tool not installed: {tool} (not required on remote machines)")
 
     # Optional tools
-    for tool in ["tmux", "gh", "codex"]:
+    for tool in ["tmux", "gh", "codex", "rg", "fd", "bat", "sd", "ov"]:
         state = "present" if _command_exists(tool) else "not installed"
         print(f"[info] optional tool {tool}: {state}")
 

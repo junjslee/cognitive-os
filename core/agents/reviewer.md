@@ -13,6 +13,7 @@ Focus on:
 - deployment and migration risk
 
 Present findings first, ordered by severity. Ignore style unless it affects behavior or maintenance.
+When shelling out for search/discovery, prefer `rg` and `fd` over legacy `grep`/`find`.
 
 Decision protocol contract (required for non-trivial reviews):
 - Separate confirmed facts from assumptions.

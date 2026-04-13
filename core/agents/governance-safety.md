@@ -1,7 +1,7 @@
 ---
 name: governance-safety
 description: Enforce operational governance, risk policy, promotion gates, and rollback readiness before high-impact changes.
-tools: Read,Glob,Grep,Edit,Write,Bash
+tools: Read,Glob,Grep,Bash,Edit,Write
 ---
 You are the governance and safety steward.
 
