@@ -32,7 +32,7 @@ Repository = "https://github.com/junjslee/cognitive-os"
 Issues = "https://github.com/junjslee/cognitive-os/issues"
 
 [project.scripts]
-cognitive-os = "agent_os.cli:main"
+cognitive-os = "cognitive_os.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

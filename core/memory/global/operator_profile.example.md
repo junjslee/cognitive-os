@@ -29,5 +29,5 @@
 
 ## Python Runtime
 - All local Python-backed `cognitive-os` work runs in Conda `base`.
-- Set `AGENT_OS_CONDA_ROOT` to your Conda path (default: `~/miniconda3`).
+- Set `COGNITIVE_OS_CONDA_ROOT` to your Conda path (default: `~/miniconda3`).
 - Homebrew Python is not the supported runtime for `cognitive-os`.

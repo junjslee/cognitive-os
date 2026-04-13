@@ -26,7 +26,7 @@ Modify the `workflow_policy.md` to mandate a "Cognitive Pause" at Step 2 (Plan):
 Standardize `docs/NEXT_STEPS.md` to use a "So-What Now?" summary format to eliminate context-switching lag.
 
 ## 4. Implementation Plan
-- [ ] Update `src/agent_os/cli.py` to include Epistemic dimensions in compiled policies.
+- [ ] Update `src/cognitive_os/cli.py` to include Epistemic dimensions in compiled policies.
 - [ ] Update `templates/project/AGENTS.md` with the new workflow.
 - [ ] Update `templates/project/docs/` templates with Epistemic blocks.
 - [ ] Add `cognitive-os audit` (epistemic check) to verify if the current session has addressed its unknowns.

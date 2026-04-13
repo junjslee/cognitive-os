@@ -56,7 +56,7 @@ These are optional. `cognitive-os doctor` reports presence but does not require 
 ## Read this next
 
 - Docs index: `docs/README.md`
-- Architecture: `docs/AGENT_OS_ARCHITECTURE.md`
+- Architecture: `docs/COGNITIVE_OS_ARCHITECTURE.md`
 - Cognitive System Playbook: `docs/COGNITIVE_SYSTEM_PLAYBOOK.md`
 
 ---
@@ -305,7 +305,7 @@ Edit scripts in `core/hooks/`. All hooks run with your Conda Python — no extra
 
 ### Conda root
 ```bash
-export AGENT_OS_CONDA_ROOT=/path/to/your/conda   # default: ~/miniconda3
+export COGNITIVE_OS_CONDA_ROOT=/path/to/your/conda   # default: ~/miniconda3
 ```
 
 ---
@@ -489,7 +489,7 @@ Cognitive dimensions (0..3):
 
 Before publishing:
 - `PYTHONPATH=. pytest -q tests/test_profile_cognition.py`
-- `python3 -m py_compile src/agent_os/cli.py`
+- `python3 -m py_compile src/cognitive_os/cli.py`
 - `cognitive-os doctor`
 - `git status` and `git rev-list --left-right --count @{u}...HEAD`
 

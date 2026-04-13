@@ -15,7 +15,12 @@ from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HOME = Path.home()
-CONDA_ROOT = Path(os.environ.get("AGENT_OS_CONDA_ROOT", str(HOME / "miniconda3")))
+CONDA_ROOT = Path(
+    os.environ.get(
+        "COGNITIVE_OS_CONDA_ROOT",
+        os.environ.get("COGNITIVE_OS_CONDA_ROOT_LEGACY", str(HOME / "miniconda3")),
+    )
+)
 EXPECTED_BASE_PREFIX = str(CONDA_ROOT)
 RUNTIME_MANIFEST = json.loads((REPO_ROOT / "core" / "runtime_manifest.json").read_text(encoding="utf-8"))
 HARNESSES_DIR = REPO_ROOT / "core" / "harnesses"
@@ -566,7 +571,7 @@ def _render_user_claude_md() -> str:
     )
 
 
-def _agent_os_settings() -> dict:
+def _cognitive_os_settings() -> dict:
     hooks_dir = REPO_ROOT / "core" / "hooks"
     py = f"{CONDA_ROOT}/bin/python"
 
@@ -629,8 +634,8 @@ def _agent_os_settings() -> dict:
     }
 
 
-def _merge_claude_settings(existing: dict, agent_os: dict) -> dict:
-    """Merge agent_os settings into existing without removing anything.
+def _merge_claude_settings(existing: dict, cognitive_os: dict) -> dict:
+    """Merge cognitive_os settings into existing without removing anything.
 
     - permissions.deny: union (no duplicates)
     - hooks.<event>: append cognitive-os entries whose commands aren't already present
@@ -640,11 +645,11 @@ def _merge_claude_settings(existing: dict, agent_os: dict) -> dict:
     merged = copy.deepcopy(existing)
 
     deny = merged.setdefault("permissions", {}).setdefault("deny", [])
-    for rule in agent_os.get("permissions", {}).get("deny", []):
+    for rule in cognitive_os.get("permissions", {}).get("deny", []):
         if rule not in deny:
             deny.append(rule)
 
-    for event, entries in agent_os.get("hooks", {}).items():
+    for event, entries in cognitive_os.get("hooks", {}).items():
         existing_entries = merged.setdefault("hooks", {}).setdefault(event, [])
         registered_cmds: set[str] = set()
         for entry in existing_entries:
@@ -714,7 +719,7 @@ def _sync_user_runtime() -> None:
     # Merge cognitive-os settings into existing settings.json rather than replace,
     # so plugin-installed hooks and keys are preserved across syncs.
     settings_path = claude_root / "settings.json"
-    agent_os = _agent_os_settings()
+    cognitive_os = _cognitive_os_settings()
     if settings_path.exists():
         try:
             existing = json.loads(settings_path.read_text(encoding="utf-8"))
@@ -722,7 +727,7 @@ def _sync_user_runtime() -> None:
             existing = {}
     else:
         existing = {}
-    merged = _merge_claude_settings(existing, agent_os)
+    merged = _merge_claude_settings(existing, cognitive_os)
     _write_text(settings_path, json.dumps(merged, indent=2) + "\n")
 
     for agent_file in (REPO_ROOT / "core" / "agents").glob("*.md"):

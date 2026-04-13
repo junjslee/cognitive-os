@@ -149,7 +149,7 @@ Clamp all scores to 0..3.
 - `profile show` prints current generated scorecard if available.
 
 ## 9) Developer Experience / Maintainability
-- Keep logic in `src/agent_os/cli.py` for v1 to minimize architecture churn.
+- Keep logic in `src/cognitive_os/cli.py` for v1 to minimize architecture churn.
 - Use helper functions:
  - `_profile_survey()`
  - `_profile_infer(path)`

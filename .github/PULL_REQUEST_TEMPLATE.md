@@ -16,7 +16,7 @@ Closes #
 ### Commands run
 
 ```bash
-python3 -m py_compile src/agent_os/cli.py
+python3 -m py_compile src/cognitive_os/cli.py
 python -m pytest -q
 ```
 
