@@ -45,15 +45,18 @@ You use multiple AI coding agents. Each one starts cold. You repeat yourself. Sk
 
 ## 1-minute model
 
-`agent-os` has three layers:
+`agent-os` has four layers:
 
 1) **Global operator layer** (`core/memory/global/*`)
 - your stable workflow + cognitive defaults across projects
 
-2) **Project truth layer** (`AGENTS.md`, `docs/*`)
+2) **Story layer** (`core/memory/global/build_story.md`, `docs/DECISION_STORY.md`)
+- narratable what/why/how traces so decisions are replayable in your head and explainable to others
+
+3) **Project truth layer** (`AGENTS.md`, `docs/*`)
 - what this specific repo is building right now
 
-3) **Adapter layer** (Claude/Codex/Cursor/Hermes)
+4) **Adapter layer** (Claude/Codex/Cursor/Hermes)
 - delivery surfaces that consume the same contract
 
 Adapters are not the authority. Repo docs + global memory are.
@@ -77,6 +80,17 @@ agent-os new-project .      # scaffold any existing or new project
 - Cross-tool consistency: one canonical operating contract across Claude/Codex/Cursor/Hermes.
 - Deterministic setup: profile/cognition onboarding is explainable (`survey`/`infer`/`hybrid`) instead of implicit drift.
 - Canonical boundary: repo docs + global memory are authority; tool-native memories are acceleration layers.
+
+### Coexistence model (self-evolving agents)
+
+`agent-os` is designed to work with agent runtimes that keep learning locally (Hermes memory/skills, Claude/Codex/Cursor local context):
+
+1. Local runtime memory evolves fast during execution (high-velocity adaptation).
+2. Durable lessons are promoted into canonical files (`core/memory/global/*`, `docs/*`, reusable skills).
+3. `agent-os sync` republishes that contract to every runtime.
+4. Runtime-native memory remains a cache/acceleration layer, not the source of truth.
+
+This gives you both: fast local learning and deterministic cross-platform consistency.
 
 ### Demo
 
@@ -175,6 +189,7 @@ docs/
   PROGRESS.md        completed work and decisions
   NEXT_STEPS.md      next-session handoff
   RUN_CONTEXT.md     runtime assumptions, APIs, execution profiles
+  DECISION_STORY.md  narratable what/why/how for major decisions
 .claude/
   settings.json      permission rules
   settings.local.json  machine-local overrides (gitignored)
@@ -204,7 +219,7 @@ agent-os cognition survey [--answers-file JSON] [--write] [--overwrite]       de
 agent-os cognition infer [path] [--write] [--overwrite]                        infer cognitive philosophy scores from repo signals
 agent-os cognition hybrid [path] [--answers-file JSON] [--write] [--overwrite] blend cognitive survey + infer (60/40)
 agent-os cognition show                                                        show latest generated cognitive scorecard
-agent-os setup [path] [--interactive] [--profile-mode ...] [--cognition-mode ...] [--answers-file JSON] [--profile-answers-file JSON] [--cognition-answers-file JSON] [--write] [--overwrite] [--sync] [--doctor]  guided setup for profile+cognition
+agent-os setup [path] [--interactive] [--profile-mode ...] [--cognition-mode ...] [--answers-file JSON] [--profile-answers-file JSON] [--cognition-answers-file JSON] [--write] [--overwrite] [--sync] [--doctor]  guided setup for profile+cognition (non-interactive defaults: infer/infer; interactive defaults: survey/survey)
 agent-os worktree <type> <name>             create a git worktree for a bounded task
 agent-os start [claude|cursor|codex]        open a tool surface
 agent-os private-skill enable <name>        enable a local experimental skill for Claude
@@ -218,10 +233,10 @@ agent-os private-skill status <name>        check its install state
 
 ```
 global memory (this repo)
-  └── stable cross-project context: who you are, how you work, safety policy
+  └── stable cross-project context: who you are, how you work, safety policy, build narrative
 
 project memory (each repo's docs/)
-  └── what is being built, current state, next handoff
+  └── what is being built, current state, next handoff, decision story (what/why/how)
 
 plugin memory (claude-mem, etc.)
   └── cache and retrieval — never the canonical record
@@ -235,6 +250,10 @@ Global memory never belongs in chat. Project memory never belongs in global. Plu
 
 ### Personal memory
 Edit `core/memory/global/*.md` — these are gitignored and never leave your machine. The `*.example.md` files in the same directory are committed templates that show what belongs in each file.
+
+Recommended additions:
+- `core/memory/global/build_story.md` from `build_story.example.md`
+- keep it short and stable; it should describe your recurring builder narrative, not project-specific details.
 
 ### Skills
 - Add to `skills/custom/` for your own skills
@@ -288,6 +307,21 @@ Add your own by dropping a JSON file into `core/harnesses/`.
 
 ---
 
+## Story layer (mental model + narrative memory)
+
+To make your system explainable in your own head (and to teammates), add:
+- Global: `core/memory/global/build_story.md` (your stable builder narrative)
+- Project: `docs/DECISION_STORY.md` (what/why/how trace for major decisions)
+
+```bash
+cp core/memory/global/build_story.example.md core/memory/global/build_story.md
+```
+
+Why this matters:
+- avoids "good reasoning but no coherent story"
+- preserves decision intent across sessions/tools
+- improves handoffs by keeping causal context
+
 ## Deterministic workstyle setup
 
 `agent-os profile` and `agent-os cognition` are deterministic onboarding layers:
@@ -329,6 +363,7 @@ Generated artifacts (machine-generated):
 - `core/memory/global/.generated/workstyle_profile.json`
 - `core/memory/global/.generated/workstyle_scores.json`
 - `core/memory/global/.generated/workstyle_explanations.md`
+- `core/memory/global/.generated/personalization_blueprint.md` (combined user system profile)
 
 To compile generated scores into global memory files:
 
@@ -347,22 +382,27 @@ agent-os doctor
 
 For first-time setup (or reconfiguration), use:
 
-Safe non-interactive defaults (recommended):
-- `profile-mode=hybrid`
-- `cognition-mode=hybrid`
+Defaults by mode:
+- Non-interactive (`agent-os setup .`): `profile-mode=infer`, `cognition-mode=infer`
+- Interactive (`agent-os setup . --interactive`): questionnaire-first (`profile-mode=survey`, `cognition-mode=survey`)
 - `write=false` (preview first)
 - `overwrite=false`
 - `sync=false`
 - `doctor=false`
 
+Important:
+- In non-interactive setup, `survey` or `hybrid` requires complete answers via `--profile-answers-file` / `--cognition-answers-file` (or shared `--answers-file`).
+- In interactive setup, you can accept questionnaire-first onboarding or manually choose modes.
+- Use `--interactive` if you want terminal prompts for each question.
+
 ```bash
-# interactive prompts (choose modes, write behavior, sync/doctor)
+# interactive prompts (questionnaire-first by default; you can choose manual mode selection)
 agent-os setup . --interactive
 
 # non-interactive with explicit post-steps
 agent-os setup . --write --sync --doctor
 
-# fully scripted with separate answer files
+# fully scripted with separate answer files (required for survey/hybrid in non-interactive mode)
 agent-os setup . \
   --profile-mode hybrid \
   --cognition-mode infer \
@@ -406,6 +446,7 @@ Cognitive dimensions (0..3):
 Generated cognitive artifacts:
 - `core/memory/global/.generated/cognitive_profile.json`
 - `core/memory/global/.generated/cognitive_explanations.md`
+- `core/memory/global/.generated/personalization_blueprint.md` (merged operator+cognitive contract)
 
 With `--write`, output compiles into:
 - `core/memory/global/cognitive_profile.md`

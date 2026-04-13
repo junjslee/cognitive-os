@@ -11,3 +11,8 @@ Update:
 - other memory docs only if they materially changed
 
 Favor concise, operational handoffs over narrative summaries.
+
+Decision protocol contract (required for non-trivial handoffs):
+- Explicitly list knowns, unknowns, and assumptions that remain.
+- Record one disconfirmation trigger for the current plan.
+- State the next smallest reversible action.

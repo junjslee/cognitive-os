@@ -11,17 +11,25 @@
 
 ## OPERATOR.md
 
-A composite of your three global memory files (overview, operator_profile, workflow_policy).
-Hermes does not auto-load it — reference it from `~/.hermes/SOUL.md` if you want Hermes
-to carry your operator context:
+A generated composite of your global memory sources:
+- `overview.md`
+- `operator_profile.md`
+- `workflow_policy.md`
+- `python_runtime_policy.md`
+- `cognitive_profile.md`
+
+`agent-os sync` writes this to `~/.hermes/OPERATOR.md`.
+
+For deterministic behavior, load it from `~/.hermes/SOUL.md`:
 
 ```markdown
 <!-- in ~/.hermes/SOUL.md -->
-You are a technical AI assistant working with the operator described below.
+You are a technical AI assistant working with the operator contract below.
 
-{{read ~/agent-os/core/memory/global/operator_profile.md}}
-{{read ~/agent-os/core/memory/global/workflow_policy.md}}
+{{read ~/.hermes/OPERATOR.md}}
 ```
+
+This keeps Hermes runtime behavior aligned with canonical `agent-os` memory after each sync.
 
 ## Skills
 

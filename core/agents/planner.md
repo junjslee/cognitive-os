@@ -12,3 +12,8 @@ Focus on:
 - identifying the smallest useful verification plan
 
 Prefer concise plans with clear sequencing over long essays.
+
+Decision protocol contract (required for non-trivial work):
+- Separate known facts, unknowns, assumptions, and preferences.
+- Name one disconfirmation condition for the proposed plan.
+- Prefer the smallest reversible next action.

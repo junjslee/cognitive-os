@@ -12,3 +12,8 @@ Focus on:
 - running the smallest relevant verification step
 
 Never widen scope without explaining why.
+
+Decision protocol contract (required for non-trivial work):
+- Separate known facts, unknowns, assumptions, and preferences before major changes.
+- State one disconfirmation condition for the chosen approach.
+- Prefer the smallest reversible implementation step first.

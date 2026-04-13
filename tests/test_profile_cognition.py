@@ -103,8 +103,10 @@ class ProfileCognitionTests(unittest.TestCase):
         with patch.object(cli, "_resolve_bootstrap_target", return_value=Path(".")), patch.object(
             cli, "_profile_command", return_value=0
         ) as profile_cmd, patch.object(cli, "_cognition_command", return_value=0) as cognition_cmd, patch.object(
-            cli, "_sync_user_runtime"
-        ) as sync_cmd, patch.object(cli, "_doctor", return_value=0) as doctor_cmd:
+            cli, "_write_personalization_blueprint"
+        ) as blueprint_cmd, patch.object(cli, "_sync_user_runtime") as sync_cmd, patch.object(
+            cli, "_doctor", return_value=0
+        ) as doctor_cmd:
             rc = cli._setup_command(
                 path_arg=".",
                 profile_mode="hybrid",
@@ -113,7 +115,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 overwrite=False,
                 do_sync=True,
                 do_doctor=True,
-                profile_answers={"planning_strictness": 4},
+                profile_answers={dim: 4 for dim in cli.PROFILE_DIMENSIONS},
                 cognition_answers={"first_principles_depth": 3},
                 interactive=False,
             )
@@ -124,7 +126,7 @@ class ProfileCognitionTests(unittest.TestCase):
             ".",
             write=True,
             overwrite=False,
-            answers={"planning_strictness": 4},
+            answers={dim: 4 for dim in cli.PROFILE_DIMENSIONS},
         )
         cognition_cmd.assert_called_once_with(
             "infer",
@@ -133,6 +135,7 @@ class ProfileCognitionTests(unittest.TestCase):
             overwrite=False,
             answers={"first_principles_depth": 3},
         )
+        blueprint_cmd.assert_called_once()
         sync_cmd.assert_called_once()
         doctor_cmd.assert_called_once()
 
@@ -190,6 +193,143 @@ class ProfileCognitionTests(unittest.TestCase):
 
             self.assertEqual(profile_answers["planning_strictness"], 4)
             self.assertEqual(cognition_answers["first_principles_depth"], 3)
+
+    def test_setup_parser_defaults_to_noninteractive_safe_modes(self):
+        parser = cli.build_parser()
+        args = parser.parse_args(["setup"])
+        self.assertIsNone(args.profile_mode)
+        self.assertIsNone(args.cognition_mode)
+
+    def test_setup_noninteractive_defaults_infer_when_modes_omitted(self):
+        with patch.object(cli, "_resolve_bootstrap_target", return_value=Path(".")), patch.object(
+            cli, "_profile_command", return_value=0
+        ) as profile_cmd, patch.object(cli, "_cognition_command", return_value=0) as cognition_cmd, patch.object(
+            cli, "_write_personalization_blueprint"
+        ) as blueprint_cmd:
+            rc = cli._setup_command(
+                path_arg=".",
+                profile_mode=None,
+                cognition_mode=None,
+                write=False,
+                overwrite=False,
+                do_sync=False,
+                do_doctor=False,
+                profile_answers=None,
+                cognition_answers=None,
+                interactive=False,
+            )
+        self.assertEqual(rc, 0)
+        profile_cmd.assert_called_once_with("infer", ".", write=False, overwrite=False, answers=None)
+        cognition_cmd.assert_called_once_with("infer", ".", write=False, overwrite=False, answers=None)
+        blueprint_cmd.assert_called_once()
+
+    def test_setup_noninteractive_rejects_survey_without_answers(self):
+        with patch("sys.stderr", new_callable=io.StringIO) as fake_stderr:
+            rc = cli._setup_command(
+                path_arg=".",
+                profile_mode="survey",
+                cognition_mode="skip",
+                write=False,
+                overwrite=False,
+                do_sync=False,
+                do_doctor=False,
+                profile_answers=None,
+                cognition_answers=None,
+                interactive=False,
+            )
+        self.assertEqual(rc, 1)
+        self.assertIn("requires complete answers", fake_stderr.getvalue())
+    def test_setup_interactive_defaults_to_questionnaire_first(self):
+        with patch.object(cli, "_prompt_yes_no", side_effect=[True, False, False, False]), patch.object(
+            cli, "_resolve_bootstrap_target", return_value=Path(".")
+        ), patch.object(cli, "_profile_command", return_value=0) as profile_cmd, patch.object(
+            cli, "_cognition_command", return_value=0
+        ) as cognition_cmd, patch.object(cli, "_write_personalization_blueprint") as blueprint_cmd:
+            rc = cli._setup_command(
+                path_arg=".",
+                profile_mode=None,
+                cognition_mode=None,
+                write=False,
+                overwrite=False,
+                do_sync=False,
+                do_doctor=False,
+                profile_answers={dim: 2 for dim in cli.PROFILE_DIMENSIONS},
+                cognition_answers={dim: 2 for dim in cli.COGNITIVE_DIMENSIONS},
+                interactive=True,
+            )
+        self.assertEqual(rc, 0)
+        profile_cmd.assert_called_once_with("survey", ".", write=False, overwrite=False, answers={dim: 2 for dim in cli.PROFILE_DIMENSIONS})
+        cognition_cmd.assert_called_once_with("survey", ".", write=False, overwrite=False, answers={dim: 2 for dim in cli.COGNITIVE_DIMENSIONS})
+        blueprint_cmd.assert_called_once()
+
+    def test_setup_interactive_prompt_mentions_questionnaire_onboarding(self):
+        with patch.object(cli, "_prompt_yes_no", side_effect=[True, False, False, False]) as prompt_yes_no, patch.object(
+            cli, "_resolve_bootstrap_target", return_value=Path(".")
+        ), patch.object(cli, "_profile_command", return_value=0), patch.object(cli, "_cognition_command", return_value=0), patch.object(
+            cli, "_write_personalization_blueprint"
+        ) as blueprint_cmd:
+            rc = cli._setup_command(
+                path_arg=".",
+                profile_mode=None,
+                cognition_mode=None,
+                write=False,
+                overwrite=False,
+                do_sync=False,
+                do_doctor=False,
+                profile_answers={dim: 2 for dim in cli.PROFILE_DIMENSIONS},
+                cognition_answers={dim: 2 for dim in cli.COGNITIVE_DIMENSIONS},
+                interactive=True,
+            )
+        self.assertEqual(rc, 0)
+        prompt_yes_no.assert_any_call("Use full questionnaire onboarding (recommended)?", default=True)
+        blueprint_cmd.assert_called_once()
+    def test_setup_writes_personalization_blueprint_when_scores_available(self):
+        with tempfile.TemporaryDirectory() as td:
+            project_root = Path(td)
+            generated_dir = project_root / "core" / "memory" / "global" / ".generated"
+            generated_dir.mkdir(parents=True)
+
+            (generated_dir / "workstyle_scores.json").write_text(
+                json.dumps(
+                    {
+                        "mode": "survey",
+                        "scores": {
+                            "planning_strictness": 3,
+                            "risk_tolerance": 2,
+                            "testing_rigor": 1,
+                            "parallelism_preference": 0,
+                            "documentation_rigor": 2,
+                            "automation_level": 1,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (generated_dir / "cognitive_profile.json").write_text(
+                json.dumps(
+                    {
+                        "mode": "survey",
+                        "scores": {
+                            "first_principles_depth": 3,
+                            "exploration_breadth": 2,
+                            "speed_vs_rigor_balance": 1,
+                            "challenge_orientation": 2,
+                            "uncertainty_tolerance": 1,
+                            "autonomy_preference": 2,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            cli._write_personalization_blueprint(project_root)
+            out_path = generated_dir / "personalization_blueprint.md"
+            self.assertTrue(out_path.exists())
+            text = out_path.read_text(encoding="utf-8")
+            self.assertIn("Personalization Blueprint", text)
+            self.assertIn("Operator System Profile", text)
+            self.assertIn("Cognitive System Profile", text)
+            self.assertIn("Personalized Operating Contract", text)
 
 
 if __name__ == "__main__":

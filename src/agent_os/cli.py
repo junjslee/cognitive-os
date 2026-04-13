@@ -60,6 +60,117 @@ def _write_text(path: Path, content: str, *, executable: bool = False) -> None:
         path.chmod(path.stat().st_mode | 0o111)
 
 
+def _write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def _load_generated_scores(project_root: Path) -> tuple[dict[str, int] | None, dict[str, int] | None]:
+    generated_dir = project_root / "core" / "memory" / "global" / ".generated"
+    workstyle_path = generated_dir / "workstyle_scores.json"
+    cognitive_path = generated_dir / "cognitive_profile.json"
+
+    workstyle_scores = None
+    cognitive_scores = None
+
+    if workstyle_path.exists():
+        try:
+            workstyle_payload = json.loads(workstyle_path.read_text(encoding="utf-8"))
+            raw = workstyle_payload.get("scores", {}) if isinstance(workstyle_payload, dict) else {}
+            if isinstance(raw, dict):
+                workstyle_scores = {k: int(v) for k, v in raw.items() if k in PROFILE_DIMENSIONS}
+        except (json.JSONDecodeError, TypeError, ValueError):
+            workstyle_scores = None
+
+    if cognitive_path.exists():
+        try:
+            cognitive_payload = json.loads(cognitive_path.read_text(encoding="utf-8"))
+            raw = cognitive_payload.get("scores", {}) if isinstance(cognitive_payload, dict) else {}
+            if isinstance(raw, dict):
+                cognitive_scores = {k: int(v) for k, v in raw.items() if k in COGNITIVE_DIMENSIONS}
+        except (json.JSONDecodeError, TypeError, ValueError):
+            cognitive_scores = None
+
+    return workstyle_scores, cognitive_scores
+
+
+def _write_personalization_blueprint(project_root: Path) -> None:
+    workstyle_scores, cognitive_scores = _load_generated_scores(project_root)
+    if not workstyle_scores or not cognitive_scores:
+        return
+
+    planning = workstyle_scores.get("planning_strictness", 0)
+    risk = workstyle_scores.get("risk_tolerance", 0)
+    testing = workstyle_scores.get("testing_rigor", 0)
+    parallel = workstyle_scores.get("parallelism_preference", 0)
+    docs = workstyle_scores.get("documentation_rigor", 0)
+    automation = workstyle_scores.get("automation_level", 0)
+
+    fpd = cognitive_scores.get("first_principles_depth", 0)
+    exp = cognitive_scores.get("exploration_breadth", 0)
+    svr = cognitive_scores.get("speed_vs_rigor_balance", 0)
+    cho = cognitive_scores.get("challenge_orientation", 0)
+    unt = cognitive_scores.get("uncertainty_tolerance", 0)
+    aut = cognitive_scores.get("autonomy_preference", 0)
+
+    operator_type = (
+        "Systems Architect" if planning >= 2 and docs >= 2 and automation >= 2 else
+        "Rapid Builder" if planning <= 1 and risk <= 1 and testing <= 1 else
+        "Balanced Operator"
+    )
+
+    cognitive_type = (
+        "First-Principles Strategist" if fpd >= 2 and cho >= 2 else
+        "Pragmatic Executor" if svr <= 1 and exp <= 1 else
+        "Adaptive Analyst"
+    )
+
+    contract = (
+        "Operate with staged plans, explicit assumptions, and review gates before irreversible changes."
+        if planning >= 2 and unt >= 2 else
+        "Bias for reversible progress with lightweight checks and explicit checkpointing."
+    )
+
+    lines = [
+        "# Personalization Blueprint",
+        "",
+        f"Generated on `{_today()}` from deterministic setup artifacts.",
+        "",
+        "## Operator System Profile",
+        f"- Type: {operator_type}",
+        f"- planning_strictness: {planning}",
+        f"- risk_tolerance: {risk}",
+        f"- testing_rigor: {testing}",
+        f"- parallelism_preference: {parallel}",
+        f"- documentation_rigor: {docs}",
+        f"- automation_level: {automation}",
+        "",
+        "## Cognitive System Profile",
+        f"- Type: {cognitive_type}",
+        f"- first_principles_depth: {fpd}",
+        f"- exploration_breadth: {exp}",
+        f"- speed_vs_rigor_balance: {svr}",
+        f"- challenge_orientation: {cho}",
+        f"- uncertainty_tolerance: {unt}",
+        f"- autonomy_preference: {aut}",
+        "",
+        "## Personalized Operating Contract",
+        f"- {contract}",
+        "- Keep project truth in `docs/*` and narrate major choices in `docs/DECISION_STORY.md`.",
+        "- Preserve your global build narrative in `core/memory/global/build_story.md`.",
+        "",
+        "## What / Why / How Snapshot",
+        "- What: Build a stable multi-agent operating contract adapted to your profile.",
+        "- Why: Reduce cross-tool drift while preserving your decision style.",
+        "- How: deterministic profile + cognition scorecards -> compiled policies -> synced adapters.",
+        "",
+    ]
+
+    out_path = project_root / "core" / "memory" / "global" / ".generated" / "personalization_blueprint.md"
+    _write_text(out_path, "\n".join(lines))
+    print(f"Wrote generated artifact:\n  - {out_path}")
+
+
 def _copy_file(src: Path, dst: Path) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
@@ -2049,11 +2160,16 @@ def _setup_mode_prompt(label: str) -> str:
     return ["survey", "infer", "hybrid", "skip"][choice - 1]
 
 
+def _has_complete_answers(answers: dict[str, int] | None, required_dimensions: list[str]) -> bool:
+    normalized = _normalize_answers(answers or {})
+    return all(dim in normalized for dim in required_dimensions)
+
+
 def _setup_command(
     *,
     path_arg: str,
-    profile_mode: str,
-    cognition_mode: str,
+    profile_mode: str | None,
+    cognition_mode: str | None,
     write: bool,
     overwrite: bool,
     do_sync: bool,
@@ -2066,12 +2182,27 @@ def _setup_command(
         print("Agent OS setup wizard")
         print("Configure deterministic workstyle + cognitive defaults for this machine.")
         print()
-        profile_mode = _setup_mode_prompt("workstyle profile")
-        cognition_mode = _setup_mode_prompt("cognitive profile")
+        if profile_mode is None and cognition_mode is None:
+            questionnaire_first = _prompt_yes_no("Use full questionnaire onboarding (recommended)?", default=True)
+            if questionnaire_first:
+                profile_mode = "survey"
+                cognition_mode = "survey"
+            else:
+                profile_mode = _setup_mode_prompt("workstyle profile")
+                cognition_mode = _setup_mode_prompt("cognitive profile")
+        else:
+            profile_mode = profile_mode or "survey"
+            cognition_mode = cognition_mode or "survey"
+
         write = _prompt_yes_no("Write canonical global memory files now?", default=True)
         overwrite = _prompt_yes_no("Allow overwrite of existing canonical files?", default=False) if write else False
         do_sync = _prompt_yes_no("Run agent-os sync now?", default=True)
         do_doctor = _prompt_yes_no("Run agent-os doctor now?", default=True)
+
+    if profile_mode is None:
+        profile_mode = "infer"
+    if cognition_mode is None:
+        cognition_mode = "infer"
 
     if profile_mode not in {"survey", "infer", "hybrid", "skip"}:
         print(f"Unsupported setup profile mode: {profile_mode}", file=sys.stderr)
@@ -2083,6 +2214,24 @@ def _setup_command(
     if profile_mode == "skip" and cognition_mode == "skip":
         print("Nothing selected (both profile and cognition are skip).")
         return 0
+
+    if not interactive:
+        if profile_mode in {"survey", "hybrid"} and not _has_complete_answers(profile_answers, PROFILE_DIMENSIONS):
+            print(
+                "setup profile mode requires complete answers in non-interactive mode. "
+                "Provide --profile-answers-file (or --answers-file) with all profile dimensions, "
+                "or use --profile-mode infer.",
+                file=sys.stderr,
+            )
+            return 1
+        if cognition_mode in {"survey", "hybrid"} and not _has_complete_answers(cognition_answers, COGNITIVE_DIMENSIONS):
+            print(
+                "setup cognition mode requires complete answers in non-interactive mode. "
+                "Provide --cognition-answers-file (or --answers-file) with all cognitive dimensions, "
+                "or use --cognition-mode infer.",
+                file=sys.stderr,
+            )
+            return 1
 
     path = _resolve_bootstrap_target(path_arg or ".")
 
@@ -2107,6 +2256,8 @@ def _setup_command(
             return rc
     else:
         print("- Skipping cognition setup")
+
+    _write_personalization_blueprint(path)
 
     if do_sync:
         print()
@@ -2272,8 +2423,8 @@ def build_parser() -> argparse.ArgumentParser:
     setup = sub.add_parser("setup", help="Interactive/non-interactive setup wizard for profile + cognition")
     setup.add_argument("path", nargs="?", default=".", help="Project path used for infer/hybrid modes")
     setup.add_argument("--interactive", action="store_true", help="Run interactive wizard prompts")
-    setup.add_argument("--profile-mode", choices=["survey", "infer", "hybrid", "skip"], default="hybrid")
-    setup.add_argument("--cognition-mode", choices=["survey", "infer", "hybrid", "skip"], default="hybrid")
+    setup.add_argument("--profile-mode", choices=["survey", "infer", "hybrid", "skip"], default=None)
+    setup.add_argument("--cognition-mode", choices=["survey", "infer", "hybrid", "skip"], default=None)
     setup.add_argument("--answers-file", metavar="JSON", help="Fallback JSON answers file used by both profile and cognition")
     setup.add_argument("--profile-answers-file", metavar="JSON", help="Optional JSON answers file for profile survey/hybrid")
     setup.add_argument("--cognition-answers-file", metavar="JSON", help="Optional JSON answers file for cognition survey/hybrid")
