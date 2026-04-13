@@ -16,14 +16,20 @@ It is not:
 - a plugin marketplace
 - a replacement for repo-local project truth
 
-## Layer Model
-The system is intentionally layered.
+## 🧬 Layer Model: The Soul and the Vessel
+The system is partitioned to separate **Cognition** from **Execution**.
 
-cognitive-os perspective:
-- Cognitive system = decision-quality policy (reasonings, assumptions, disconfirmation, uncertainty handling)
-- Execution system = operational policy (workflow stages, risk gates, verification, handoff)
-- Memory governance + adapters = cross-runtime continuity without authority fragmentation
-- Accountable evolution = gated improvement with promotion/rollback traceability
+### 🏛️ Cognitive Layer (The Soul)
+This layer defines the "Thinking" and "Reasoning" defaults.
+- **Identity**: Who the agent is (Professional profile, cognitive style).
+- **First Principles**: Foundational reasoning laws (Epistemic humility, disconfirmation).
+- **Governance**: Decision-making limits and ethical boundaries.
+
+### 🛠️ Execution Layer (The Vessel)
+This layer defines "Acting" and "Adapting."
+- **Workflow**: The stages of transformation (Explore -> Plan -> Manifest).
+- **Harnesses**: Mental boundaries for specific tech stacks (Cognitive safety).
+- **Lifecycle Hooks**: Deterministic enforcement of quality (Post-write formatting, pre-commit tests).
 
 ### 1. Global `cognitive-os`
 This is the source of truth for:

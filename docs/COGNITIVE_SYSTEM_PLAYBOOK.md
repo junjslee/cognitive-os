@@ -1,18 +1,13 @@
-# Cognitive System Playbook
+# 📒 Cognitive System Playbook
 
-Purpose: make cognitive-os practical for real delivery while preserving reasoning rigor.
+## 🏛️ Operating Thesis: The Mind-Vessel Duality
+`cognitive-os` operationalizes a dual-system architecture:
+- **Cognitive System (The Soul)**: Governs *how to think*. It improves decision quality and reasoning integrity through formal protocols.
+- **Execution System (The Vessel)**: Governs *how to act*. It improves delivery reliability and verification discipline through deterministic workflows.
 
-This playbook defines how to run a cognitive system (how to think) and workflow system (how to execute) together.
-
-## 1) Operating thesis
-
-cognitive-os operationalizes a dual system:
-- cognitive system: improves decision quality and reasoning integrity
-- execution system: improves delivery reliability and verification discipline
-
-Design rule:
-- cognition without execution becomes abstract
-- execution without cognition becomes brittle
+**Design Rule**: 
+> Cognition without Execution is an abstract hallucination. 
+> Execution without Cognition is a brittle machine.
 
 ## 2) Memory architecture (authoritative boundaries)
 
@@ -37,31 +32,23 @@ Conflict precedence:
 - project > global > episodic
 - explicit human correction overrides inferred memory
 
-## 3) Decision protocol (mandatory)
+## 🧠 3) Cognitive Reasoning Protocol (Mandatory)
+Before committing to any major path, you must project your reasoning onto the **Reasoning Surface**:
 
-For major changes, always write:
-- Knowns
-- Unknowns
-- Assumptions
-- Disconfirmation test
+- **Knowns**: Verified, non-negotiable facts.
+- **Unknowns**: Risks, missing data, or "black boxes."
+- **Assumptions**: The logical leaps we are currently making.
+- **Disconfirmation**: One specific piece of evidence that would prove our reasoning is wrong.
 
-Minimal template:
+This ensures the agent's mind is **falsifiable** and prevents "plausible but wrong" drift.
 
-- Knowns: what is directly verified
-- Unknowns: what could invalidate the plan
-- Assumptions: what is currently believed but unproven
-- Disconfirmation: one test that could prove us wrong quickly
+## 🎭 4) Manifestation Loop (Workflow)
 
-This keeps reasoning auditable and prevents “plausible but wrong” drift.
-
-## 4) Workflow protocol (delivery loop)
-
-Stage loop:
-1. Explore context (`docs/NEXT_STEPS.md`, `docs/PROGRESS.md`, `HARNESS.md`)
-2. Plan with risk and verification checkpoints
-3. Implement smallest reversible increment
-4. Verify with compile/tests/smoke checks
-5. Handoff with explicit next action
+1. **Awareness**: Ingest the **Cognitive Harness** (`HARNESS.md`) and state of the world (`PROGRESS.md`).
+2. **Projection**: Map the logic into `docs/PLAN.md` with explicit verification checkpoints.
+3. **Manifestation**: Implement the smallest reversible increment.
+4. **Verification**: Execute deterministic quality checks (tests, lint, audit).
+5. **Synchronization**: Update memory and hand off with a "So-What Now?" summary.
 
 Output rule:
 - every stage must produce an artifact (plan update, test output, decision note, handoff note)

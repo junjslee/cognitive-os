@@ -143,8 +143,9 @@ def _write_personalization_blueprint(project_root: Path) -> None:
         "# Personalization Blueprint",
         "",
         f"Generated on `{_today()}` from deterministic setup artifacts.",
+        "This document captures your stable operating identity: how you execute and how you think.",
         "",
-        "## Operator System Profile",
+        "## 🧭 Execution Profile (Workstyle)",
         f"- Type: {operator_type}",
         f"- planning_strictness: {planning}",
         f"- risk_tolerance: {risk}",
@@ -153,7 +154,7 @@ def _write_personalization_blueprint(project_root: Path) -> None:
         f"- documentation_rigor: {docs}",
         f"- automation_level: {automation}",
         "",
-        "## Cognitive System Profile",
+        "## 🧠 Thinking Profile (Cognition)",
         f"- Type: {cognitive_type}",
         f"- first_principles_depth: {fpd}",
         f"- exploration_breadth: {exp}",
@@ -162,12 +163,12 @@ def _write_personalization_blueprint(project_root: Path) -> None:
         f"- uncertainty_tolerance: {unt}",
         f"- autonomy_preference: {aut}",
         "",
-        "## Personalized Operating Contract",
+        "## 🔒 Operating Contract",
         f"- {contract}",
         "- Keep project truth in `docs/*` and narrate major choices in `docs/DECISION_STORY.md`.",
         "- Preserve your global build narrative in `core/memory/global/build_story.md`.",
         "",
-        "## What / Why / How Snapshot",
+        "## What / Why / How",
         "- What: Build a stable multi-agent operating contract adapted to your profile.",
         "- Why: Reduce cross-tool drift while preserving your decision style.",
         "- How: deterministic profile + cognition scorecards -> compiled policies -> synced adapters.",
@@ -176,7 +177,7 @@ def _write_personalization_blueprint(project_root: Path) -> None:
 
     out_path = project_root / "core" / "memory" / "global" / ".generated" / "personalization_blueprint.md"
     _write_text(out_path, "\n".join(lines))
-    print(f"Wrote generated artifact:\n  - {out_path}")
+    print(f"✅ Wrote generated artifact:\n  - {out_path}")
 
 
 def _copy_file(src: Path, dst: Path) -> None:
@@ -898,9 +899,9 @@ def _private_skill(action: str, name: str, tool: str) -> int:
 
 def _doctor() -> int:
     failures: list[str] = []
-    print("cognitive-os doctor")
-    print(f"Repo root: {REPO_ROOT}")
-    print(f"Expected Conda root: {CONDA_ROOT}")
+    print("🧠 cognitive-os Awareness Check")
+    print(f"Project Core: {REPO_ROOT}")
+    print(f"Conda Vessel: {CONDA_ROOT}")
 
     conda_bin = CONDA_ROOT / "bin" / "conda"
     if not conda_bin.exists():
@@ -977,7 +978,7 @@ def _doctor() -> int:
             print("  • Ensure Git is installed and you are inside a repository.")
         return 1
 
-    print("\nDoctor passed.")
+    print("\n✅ Awareness verified. The Soul is ready for transition.")
     return 0
 
 
@@ -2419,11 +2420,11 @@ def _setup_command(
     interactive: bool,
 ) -> int:
     if interactive:
-        print("cognitive-os setup wizard")
-        print("Configure deterministic workstyle + cognitive defaults for this machine.")
+        print("🧭 cognitive-os setup")
+        print("Configure execution (workstyle) + thinking (cognition) defaults — your agent's soul.")
         print()
         if profile_mode is None and cognition_mode is None:
-            questionnaire_first = _prompt_yes_no("Use full questionnaire onboarding (recommended)?", default=True)
+            questionnaire_first = _prompt_yes_no("Use questionnaire onboarding now?", default=True)
             if questionnaire_first:
                 profile_mode = "survey"
                 cognition_mode = "survey"
@@ -2434,8 +2435,8 @@ def _setup_command(
             profile_mode = profile_mode or "survey"
             cognition_mode = cognition_mode or "survey"
 
-        write = _prompt_yes_no("Write authoritative global memory files now?", default=True)
-        overwrite = _prompt_yes_no("Allow overwrite of existing authoritative files?", default=False) if write else False
+        write = _prompt_yes_no("Write canonical memory files now?", default=True)
+        overwrite = _prompt_yes_no("Allow overwrite of existing canonical files?", default=False) if write else False
         do_sync = _prompt_yes_no("Run cognitive-os sync now?", default=True)
         do_doctor = _prompt_yes_no("Run cognitive-os doctor now?", default=True)
 
@@ -2509,7 +2510,7 @@ def _setup_command(
             return rc
 
     print()
-    print("Setup complete.")
+    print("✅ Setup complete. Profile and cognition are configured.")
     return 0
 
 
@@ -2589,7 +2590,7 @@ def _bootstrap_project(project_root: Path, *, harness_name: str | None = None) -
 # ---------------------------------------------------------------------------
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="cognitive-os cross-tool runtime manager")
+    parser = argparse.ArgumentParser(description="🧠 cognitive-os: The Identity and Context Layer for Autonomous Agents.")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("init", help="Bootstrap personal memory files from *.example.md templates")
@@ -2723,7 +2724,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     if args.command == "doctor":
         return _doctor()
     if args.command == "sync":
+        print("🛸 Transitioning Soul to all available vessels...")
         _sync_user_runtime()
+        print("✅ Transition complete. Your agents are now aware.")
         return 0
     if args.command == "update":
         return _update()

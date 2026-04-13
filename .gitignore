@@ -18,6 +18,7 @@ core/memory/global/.generated/workstyle_scores.json
 core/memory/global/.generated/workstyle_explanations.md
 core/memory/global/.generated/cognitive_profile.json
 core/memory/global/.generated/cognitive_explanations.md
+core/memory/global/.generated/personalization_blueprint.md
 core/memory/evolution/episodes/*.json
 
 # Secrets and local sensitive artifacts

@@ -1,25 +1,21 @@
-# Run Context
+# 🛠️ Operational Vessel (Run Context)
 
-Last generated: `{{DATE}}`
-
-## Machine
+## 📡 Sensory Input (Machine Metadata)
 - OS: `{{OS_VERSION}}` (`{{OS_BUILD}}`)
 - CPU: `{{CPU}}`
 - Memory: `{{MEM_GB}} GB`
 - Architecture: `{{ARCH}}`
 - Shell: `{{SHELL}}`
 
-## Local Tooling
+## 🗡️ Tooling Manifest
 - Claude Code: `{{CLAUDE_VERSION}}`
 - Cursor: `{{CURSOR_VERSION}}`
 - Git: `{{GIT_VERSION}}`
-- Node: `{{NODE_VERSION}}`
-- npm: `{{NPM_VERSION}}`
 
-## Python Runtime Policy
+## ⛓️ Execution Constraints (Python Runtime)
 - `cognitive-os` local Python work must run in Conda `base`.
 - Expected Conda root: `{{CONDA_ROOT}}`
-- Homebrew Python is not the supported runtime for `cognitive-os`.
+- **Constraint**: Homebrew Python is not a supported runtime.
 
 ## Practical Local Limits
 - This machine is well suited for editing, tests, small automation, and light inference.

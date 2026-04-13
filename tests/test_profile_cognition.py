@@ -265,7 +265,7 @@ class ProfileCognitionTests(unittest.TestCase):
     def test_setup_interactive_prompt_mentions_questionnaire_onboarding(self):
         with patch.object(cli, "_prompt_yes_no", side_effect=[True, False, False, False]) as prompt_yes_no, patch.object(
             cli, "_resolve_bootstrap_target", return_value=Path(".")
-        ), patch.object(cli, "_profile_command", return_value=0), patch.object(cli, "_cognition_command", return_value=0), patch.object(
+        ), patch("sys.stdout", new_callable=io.StringIO) as fake_stdout, patch.object(cli, "_profile_command", return_value=0), patch.object(cli, "_cognition_command", return_value=0), patch.object(
             cli, "_write_personalization_blueprint"
         ) as blueprint_cmd:
             rc = cli._setup_command(
@@ -281,7 +281,8 @@ class ProfileCognitionTests(unittest.TestCase):
                 interactive=True,
             )
         self.assertEqual(rc, 0)
-        prompt_yes_no.assert_any_call("Use full questionnaire onboarding (recommended)?", default=True)
+        prompt_yes_no.assert_any_call("Use questionnaire onboarding now?", default=True)
+        self.assertIn("agent's soul", fake_stdout.getvalue())
         blueprint_cmd.assert_called_once()
     def test_setup_writes_personalization_blueprint_when_scores_available(self):
         with tempfile.TemporaryDirectory() as td:
@@ -327,9 +328,9 @@ class ProfileCognitionTests(unittest.TestCase):
             self.assertTrue(out_path.exists())
             text = out_path.read_text(encoding="utf-8")
             self.assertIn("Personalization Blueprint", text)
-            self.assertIn("Operator System Profile", text)
-            self.assertIn("Cognitive System Profile", text)
-            self.assertIn("Personalized Operating Contract", text)
+            self.assertIn("🧭 Execution Profile (Workstyle)", text)
+            self.assertIn("🧠 Thinking Profile (Cognition)", text)
+            self.assertIn("🔒 Operating Contract", text)
 
     def test_evolve_parser_has_run_report_promote_rollback(self):
         parser = cli.build_parser()

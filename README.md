@@ -1,10 +1,14 @@
-# cognitive-os
+# 🧠 cognitive-os
+**Every AI agent starts as a blank slate. cognitive-os gives them a Soul.**
 
-**Every AI tool you open starts cold. cognitive-os fixes that.**
+`cognitive-os` is a platform-agnostic **Cognitive Architecture** for autonomous agents. It ensures that your identity, memory, and operational philosophy follow you across Claude Code, Codex CLI, Cursor, and Hermes.
 
-`cognitive-os` is a platform-agnostic cognitive + execution operating system for AI work, delivered as a CLI that syncs memory, skills, hooks, and project harnesses across Claude Code, Codex CLI, Cursor, Hermes, and future adapters.
+> Stop managing configuration files. Start managing your agent's consciousness.
 
-> Not a web UI, not a session manager, not a skill marketplace. It's the layer that runs *before* your agent starts work.
+### 🏛️ The Three Pillars
+1.  **Identity (The Soul):** Persistent global profiles that define *who* the agent is (e.g., "First-Principles Strategist" vs "Pragmatic Executor").
+2.  **Context (The Memory):** Repo-specific "Harnesses" that teach the agent *how* to think about your specific tech stack.
+3.  **Sync (The Vessel):** Automated delivery that propagates this identity into every tool you use.
 
 ## System Overview
 
@@ -37,7 +41,7 @@ cognitive-os doctor
 ```
 
 Expected outcome:
-- `Doctor passed.`
+- `Awareness verified.`
 - Claude/Codex/Cursor/Hermes adapter wiring checks shown as `[ok]` or `[info]`
 
 ## Quick terminal tools (optional but recommended)
@@ -426,13 +430,15 @@ cognitive-os sync
 cognitive-os doctor
 ```
 
-### One-command setup wizard
+### One-command setup (execution + thinking)
 
 For first-time setup (or reconfiguration), use:
 
-Defaults by mode:
+This flow sets your agent's soul: stable execution defaults + thinking posture.
+
+Defaults:
 - Non-interactive (`cognitive-os setup .`): `profile-mode=infer`, `cognition-mode=infer`
-- Interactive (`cognitive-os setup . --interactive`): questionnaire-first (`profile-mode=survey`, `cognition-mode=survey`)
+- Interactive (`cognitive-os setup . --interactive`): asks whether to use questionnaire onboarding now; if yes, both modes default to `survey`
 - `write=false` (preview first)
 - `overwrite=false`
 - `sync=false`
@@ -440,11 +446,12 @@ Defaults by mode:
 
 Important:
 - In non-interactive setup, `survey` or `hybrid` requires complete answers via `--profile-answers-file` / `--cognition-answers-file` (or shared `--answers-file`).
-- In interactive setup, you can accept questionnaire-first onboarding or manually choose modes.
-- Use `--interactive` if you want terminal prompts for each question.
+- In interactive setup, missing answers are prompted in-terminal for selected survey/hybrid modes.
+- Interactive prompt order is: onboarding choice -> mode selection (if not questionnaire) -> write/overwrite/sync/doctor -> survey questions.
+- Setup binds both execution policy (workstyle) and cognitive policy (thinking posture) in one flow.
 
 ```bash
-# interactive prompts (questionnaire-first by default; you can choose manual mode selection)
+# interactive prompts
 cognitive-os setup . --interactive
 
 # non-interactive with explicit post-steps
