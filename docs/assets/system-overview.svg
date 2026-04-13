@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860" role="img" aria-label="System overview for cognitive-os">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" role="img" aria-label="System overview for cognitive-os">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#0b1020"/>
@@ -18,12 +18,13 @@
       .h { font: 700 19px Inter, -apple-system, Segoe UI, Arial, sans-serif; fill: #e8f1ff; }
       .t { font: 500 14px Inter, -apple-system, Segoe UI, Arial, sans-serif; fill: #cfdaf0; }
       .mono { font: 500 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; fill: #a8bddf; }
-      .small { font: 500 13px Inter, -apple-system, Segoe UI, Arial, sans-serif; fill: #dbe6ff; }
+      .small { font: 500 13px Inter, -apple-system, Segoe UI, Arial, sans-serif; fill: #dbe6ff; text-anchor: middle; }
+      .h-center { font: 700 19px Inter, -apple-system, Segoe UI, Arial, sans-serif; fill: #e8f1ff; text-anchor: middle; }
       .arrow { stroke: #91a4c8; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
     </style>
   </defs>
 
-  <rect x="0" y="0" width="1600" height="860" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1600" height="960" fill="url(#bg)"/>
 
   <text x="42" y="58" class="title">System Overview</text>
   <text x="42" y="86" class="subtitle">cognitive-os is the authoritative governance backbone that blends with existing agent systems instead of replacing them.</text>
@@ -55,28 +56,44 @@
   <path d="M536,257 L548,257" class="arrow"/>
   <path d="M1048,257 L1060,257" class="arrow"/>
 
-  <rect x="160" y="430" width="1280" height="374" class="panelD"/>
-  <text x="188" y="466" class="h">4) Blend with existing systems through adapters (cognitive-os sync)</text>
-  <text x="188" y="494" class="t">Existing tools keep their native workflows; cognitive-os publishes shared memory/policy so behavior stays aligned.</text>
-  <text x="188" y="518" class="t">Local runtime memory is fast cache; authoritative truth remains in repository docs and contracts.</text>
+  <rect x="42" y="430" width="1516" height="470" class="panelD"/>
+  <text x="74" y="466" class="h">4) Multi-Platform Synchronization (cognitive-os sync)</text>
+  <text x="74" y="494" class="t">Adapters propagate the exact same reasoning principles, shared memory, and structural policy to every target platform.</text>
+  <text x="74" y="518" class="t">Local runtime memory remains a fast cache; the central repository docs dictate the authoritative truth.</text>
 
-  <rect x="212" y="560" width="260" height="108" class="tool"/>
-  <text x="310" y="599" class="h">Claude</text>
-  <text x="237" y="625" class="small">hooks + skills + context index</text>
+  <!-- Claude -->
+  <rect x="74" y="560" width="344" height="150" class="tool"/>
+  <text x="246" y="599" class="h-center">Claude Code</text>
+  <text x="246" y="635" class="small">CLAUDE.md index</text>
+  <text x="246" y="655" class="small">Deterministic safety hooks</text>
+  <text x="246" y="675" class="small">Agent personas + Local skills</text>
 
-  <rect x="500" y="560" width="260" height="108" class="tool"/>
-  <text x="603" y="599" class="h">Codex</text>
-  <text x="536" y="625" class="small">skills + docs + runtime contract</text>
+  <!-- Codex -->
+  <rect x="444" y="560" width="344" height="150" class="tool"/>
+  <text x="616" y="599" class="h-center">Codex CLI</text>
+  <text x="616" y="635" class="small">AGENTS.md workflow compliance</text>
+  <text x="616" y="655" class="small">.codex/config.toml overrides</text>
+  <text x="616" y="675" class="small">Synced global/repo skills</text>
 
-  <rect x="788" y="560" width="260" height="108" class="tool"/>
-  <text x="888" y="599" class="h">Cursor</text>
-  <text x="821" y="625" class="small">skills + repo memory contract</text>
+  <!-- Cursor -->
+  <rect x="814" y="560" width="344" height="150" class="tool"/>
+  <text x="986" y="599" class="h-center">Cursor</text>
+  <text x="986" y="635" class="small">Cursor IDE skill directory</text>
+  <text x="986" y="655" class="small">Project memory indexing</text>
+  <text x="986" y="675" class="small">In-editor review &amp; diff gates</text>
 
-  <rect x="1076" y="560" width="260" height="108" class="tool"/>
-  <text x="1178" y="599" class="h">Hermes</text>
-  <text x="1100" y="625" class="small">OPERATOR context + skills sync</text>
+  <!-- Hermes -->
+  <rect x="1184" y="560" width="344" height="150" class="tool"/>
+  <text x="1356" y="599" class="h-center">Hermes</text>
+  <text x="1356" y="635" class="small">OPERATOR.md composite rules</text>
+  <text x="1356" y="655" class="small">Native skills sync (~/.hermes/skills/)</text>
+  <text x="1356" y="675" class="small">SOUL.md continuous identity</text>
 
-  <text x="188" y="718" class="small">Result: one cognitive backbone, many execution surfaces, consistent decision behavior.</text>
+  <!-- Future target / generic -->
+  <rect x="444" y="740" width="714" height="120" class="tool" stroke-dasharray="8 8"/>
+  <text x="801" y="780" class="h-center">Future Extensibility (MCP / CI / New Agents)</text>
+  <text x="801" y="815" class="small">All platforms consume the same Memory Contract schemas (JSON) and Evolution gates.</text>
+  <text x="801" y="835" class="small">No platform has monopoly over the system structure.</text>
 
   <path d="M800,388 L800,430" class="arrow"/>
 </svg>
