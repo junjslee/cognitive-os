@@ -1,14 +1,55 @@
 # 🧠 cognitive-os
 **Every AI agent starts as a blank slate. cognitive-os gives them a Soul.**
 
-`cognitive-os` is a platform-agnostic **Cognitive Architecture** for autonomous agents. It ensures that your identity, memory, and operational philosophy follow you across Claude Code, Codex CLI, Cursor, and Hermes.
+You use Claude Code, Codex CLI, opencode, Hermes. Each one starts cold. You repeat yourself every session. One agent knows your workflow; the next doesn't. A context reset wipes everything. Skills and preferences drift out of sync across tools.
+
+`cognitive-os` is the missing operating layer. One repo that acts as the persistent cognitive contract for your entire AI stack — identity, memory, skills, safety hooks, and sync.
 
 > Stop managing configuration files. Start managing your agent's consciousness.
 
-### 🏛️ The Three Pillars
-1.  **Identity (The Soul):** Persistent global profiles that define *who* the agent is (e.g., "First-Principles Strategist" vs "Pragmatic Executor").
-2.  **Context (The Memory):** Repo-specific "Harnesses" that teach the agent *how* to think about your specific tech stack.
-3.  **Sync (The Vessel):** Automated delivery that propagates this identity into every tool you use.
+---
+
+## The problem with CLAUDE.md, AGENTS.md, and .cursorrules
+
+These files are good for project-specific instructions. They're not enough on their own:
+
+- **They're per-project.** Your cross-project identity, cognitive posture, and workflow defaults don't live anywhere durable.
+- **They're per-tool.** CLAUDE.md means nothing to Codex. .cursorrules means nothing to Claude Code. You end up maintaining divergent files.
+- **They're static.** No sync mechanism. No structure. No governance. If you update one, the others fall behind.
+- **They have no memory layer.** No episodic trace, no provenance, no conflict semantics. Just flat text that agents forget after a reset.
+
+`cognitive-os` wraps around these files and gives them a backbone. Your `CLAUDE.md` becomes an index into a governed memory system. Your `AGENTS.md` inherits from a global cognitive contract. Your `.cursorrules` gets supplemented with synced skills.
+
+---
+
+## How cognitive-os compares
+
+Most tools in this space either build new agent runtimes or provide memory APIs for applications. `cognitive-os` does neither. It augments the developer tools you already use.
+
+| | cognitive-os | Manual per-tool files | mem0 / OpenMemory | Agno (Phidata) | opencode / omo |
+|---|---|---|---|---|---|
+| **What it is** | Identity + governance layer for your dev tools | CLAUDE.md, AGENTS.md per project | Memory API / service for AI applications | Framework for building new agent apps | Open-source AI coding agent + community harness layer |
+| **Approach** | Augments existing tools (Claude Code, Codex, opencode, Hermes) | Per-tool, per-project, manual | Embedded in application code | Replaces tools with new agent runtime | Agent runtime; community configs layered on top |
+| **Target** | Developers who already use AI coding tools | Same, but with no sync mechanism | App developers embedding memory in products | Teams building new AI applications | Developers who want an open-source Claude Code alternative |
+| **Memory** | Governed markdown + JSON schemas, authoritative | Flat markdown, no schema, no governance | Vector/graph store, API-managed | Runtime-managed per agent | Session-scoped, no persistent identity layer |
+| **Identity** | Your profile, cognitive posture, cross-tool | One file per tool, diverges over time | Not a concept | Agent-level, defined per app | System prompt per session |
+| **Sync** | One command, all tools | Manual copy-paste per tool | N/A | N/A | N/A (per-project config) |
+
+The gap cognitive-os fills: no other project syncs a governed identity + cognitive contract across Claude Code, Codex, opencode, and Hermes in one command. The manual approach (maintaining separate CLAUDE.md, AGENTS.md, and per-tool configs per project) is what most developers do today. That's what cognitive-os replaces.
+
+mem0 and Agno are strong in their lanes -- application memory and agent app building, respectively. They are not developer tool augmentation layers. opencode and omo are excellent runtimes; cognitive-os makes them aware of who you are and how you think.
+
+If you want to keep using the tools you already have -- and just make them sharper, more consistent, and persistent -- that's `cognitive-os`.
+
+---
+
+## 🏛️ The Three Pillars
+
+1. **Identity (The Soul):** Persistent global profiles that define *who* the agent is — cognitive posture, reasoning depth, challenge orientation, operator preferences.
+2. **Context (The Harness):** Repo-specific operating environments that teach the agent *how* to think about your specific tech stack and constraints.
+3. **Sync (The Vessel):** Automated delivery that propagates identity + context into every tool you use, every session.
+
+---
 
 ## System Overview
 
@@ -22,44 +63,73 @@ Structure summary:
 - Structural + operational stack defines roles and authority boundaries.
 - Authoritative memory + policy defines what persists and how conflicts resolve.
 - Workflow + evolution governs execution and safe improvement.
-- `cognitive-os sync` propagates the same operating contract to Claude, Codex, Cursor, and Hermes.
+- `cognitive-os sync` propagates the same operating contract to Claude Code, Codex, opencode, and Hermes.
 
-## Quick start
+---
+
+## ⚡ Quick start
 
 ```bash
 git clone https://github.com/junjslee/cognitive-os ~/cognitive-os
 cd ~/cognitive-os
 pip install -e .
-cognitive-os init
-cognitive-os sync
+cognitive-os init       # generate personal memory files from templates
+cognitive-os sync       # push your identity to Claude, Codex, opencode, Hermes
+cognitive-os doctor     # verify everything wired correctly
 ```
 
-## Verify setup
+Expected output from `doctor`:
+- `Awareness verified.`
+- Claude/Codex/opencode/Hermes adapter checks shown as `[ok]` or `[info]`
+
+### 60-second demo (profile + cognition + sync)
 
 ```bash
-cognitive-os doctor
+cognitive-os profile hybrid . --write     # score your work style
+cognitive-os cognition survey --write     # encode your reasoning posture
+cognitive-os sync                         # push to all agents
+cognitive-os doctor                       # verify
 ```
 
-Expected outcome:
-- `Awareness verified.`
-- Claude/Codex/Cursor/Hermes adapter wiring checks shown as `[ok]` or `[info]`
+Every agent you open now inherits your memory, skills, and governance hooks.
 
-## Quick terminal tools (optional but recommended)
+### Provision the right harness for your project type
 
-For speed in interactive terminal work:
-- `rg` (ripgrep): faster content search than grep
-- `fd`: faster file discovery than find
-- `bat`: better file preview than cat
-- `sd`: easier replacements than sed
-- `ov`: modern pager alternative to less
+```bash
+cognitive-os detect .                          # analyze repo, recommend a harness
+cognitive-os harness apply ml-research .       # apply it
+# or in one shot:
+cognitive-os new-project . --harness auto      # scaffold + auto-detect harness
+```
 
-These are optional. `cognitive-os doctor` reports presence but does not require them.
+---
 
-## Read this next
+## CLI command surface
 
-- Docs index: `docs/README.md`
-- Architecture: `docs/COGNITIVE_OS_ARCHITECTURE.md`
-- Cognitive System Playbook: `docs/COGNITIVE_SYSTEM_PLAYBOOK.md`
+```bash
+cognitive-os init
+cognitive-os doctor
+cognitive-os sync [--governance-pack minimal|balanced|strict]
+cognitive-os new-project [path] --harness auto
+cognitive-os detect [path]
+cognitive-os harness apply <type> [path]
+cognitive-os profile [survey|infer|hybrid] [path] [--write]
+cognitive-os cognition [survey|infer|hybrid] [path] [--write]
+cognitive-os setup [path] [--interactive] [--governance-pack minimal|balanced|strict] [--write] [--sync] [--doctor]
+cognitive-os bridge anthropic-managed --input <managed-events.json> [--project-id <id>] [--dry-run]
+cognitive-os evolve [run|report|promote|rollback] ...
+```
+
+Full command reference: `docs/README.md`
+
+| Task | Command |
+|---|---|
+| Initialize personal files | `cognitive-os init` |
+| Push memory to all agents | `cognitive-os sync` |
+| New project from scaffold | `cognitive-os new-project [path]` |
+| Detect / apply harness | `cognitive-os detect` \| `harness apply <type>` |
+| Deterministic onboarding | `cognitive-os setup . --interactive` |
+| Verify system health | `cognitive-os doctor` |
 
 ---
 
@@ -76,8 +146,8 @@ You use multiple AI coding agents. Each one starts cold. You repeat yourself. Sk
 - cognitive-os operationalizes cognitive policy (how agents think) and execution policy (how agents act) into repeatable workflows.
 - Authoritative project truth lives in repository docs (`AGENTS.md`, `docs/*`), not in any single agent tool.
 - Global operator memory (cross-project) is separate from project memory (repo-local delivery context).
-- Adapters (Claude, Codex, Cursor, Hermes, others) are delivery mechanisms for the same operating contract, not separate authorities.
-- Plugin or tool-native memory systems accelerate retrieval, but do not replace authoritative records.
+- Adapters (Claude, Codex, opencode, Hermes, others) are delivery mechanisms for the same operating contract, not separate authorities.
+- Plugin or tool-native memory systems accelerate retrieval but don't replace authoritative records.
 
 ---
 
@@ -94,7 +164,7 @@ cognitive-os has four layers:
 3) **Project truth layer** (`AGENTS.md`, `docs/*`)
 - what this specific repo is building right now
 
-4) **Adapter layer** (Claude/Codex/Cursor/Hermes)
+4) **Adapter layer** (Claude/Codex/opencode/Hermes)
 - delivery surfaces that consume the same contract
 
 Adapters are not the authority. Repo docs + global memory are.
@@ -103,9 +173,9 @@ Adapters are not the authority. Repo docs + global memory are.
 
 ## Why this architecture wins
 
-- Cross-tool consistency: one authoritative operating contract across Claude/Codex/Cursor/Hermes.
+- Cross-tool consistency: one authoritative operating contract across Claude/Codex/opencode/Hermes.
 - Deterministic setup: profile/cognition onboarding is explainable (`survey`/`infer`/`hybrid`) instead of implicit drift.
-- Authoritative boundary: repo docs + global memory are authority; tool-native memories are acceleration layers.
+- Hard authority boundary: repo docs + global memory are the source of truth; tool-native memories are acceleration layers.
 
 ### Coexistence model (self-evolving agents)
 
@@ -122,7 +192,7 @@ This gives you both: fast local learning and deterministic cross-platform consis
 
 `cognitive-os` and managed runtimes are complementary by design.
 
-- Managed runtime (e.g., Anthropic Managed Agents): execution substrate for long-horizon agent work — brain/harness orchestration, sandbox/tool execution, durable runtime session/event logs.
+- Managed runtime (e.g., Anthropic Managed Agents): execution substrate for long-horizon agent work — orchestration, sandbox/tool execution, durable runtime session/event logs.
 - `cognitive-os`: cross-runtime cognitive control plane — identity, memory governance, authoritative docs, and deterministic policy sync across tools.
 
 Practical model:
@@ -139,43 +209,19 @@ Guided setup in one command:
 
 ![cognitive-os setup demo](docs/assets/setup-demo.svg)
 
-### 60-second demo (workflow + cognition + sync)
-
-```bash
-cognitive-os profile hybrid . --write
-cognitive-os cognition survey --write
-cognitive-os sync
-cognitive-os doctor
-```
-
-Expected outcome:
-- deterministic score artifacts generated under `core/memory/global/.generated/`
-- global memory markdown updated (if `--write` and overwrite rules allow)
-- adapters receive updated runtime context after `sync`
-
-That's it. Every agent you open now inherits your memory, skills, and hooks.
-
-To provision the right operating environment for your project type:
-
-```bash
-cognitive-os detect .                          # analyze repo and recommend a harness
-cognitive-os harness apply ml-research .       # apply it
-# or in one shot:
-cognitive-os new-project . --harness auto      # scaffold + auto-detect harness
-```
-
 ---
 
 ## What gets synced
 
-| Asset | Claude Code | Codex CLI | Cursor | Hermes | OMO / OMX |
+| Asset | Claude Code | Codex CLI | opencode | Hermes | OMO / OMX |
 |---|---|---|---|---|---|
 | Global memory index (`CLAUDE.md`) | ✅ | — | — | — | — |
 | Operator/cognitive/workflow source files (`core/memory/global/*.md`) | via include | source only | source only | composed into `OPERATOR.md` | — |
 | Agent personas | ✅ | — | — | — | ✅ |
-| Skills | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Skills | ✅ | ✅ | — | ✅ | ✅ |
 | Lifecycle hooks | ✅ | — | — | — | ✅ |
-| Authoritative context composite (`OPERATOR.md`) | — | — | — | ✅ | — |
+| Governance subagent | — | — | ✅ (`cognitive-os-governance.md`) | — | — |
+| Authoritative context composite (`OPERATOR.md`) | — | — | via `{file:}` ref | ✅ | — |
 
 Note: this matrix describes current adapter capabilities, not architectural authority. Authoritative truth remains in repository docs and global cognitive-os memory.
 
@@ -235,36 +281,25 @@ Structural governance: `domain-architect` · `reasoning-auditor` · `governance-
 AGENTS.md            vendor-neutral operating manual for any agent
 CLAUDE.md            Claude-native memory index
 docs/
-REQUIREMENTS.md    what is being built
-PLAN.md            staged execution
-PROGRESS.md        completed work and decisions
-NEXT_STEPS.md      next-session handoff
-RUN_CONTEXT.md     runtime assumptions, APIs, execution profiles
-DECISION_STORY.md  narratable what/why/how for major decisions
+  REQUIREMENTS.md    what is being built
+  PLAN.md            staged execution
+  PROGRESS.md        completed work and decisions
+  NEXT_STEPS.md      next-session handoff
+  RUN_CONTEXT.md     runtime assumptions, APIs, execution profiles
+  DECISION_STORY.md  narratable what/why/how for major decisions
 .claude/
-settings.json      permission rules
-settings.local.json  machine-local overrides (gitignored)
+  settings.json      permission rules
+  settings.local.json  machine-local overrides (gitignored)
 ```
 
 ---
 
-## Command reference (essential)
+## Read this next
 
-```bash
-cognitive-os init
-cognitive-os doctor
-cognitive-os sync [--governance-pack minimal|balanced|strict]
-cognitive-os new-project [path] --harness auto
-cognitive-os detect [path]
-cognitive-os harness apply <type> [path]
-cognitive-os profile [survey|infer|hybrid] [path] [--write]
-cognitive-os cognition [survey|infer|hybrid] [path] [--write]
-cognitive-os setup [path] [--interactive] [--governance-pack minimal|balanced|strict] [--write] [--sync] [--doctor]
-cognitive-os bridge anthropic-managed --input <managed-events.json> [--project-id <id>] [--dry-run]
-cognitive-os evolve [run|report|promote|rollback] ...
-```
-
-Full command list is available in `docs/README.md`.
+- Governing philosophy: `docs/CONSTITUTION.md`
+- Docs index: `docs/README.md`
+- Architecture: `docs/COGNITIVE_OS_ARCHITECTURE.md`
+- Cognitive System Playbook: `docs/COGNITIVE_SYSTEM_PLAYBOOK.md`
 
 ---
 
@@ -496,22 +531,18 @@ Answer-file precedence in setup:
 1) `--profile-answers-file` / `--cognition-answers-file` (most specific)
 2) `--answers-file` fallback for both
 
-This command is designed for end users to self-select setup options instead of editing files manually.
-
-
-
 ---
 
-## Command cheat sheet
+## Quick terminal tools (strongly recommended)
 
-| Task | Command |
-|---|---|
-| Initialize personal files | `cognitive-os init` |
-| Propagate memory to agents | `cognitive-os sync` |
-| New project from scaffold | `cognitive-os new-project [path]` |
-| Detect/Apply harness | `cognitive-os detect` \| `harness apply <type>` |
-| Deterministic onboarding | `cognitive-os setup . --interactive` |
-| Verify system health | `cognitive-os doctor` |
+Agents running under cognitive-os use these tools for codebase search, file discovery, and inspection. Install them for the best experience:
+- `rg` (ripgrep): agents use it for codebase search — fast, respects .gitignore, structured output
+- `fd`: agents use it for file discovery — cleaner interface than find, predictable behavior
+- `bat`: cleaner file inspection — syntax highlighting and line numbers in agent-readable output
+- `sd`: safer in-place replacements — explicit, regex-capable, less footgun-prone than sed
+- `ov`: better pager for long outputs — handles wide output and ANSI without mangling it
+
+`rg`, `fd`, and `bat` are treated as local-only (expected on dev workstations). `cognitive-os doctor` checks their presence.
 
 ---
 

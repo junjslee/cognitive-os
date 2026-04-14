@@ -4,7 +4,7 @@
 - **Knowns**:
   - [Verified fact]
 - **Unknowns**:
-  - [Identification of risk/gap]
+  - [Identified risk or gap]
 - **Assumptions**:
   - [Belief requiring validation]
 - **Disconfirmation**:
@@ -15,8 +15,8 @@
 
 ## Key Decisions
 - **Decision**: [Summary]
-  - **Reasoning**: [Top-down explanation]
-  - **Status**: [Accepted/Superseded]
+  - **Reasoning**: [First-principles explanation]
+  - **Status**: [Accepted / Superseded]
 
 ## Validation Results
-- [ ] [Test description]
+- [ ] [Test or check description]

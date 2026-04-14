@@ -1,0 +1,17 @@
+{
+  "name": "claude",
+  "display": "Claude Code",
+  "detect": {
+    "commands": ["claude"],
+    "paths": ["~/.claude"]
+  },
+  "docs_url": "https://docs.anthropic.com/en/docs/claude-code",
+  "sync": {
+    "global_memory_md": "~/.claude/CLAUDE.md",
+    "settings_json": "~/.claude/settings.json",
+    "agents_dir": "~/.claude/agents",
+    "skills_dir": "~/.claude/skills"
+  },
+  "project_contract": "CLAUDE.md",
+  "notes": "CLAUDE.md is an index file using @-include syntax. settings.json is merged not replaced. Hooks are Claude-specific and do not transfer to other runtimes."
+}

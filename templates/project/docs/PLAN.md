@@ -1,7 +1,7 @@
 # Plan
 
 ## Current Goal
-- State the active objective.
+- State the active objective clearly and specifically.
 
 ## Stages
 1. Explore
@@ -13,8 +13,8 @@
 ## Active Stage
 - Explore
 
-## Risks And Unknowns
-- List open questions or blockers.
+## Risks and Unknowns
+- List open questions, dependencies, or blockers. Be specific.
 
 ## Verification Plan
-- Smallest useful checks first.
+- Smallest useful checks first. What passes = done?

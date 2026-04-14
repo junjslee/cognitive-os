@@ -1,0 +1,72 @@
+{
+  "name": "agent-system",
+  "label": "Agent System",
+  "description": "Projects that ARE AI agent systems: cognitive orchestration, LLM pipelines, multi-agent workflows, tool-use frameworks.",
+  "detection": {
+    "file_patterns": [
+      "**/AGENTS.md",
+      "**/CLAUDE.md",
+      "**/agent*.py",
+      "**/orchestrat*.py",
+      "**/pipeline*.py",
+      "**/crew*.py",
+      "**/langgraph*.py",
+      "**/autogen*.py",
+      "**/swarm*.py"
+    ],
+    "import_signatures": [
+      "anthropic",
+      "openai",
+      "langchain",
+      "langgraph",
+      "autogen",
+      "crewai",
+      "swarm",
+      "litellm",
+      "instructor",
+      "pydantic_ai",
+      "smolagents"
+    ],
+    "directory_names": [
+      "agents",
+      "skills",
+      "prompts",
+      "harnesses",
+      "memory",
+      "hooks",
+      "orchestration",
+      "pipelines"
+    ],
+    "config_files": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/settings.json"
+    ]
+  },
+  "execution_profile": "local_or_managed",
+  "profile_description": "LLM inference via API; agent loops run locally or on managed runtimes. Track costs and token usage per run.",
+  "run_context_additions": [
+    "## Agent System Notes",
+    "- Document every prompt template change in PROGRESS.md with before/after and observed behavioral delta.",
+    "- Track token usage and API costs per run session; record in action_log or RUN_CONTEXT.md.",
+    "- Never hardcode API keys; always load from environment variables or a secrets manager.",
+    "- Use bounded loop discipline (max_iterations, timeout, cost ceiling) for any agentic loop.",
+    "- Log agent decisions and tool calls at INFO level for replay and debugging."
+  ],
+  "workflow_notes": [
+    "Treat prompt files as first-class code: version them, review changes, track regressions.",
+    "Use the `bounded-loop-runner` skill for any agent loop that may iterate unboundedly.",
+    "Evaluate agent behavior on a fixed test harness before shipping prompt changes.",
+    "Separate retrieval layer from generation layer — memory is not the model.",
+    "Document agent boundaries, handoff formats, and escalation paths in AGENTS.md."
+  ],
+  "safety_notes": [
+    "Cost acknowledgment required before any paid inference run exceeding estimated budget.",
+    "Never allow agents to modify authoritative memory files without a human review gate.",
+    "Sandbox tool-use permissions to least privilege — deny by default, allow explicitly.",
+    "Log and audit every external tool call made by an agent (shell, browser, file writes).",
+    "Test safety constraints (block_dangerous.py equivalents) before deploying new hooks."
+  ],
+  "recommended_agents": ["planner", "researcher", "implementer", "reviewer"],
+  "recommended_skills": ["bounded-loop-runner", "requirements-to-plan", "research-synthesis"]
+}

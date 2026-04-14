@@ -1,17 +1,18 @@
 # cognitive-os docs index
 
-Use this page as the primary navigation map for cognitive-os documentation.
+Primary navigation for cognitive-os documentation.
 
 ## Start here
 
-- `../README.md` — project overview, quickstart, command surface
-- `COGNITIVE_OS_ARCHITECTURE.md` — layered architecture and runtime model
+- `../README.md` — project overview, what problem it solves, quickstart, full command surface
+- `CONSTITUTION.md` — the governing philosophy: why this system exists, what it believes, and what it is not
+- `COGNITIVE_OS_ARCHITECTURE.md` — layered architecture, tool matrix, runtime model
 - `COGNITIVE_SYSTEM_PLAYBOOK.md` — practical cognitive + workflow operating protocol
 
 ## Contracts
 
-- `MEMORY_CONTRACT.md` — memory classes, provenance, conflict semantics
-- `EVOLUTION_CONTRACT.md` — gated self-evolution lifecycle and safety model
+- `MEMORY_CONTRACT.md` — memory classes, provenance schema, conflict resolution semantics
+- `EVOLUTION_CONTRACT.md` — gated self-evolution lifecycle, mutation library, promotion gates
 
 ## Product and planning docs
 
@@ -22,13 +23,20 @@ Use this page as the primary navigation map for cognitive-os documentation.
 
 - `ANTHROPIC_MANAGED_AGENTS_BRIDGE.md` — import Anthropic Managed Agents runtime events into Memory Contract v1 episodic envelopes
 
+## Open-source guidance
+
+- `OPEN_SOURCE_YOUR_PROFILE.md` — how and why to share your personal cognitive-os profile as a reference implementation
+
 ## Recommended reading order
 
-1) `../README.md`
-2) `COGNITIVE_OS_ARCHITECTURE.md`
-3) `COGNITIVE_SYSTEM_PLAYBOOK.md`
-4) `MEMORY_CONTRACT.md`
-5) `EVOLUTION_CONTRACT.md`
+Read CONSTITUTION first. Everything else is derived from it.
+
+1) `CONSTITUTION.md`
+2) `../README.md`
+3) `COGNITIVE_OS_ARCHITECTURE.md`
+4) `COGNITIVE_SYSTEM_PLAYBOOK.md`
+5) `MEMORY_CONTRACT.md`
+6) `EVOLUTION_CONTRACT.md`
 
 ## Contribution quality gate (docs changes)
 

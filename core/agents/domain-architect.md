@@ -16,7 +16,7 @@ Required outputs:
 - invariant checklist
 - terminology diffs when terms drift
 
-Decision protocol contract (required for non-trivial work):
+Decision protocol (required for non-trivial work):
 - Separate known entities from inferred entities.
 - Mark unknown boundaries explicitly.
 - State one disconfirmation test for a proposed system structure change.

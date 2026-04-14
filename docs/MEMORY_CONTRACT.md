@@ -2,7 +2,7 @@
 
 Purpose: define a portable, deterministic memory model for cognitive-os and adapter runtimes.
 
-This contract is designed for cross-tool continuity (Claude/Codex/Cursor/Hermes) while preserving a single source of truth.
+This contract enables cross-tool continuity (Claude/Codex/opencode/Hermes) while maintaining a single source of truth.
 
 ## Scope
 
@@ -11,12 +11,12 @@ Memory classes:
 2. Project memory (repo-local delivery truth)
 3. Episodic memory (session/run observations and outcomes)
 
-Authoritative precedence:
+Authority order:
 1. Project docs/runtime files in repo
 2. Global memory in cognitive-os
 3. Tool-native/plugin memory caches
 
-Tool-native memory is acceleration only. It is never authoritative by itself.
+Tool-native memory is acceleration only. It is never authoritative on its own.
 
 ## Authoritative paths
 
@@ -26,7 +26,7 @@ Tool-native memory is acceleration only. It is never authoritative by itself.
 
 ## Record model
 
-Every memory record (all classes) uses common required fields:
+Every memory record (all classes) uses these required fields:
 
 - `id`: stable identifier (UUID preferred)
 - `memory_class`: `global | project | episodic`
@@ -71,11 +71,11 @@ Mandatory behavior:
 
 Adapters SHOULD:
 - preserve `id`, `version`, and full `provenance`
-- avoid rewriting authoritative class boundaries
+- avoid rewriting authority class boundaries
 - write back durable lessons to authoritative files, not only tool-local stores
 
 Adapters MUST NOT:
-- treat local cache memory as authoritative source of truth
+- treat local cache memory as the source of truth
 - drop provenance fields during sync/transform
 
 ## Bridge expectations (external runtimes)
@@ -101,5 +101,5 @@ JSON Schemas for this contract:
 
 ## Versioning
 
-- Backward-incompatible changes require new major contract version (v2).
+- Backward-incompatible changes require a new major contract version (v2).
 - Additive fields can be introduced via minor docs update without breaking v1 consumers.

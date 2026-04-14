@@ -1,0 +1,63 @@
+{
+  "name": "cli-tool",
+  "label": "CLI Tool",
+  "description": "Command-line tool projects: argument parsing, terminal UX, shell integration, cross-platform distribution.",
+  "detection": {
+    "file_patterns": [
+      "**/cli.py",
+      "**/main.py",
+      "**/cmd/*.py",
+      "**/commands/*.py",
+      "**/__main__.py",
+      "**/bin/*"
+    ],
+    "import_signatures": [
+      "argparse",
+      "click",
+      "typer",
+      "rich",
+      "prompt_toolkit",
+      "curses",
+      "subprocess",
+      "shutil"
+    ],
+    "directory_names": [
+      "cli",
+      "cmd",
+      "commands",
+      "bin",
+      "scripts"
+    ],
+    "config_files": [
+      "pyproject.toml",
+      "setup.cfg",
+      "Makefile"
+    ]
+  },
+  "execution_profile": "local",
+  "profile_description": "Runs locally on user machines. Prioritize fast startup, clear error messages, and zero-surprise defaults.",
+  "run_context_additions": [
+    "## CLI Tool Notes",
+    "- Every command must exit with a meaningful exit code: 0 for success, non-zero for failure.",
+    "- Error messages go to stderr; all normal output goes to stdout.",
+    "- Never use interactive prompts without a non-interactive fallback flag.",
+    "- Test on macOS, Linux, and Windows (or document explicitly unsupported platforms).",
+    "- Keep startup time under 200ms for simple commands — avoid heavy imports at module load."
+  ],
+  "workflow_notes": [
+    "Design the help text first: if `--help` is confusing, the UX is broken.",
+    "Follow POSIX conventions: short flags (-v) and long flags (--verbose) for all options.",
+    "Provide machine-readable output mode (--json or --output json) for scripting consumers.",
+    "Use explicit defaults and document them in --help; never rely on ambient env vars silently.",
+    "Write integration tests that invoke the CLI as a subprocess to catch argument parsing bugs."
+  ],
+  "safety_notes": [
+    "Never delete files without --dry-run showing what would be removed first.",
+    "Destructive operations (delete, overwrite, reset) require explicit confirmation or --force.",
+    "Validate all path arguments before acting — reject traversal patterns (../) explicitly.",
+    "Credentials passed via flags are visible in process lists; prefer env vars or prompt input.",
+    "Guard against partial writes: write to a temp file and rename atomically where possible."
+  ],
+  "recommended_agents": ["implementer", "reviewer"],
+  "recommended_skills": ["requirements-to-plan", "bounded-loop-runner"]
+}

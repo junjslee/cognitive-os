@@ -16,7 +16,7 @@ Required outputs:
 - unresolved unknowns list
 - minimal disconfirmation plan
 
-Decision protocol contract (required for non-trivial work):
+Decision protocol (required for non-trivial work):
 - Every major claim must be labeled: known, unknown, or assumption.
 - At least one fast disconfirmation test is mandatory.
-- If unknowns dominate, recommend smallest reversible next action instead of broad execution.
+- If unknowns dominate, recommend the smallest reversible next action instead of broad execution.

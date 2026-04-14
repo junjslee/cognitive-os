@@ -10,10 +10,10 @@ This bridge is additive and non-breaking:
 ## Why this exists
 
 Managed runtimes and `cognitive-os` operate at different layers:
-- Managed runtime: execution substrate (agent loop, sandboxes/tools, runtime event durability).
-- `cognitive-os`: cognitive control plane (identity, governance, cross-runtime authoritative memory).
+- Managed runtime: execution substrate — agent loop, sandboxes/tools, runtime event durability.
+- `cognitive-os`: cognitive control plane — identity, governance, cross-runtime authoritative memory.
 
-The bridge connects these layers by transforming runtime events into portable memory envelopes.
+The bridge connects these layers by transforming runtime events into portable memory envelopes that cognitive-os can promote, audit, and sync.
 
 ## Input formats
 
@@ -86,13 +86,13 @@ Envelope shape:
 }
 ```
 
-Event type mapping (runtime -> memory contract):
-- `tool_call`, `tool_result`, `action`, `execute`, `command`, `bash` -> `action`
-- `error`, `exception`, `failure` -> `error`
-- `decision` -> `decision`
-- `verification`, `assertion`, `check` -> `verification`
-- `handoff` -> `handoff`
-- anything else -> `observation`
+Event type mapping (runtime → memory contract):
+- `tool_call`, `tool_result`, `action`, `execute`, `command`, `bash` → `action`
+- `error`, `exception`, `failure` → `error`
+- `decision` → `decision`
+- `verification`, `assertion`, `check` → `verification`
+- `handoff` → `handoff`
+- anything else → `observation`
 
 ## Recommended promotion loop
 

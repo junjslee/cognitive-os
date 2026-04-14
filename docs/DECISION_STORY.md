@@ -1,7 +1,7 @@
 # Decision Story (Template)
 
 Use this file to keep project decisions narratable and auditable.
-Create one section per meaningful decision.
+Create one section per meaningful decision. The goal: anyone (including future-you) can understand not just what was decided, but why — and what would reverse it.
 
 ## Decision DS-001: <title>
 Date:
@@ -10,7 +10,7 @@ Status: proposed | accepted | superseded
 
 ### 1) Context (What)
 - What happened?
-- What friction/problem are we resolving?
+- What friction or problem are we resolving?
 - Scope and affected systems:
 
 ### 2) Stakes (Why)

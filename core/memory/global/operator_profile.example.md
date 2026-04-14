@@ -6,9 +6,9 @@
 - This machine is suited for coding, tests, small automation, and light local inference.
 - Heavy LLM runs, large training, or long autonomous compute loops should default to remote infrastructure.
 - Tool preference:
- - Claude Code for orchestration
- - Cursor for editing and review
- - Codex supported via repo policy and synced skills where useful
+  - Claude Code for orchestration
+  - Cursor for editing and review
+  - Codex supported via repo policy and synced skills where useful
 
 ## Execution Profiles
 

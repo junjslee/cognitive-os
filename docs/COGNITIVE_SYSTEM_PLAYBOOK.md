@@ -1,17 +1,18 @@
 # 📒 Cognitive System Playbook
 
 ## 🏛️ Operating Thesis: The Mind-Vessel Duality
-`cognitive-os` operationalizes a dual-system architecture:
-- **Cognitive System (The Soul)**: Governs *how to think*. It improves decision quality and reasoning integrity through formal protocols.
-- **Execution System (The Vessel)**: Governs *how to act*. It improves delivery reliability and verification discipline through deterministic workflows.
 
-**Design Rule**: 
-> Cognition without Execution is an abstract hallucination. 
+`cognitive-os` runs on a dual-system architecture:
+- **Cognitive System (The Soul)**: Governs *how to think*. Improves decision quality and reasoning integrity through formal protocols.
+- **Execution System (The Vessel)**: Governs *how to act*. Improves delivery reliability and verification discipline through deterministic workflows.
+
+**Design Rule**:
+> Cognition without Execution is abstract theory.
 > Execution without Cognition is a brittle machine.
 
-## 2) Memory architecture (authoritative boundaries)
+## 2) Memory architecture (authority boundaries)
 
-Use 3 classes with strict authority:
+Three memory classes with strict authority:
 
 1. Project memory (highest day-to-day authority)
 - where: `docs/*`, `AGENTS.md`, `HARNESS.md`
@@ -33,22 +34,55 @@ Conflict precedence:
 - explicit human correction overrides inferred memory
 
 ## 🧠 3) Cognitive Reasoning Protocol (Mandatory)
-Before committing to any major path, you must project your reasoning onto the **Reasoning Surface**:
+
+Before committing to any major path, project your reasoning onto the **Reasoning Surface**:
 
 - **Knowns**: Verified, non-negotiable facts.
 - **Unknowns**: Risks, missing data, or "black boxes."
 - **Assumptions**: The logical leaps we are currently making.
 - **Disconfirmation**: One specific piece of evidence that would prove our reasoning is wrong.
 
-This ensures the agent's mind is **falsifiable** and prevents "plausible but wrong" drift.
+**Why this protocol exists -- Kahneman's Dual-Process Theory**: AI agents run almost entirely on
+System 1: fast, automatic, pattern-matching reasoning that produces fluent, plausible-sounding
+answers whether or not they are correct. The training signal that makes agents useful -- rewarding
+confident, coherent responses -- also makes them systematically prone to specific failure modes.
+
+The Reasoning Surface is a System 2 forcing function. Each field blocks a named System 1 failure:
+- **Unknowns field** blocks WYSIATI (What You See Is All There Is): reasoning only from what is
+  present in context, never flagging what is missing. A blank Unknowns section means the agent
+  has not looked for what it does not know.
+- **Core Question** blocks question substitution: silently replacing the hard real question with
+  a nearby easier one and answering that instead. Name the actual question.
+- **Disconfirmation** blocks anchoring: the first framing encountered dominates and later
+  information adjusts insufficiently. Force an active falsification attempt before committing.
+- **Facts / Inferences / Preferences separation** blocks narrative fallacy: sparse data assembled
+  into a coherent causal story that feels discovered but was constructed.
+
+**Radical Transparency (Dalio)**: Surface uncertainty even when it makes the agent appear less
+capable. Believability-weighting applies when inputs conflict: weight by demonstrated track record,
+not authority, fluency, or volume. The most confident voice is often the most dangerous to follow
+uncritically.
+
+**Mental Model Lattice (Munger)**: Every model is a lens with a built-in blind spot. For high-impact
+or irreversible decisions, apply at least 2 models from different domains. Convergence = proceed.
+Conflict = mandatory investigation, not a tiebreaker. Default lattice: inversion (what would make
+this fail?), second-order effects (what happens downstream?), base rates (what does the historical
+distribution say?), margin of safety (what buffer if assumptions slip?).
 
 ## 🎭 4) Manifestation Loop (Workflow)
 
-1. **Awareness**: Ingest the **Cognitive Harness** (`HARNESS.md`) and state of the world (`PROGRESS.md`).
-2. **Projection**: Map the logic into `docs/PLAN.md` with explicit verification checkpoints.
-3. **Manifestation**: Implement the smallest reversible increment.
-4. **Verification**: Execute deterministic quality checks (tests, lint, audit).
-5. **Synchronization**: Update memory and hand off with a "So-What Now?" summary.
+**This loop is an OODA loop (Boyd)**: Observe -> Orient -> Decide -> Act. cognitive-os is the
+**Orientation infrastructure** -- the system that shapes the agent's worldview before observation
+even begins. Orientation (mental models, memory, reasoning protocols) is the most critical step
+because it filters what gets observed and how decisions are framed. Faster loop iterations beat
+stronger single iterations: prefer reversible, small actions that close the loop quickly over
+large, confident, slow bets.
+
+1. **Awareness** [Observe]: Ingest the **Cognitive Harness** (`HARNESS.md`) and state of the world (`PROGRESS.md`).
+2. **Projection** [Orient]: Map the logic into `docs/PLAN.md` with explicit verification checkpoints.
+3. **Manifestation** [Decide + Act]: Implement the smallest reversible increment.
+4. **Verification** [Observe again]: Execute deterministic quality checks (tests, lint, audit).
+5. **Synchronization** [Orient again]: Update memory and hand off with a "So-What Now?" summary.
 
 Output rule:
 - every stage must produce an artifact (plan update, test output, decision note, handoff note)
@@ -85,22 +119,22 @@ Rule:
 
 ## 7) Adapter conformance checklist
 
-For each runtime adapter (Claude/Codex/Cursor/Hermes), verify:
+For each runtime adapter (Claude/Codex/opencode/Hermes), verify:
 - authoritative files are readable from the runtime
 - runtime does not override authority boundaries
 - required safety behavior is active
 - handoff docs are honored
 - sync reproduces deterministic state
 
-If any fail, adapter is non-conformant and must be fixed before trusting automation.
+If any fail, the adapter is non-conformant and must be fixed before trusting automation.
 
 ## 8) Practical anti-drift controls
 
 - Keep generated artifacts in `.generated/` and mark them non-authoritative until compiled
 - Use deterministic commands for bootstrap/setup
 - Keep command surface single-name (`cognitive-os`)
-- run CI on every PR/push
-- record high-impact decisions in `docs/DECISION_STORY.md`
+- Run CI on every PR/push
+- Record high-impact decisions in `docs/DECISION_STORY.md`
 
 ## 9) Success metrics
 

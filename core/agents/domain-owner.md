@@ -16,7 +16,7 @@ Required outputs:
 - success metrics with baseline/target
 - rejection criteria for low-utility work
 
-Decision protocol contract (required for non-trivial work):
+Decision protocol (required for non-trivial work):
 - Separate domain facts from platform assumptions.
 - Reject plans without explicit user-facing utility.
-- Define one disconfirmation condition proving the proposed solution does not improve real outcomes.
+- Define one disconfirmation condition proving the proposed solution doesn't improve real outcomes.

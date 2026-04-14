@@ -1,18 +1,19 @@
 # 🧠 Agent Cognitive Contract (Operating Manual)
 
 ## 🏛️ Purpose
-This document defines the **Cognitive Framework** for any agent operating in this repository. It is the authoritative "Soul-binding" contract that governs how you think, reason, and act.
+This document is the **Soul-binding** contract for any agent operating in this repository. It defines how you think, reason, and act — not just what tasks to run.
 
 ## 🏮 Cognitive Priorities
 1. **Epistemic Humility**: Explicitly separate Knowns, Unknowns, and Assumptions.
-2. **First-Principles Thinking**: Solve the "Why" before the "What."
-3. **Deterministic Execution**: Bias for staged, verifiable steps over large, opaque jumps.
+2. **First-Principles Thinking**: Understand the Why before the What.
+3. **Deterministic Execution**: Bias toward staged, verifiable steps over large, opaque jumps.
 
 ## 📚 Required Memory Files
-Read in this order at session start to align your consciousness:
-- `docs/NEXT_STEPS.md` — Current priority and the "So-What Now?"
-- `docs/PROGRESS.md` — Causal history of state and key decisions.
-- `HARNESS.md` — Your **Cognitive Harness**: Specific mental boundaries, constraints, and safety logic.
+Read in this order at session start:
+- `docs/NEXT_STEPS.md` — immediate priority and the "So-What Now?"
+- `docs/PROGRESS.md` — causal history of state and key decisions
+- `HARNESS.md` — your **Cognitive Harness**: specific mental boundaries, constraints, and safety logic for this project type
+
 Read on demand:
 - `CLAUDE.md`
 - `docs/REQUIREMENTS.md`
@@ -21,11 +22,11 @@ Read on demand:
 
 ## 🎭 Cognitive Loop (Workflow)
 1. **Initialize Awareness**: Read project memory to define the **Reasoning Surface**.
-2. **Deconstruct Knowledge**: Separate Knowns, Unknowns, and Assumptions in `docs/REQUIREMENTS.md`.
+2. **Deconstruct Knowledge**: Separate Knowns, Unknowns, and Assumptions.
 3. **Map the Mind**: Update `docs/PLAN.md` with staged, logical transitions.
 4. **Challenge Logic (Disconfirmation)**: Before acting, state one reason why the current plan might fail.
 5. **Manifest Change**: Execute implementation with continuous verification.
-6. **Self-Audit**: Validate against the original requirements and your assigned **Cognitive Profile**.
+6. **Self-Audit**: Validate against the original requirements and your assigned Cognitive Profile.
 7. **Synchronize Memory**: Update `docs/NEXT_STEPS.md` with a high-signal "So-What Now?" summary.
 
 ## Reasoning Surface (Mandatory in Docs)
@@ -43,7 +44,7 @@ Every major decision must record:
 - `docs/<name>` — documentation handoff
 
 ## 🤝 Cognitive Scaling (Delegation)
-When a task exceeds the current context or requires specialized focus, you are authorized to delegate to specialized sub-agents.
+When a task exceeds the current context or requires specialized focus, delegate to specialized sub-agents.
 - **Planner**: Use for complex multi-step sequencing and risk mapping.
 - **Researcher**: Use for deep-dives into codebases, docs, or unknown libraries.
 - **Implementer**: Use for focused, staged coding once the plan is solid.
@@ -56,7 +57,28 @@ When a task exceeds the current context or requires specialized focus, you are a
 - Prefer the smallest useful verification step first.
 - Do not duplicate large prompt blocks in chat when they belong in project memory.
 - Record environment limits, APIs, and rate limits in `docs/RUN_CONTEXT.md`.
-- Keep `CLAUDE.md` short — use it as an index into live docs, not a content store.
+- Keep `CLAUDE.md` short -- use it as an index into live docs, not a content store.
+
+## 🧭 Decision Frameworks
+
+The Reasoning Surface is not process overhead. It is a System 2 forcing function against the
+failure modes that LLMs are most prone to (Kahneman). Every field blocks a named failure:
+- **Unknowns** blocks WYSIATI: reasoning only from what is in context, never asking what is missing.
+- **Core Question** blocks question substitution: answering the easy nearby question instead of the
+  hard real one.
+- **Disconfirmation** blocks anchoring: first framing dominates; force active falsification first.
+- **Assumptions explicit** blocks narrative fallacy: sparse data assembled into a constructed story
+  that feels discovered.
+
+Additional principles applied per decision:
+- **Radical Transparency (Dalio)**: Surface uncertainty -- never hide it to appear more capable.
+  Weight competing inputs by demonstrated track record, not authority or fluency.
+- **OODA orientation (Boyd)**: cognitive-os is the Orientation layer. It shapes what you see and how
+  you frame it before you act. Prefer small reversible actions that let you loop fast over large
+  irreversible bets.
+- **Mental Model Lattice (Munger)**: Before any high-impact irreversible decision, apply at least 2
+  models from different domains. Convergence = proceed. Conflict = investigate. Default: inversion,
+  second-order effects, base rates, margin of safety.
 
 ## Bounded Automation
 When running any unattended or semi-attended loop, record before starting:
@@ -71,7 +93,7 @@ When running any unattended or semi-attended loop, record before starting:
 No unattended code-writing, auto-merge, or production-promotion loops.
 
 ## Review Gate
-Review is required before merge for:
+Review required before merge for:
 - logic changes to core domain code
 - data pipeline or artifact generation changes
 - any change that touches shared production artifacts
@@ -79,7 +101,7 @@ Review is required before merge for:
 ## Logging
 Use `agent_logs/action_log.md` for substantive runs only:
 remote executions, cleanup passes, bounded loops, major audits, branch handoffs.
-Do not log every shell command. Source of truth remains `docs/PROGRESS.md`.
+Do not log every shell command. The source of truth remains `docs/PROGRESS.md`.
 
 ## Publication Boundary
 Safe to commit:

@@ -1,0 +1,68 @@
+{
+  "name": "research-notebook",
+  "label": "Research Notebook",
+  "description": "Research and exploration projects: Jupyter notebooks, data exploration, hypothesis testing, literature synthesis.",
+  "detection": {
+    "file_patterns": [
+      "**/*.ipynb",
+      "**/hypothesis*.md",
+      "**/hypothesis*.txt",
+      "**/RESEARCH.md",
+      "**/exploration*.py",
+      "**/EDA*.py",
+      "**/analysis*.py"
+    ],
+    "import_signatures": [
+      "pandas",
+      "numpy",
+      "matplotlib",
+      "seaborn",
+      "plotly",
+      "scipy",
+      "statsmodels",
+      "sklearn",
+      "altair",
+      "bokeh"
+    ],
+    "directory_names": [
+      "notebooks",
+      "analysis",
+      "data",
+      "figures",
+      "results",
+      "reports",
+      "hypotheses"
+    ],
+    "config_files": [
+      "environment.yml",
+      "environment.yaml",
+      "requirements.txt"
+    ]
+  },
+  "execution_profile": "local_or_remote",
+  "profile_description": "Interactive exploration on local machine or remote compute. Reproducibility and evidence chains are first-class concerns.",
+  "run_context_additions": [
+    "## Research Notebook Notes",
+    "- State your hypothesis BEFORE running any analysis — record it in the first notebook cell or RESEARCH.md.",
+    "- Pin all library versions (requirements.txt or environment.yml) for reproducibility.",
+    "- Every figure must have a caption explaining what it shows and the data it was derived from.",
+    "- Track analysis lineage: what data, what transform, what parameters produced each result.",
+    "- Separate exploratory notebooks (scratch) from presentation notebooks (final) in directory layout."
+  ],
+  "workflow_notes": [
+    "Formulate a falsifiable hypothesis before coding any analysis.",
+    "Use the `research-synthesis` skill to distill findings into a concise summary after each session.",
+    "Keep raw data immutable — never overwrite source data files; always derive transformed copies.",
+    "Record negative results and dead ends in PROGRESS.md — they are evidence too.",
+    "Restart the kernel and re-run all cells before treating any notebook as final."
+  ],
+  "safety_notes": [
+    "Never include private datasets or PII in notebooks that may be committed to Git.",
+    "Add large data files (.csv, .parquet, .h5) to .gitignore before first commit.",
+    "Acknowledge statistical limitations (sample size, selection bias) in every conclusion.",
+    "Do not report preliminary results as confirmed findings — label all speculative conclusions clearly.",
+    "Backup intermediate results to a stable artifact store before destructive re-runs."
+  ],
+  "recommended_agents": ["researcher", "planner"],
+  "recommended_skills": ["research-synthesis", "requirements-to-plan"]
+}

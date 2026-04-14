@@ -1,38 +1,53 @@
-# cognitive-os Architecture (`cognitive-os` runtime)
+# cognitive-os Architecture
 
 ## Purpose
+
 `cognitive-os` is the cognitive + execution operating system for cross-project development and research workflows. It operationalizes decision quality, memory governance, execution cognition, and accountable evolution.
 
-It is currently distributed via the `cognitive-os` CLI/package for compatibility.
+Distributed via the `cognitive-os` CLI/package.
 
-It exists to provide:
+It provides:
 - stable memory outside chat sessions
 - reusable skills and workflow policy
-- tool-specific adapters for Claude, Codex, and editor-driven work
-- bounded execution patterns such as worktrees, review gates, and handoffs
+- tool-specific adapters for Claude Code, Codex, opencode, and Hermes
+- bounded execution patterns: worktrees, review gates, and handoffs
 
 It is not:
 - a project requirements document
 - a plugin marketplace
 - a replacement for repo-local project truth
 
+## Positioning
+
+cognitive-os is the governance and identity layer that sits above agent platforms. The platforms are delivery vessels; cognitive-os is the authority.
+
+- cognitive-os lives above Claude Code, Codex, opencode, and Hermes. Those tools are adapters -- they consume the cognitive contract but do not define it.
+- No single agent platform is authoritative. cognitive-os is. A context reset in Claude Code, a new Codex session, or a Cursor workspace change does not reset your identity -- only cognitive-os holds that.
+- The layer distinction matters: agent platforms handle execution (run code, call tools, respond in sessions). cognitive-os handles governance (who the agent is, what it knows, how it behaves, what it remembers across sessions and tools).
+- Sync flows one direction: from cognitive-os outward to platforms. Platforms do not write back into cognitive-os automatically; durable lessons are explicitly promoted via `cognitive-os evolve` or manual authoring.
+- This architecture makes cognitive-os portable across the current toolchain and any future tools -- a new adapter can be added without changing the identity layer.
+
 ## 🧬 Layer Model: The Soul and the Vessel
-The system is partitioned to separate **Cognition** from **Execution**.
+
+The system separates **Cognition** from **Execution** deliberately. They reinforce each other — cognition without execution is theory; execution without cognition is a brittle machine.
 
 ### 🏛️ Cognitive Layer (The Soul)
-This layer defines the "Thinking" and "Reasoning" defaults.
-- **Identity**: Who the agent is (Professional profile, cognitive style).
-- **First Principles**: Foundational reasoning laws (Epistemic humility, disconfirmation).
+
+Defines how the agent thinks and reasons.
+- **Identity**: Who the agent is — professional profile, cognitive style, reasoning posture.
+- **First Principles**: Foundational reasoning laws — epistemic humility, disconfirmation discipline.
 - **Governance**: Decision-making limits and ethical boundaries.
 
 ### 🛠️ Execution Layer (The Vessel)
-This layer defines "Acting" and "Adapting."
-- **Workflow**: The stages of transformation (Explore -> Plan -> Manifest).
-- **Harnesses**: Mental boundaries for specific tech stacks (Cognitive safety).
-- **Lifecycle Hooks**: Deterministic enforcement of quality (Post-write formatting, pre-commit tests).
 
-### 1. Global `cognitive-os`
-This is the source of truth for:
+Defines how the agent acts and adapts.
+- **Workflow**: The stages of transformation — Explore → Plan → Manifest.
+- **Harnesses**: Project-type-specific operating environments — execution profiles, constraints, safety notes.
+- **Lifecycle Hooks**: Deterministic quality enforcement — post-write formatting, pre-commit tests, stop-gate checks.
+
+### 1. Global cognitive-os
+
+Source of truth for:
 - personal workflow policy
 - safety defaults
 - shared skills
@@ -42,9 +57,9 @@ This is the source of truth for:
 - sync and bootstrap scripts
 
 ### 2. Project Harness
+
 A harness defines the operating environment for a specific project type.
-It is provisioned once at project creation (or applied to an existing project)
-and lives as `HARNESS.md` in the project root.
+Provisioned once at project creation (or applied to an existing project) and lives as `HARNESS.md` in the project root.
 
 A harness specifies:
 - execution profile (`local`, `remote_gpu`, etc.)
@@ -55,11 +70,11 @@ A harness specifies:
 Available harness types: `ml-research`, `python-library`, `web-app`, `data-pipeline`, `generic`.
 Add custom types by dropping a JSON file into `core/harnesses/`.
 
-Detection: `cognitive-os detect [path]` scores signals in the repo (dependency files, file
-patterns, directory names) and recommends the best match.
+Detection: `cognitive-os detect [path]` scores signals in the repo (dependency files, file patterns, directory names) and recommends the best match.
 
-### 3. Shared Project Memory
-Every project should keep its authoritative truth in repo files such as:
+### 3. Project Memory
+
+Every project keeps its definitive truth in repo files:
 - `AGENTS.md`
 - `docs/REQUIREMENTS.md`
 - `docs/PLAN.md`
@@ -70,31 +85,35 @@ Every project should keep its authoritative truth in repo files such as:
 This layer must remain tool-agnostic.
 
 ### 4. Tool Adapters
+
 Tool-specific runtime files shape behavior without replacing project memory.
 
 Current adapters:
 - Claude:
- `CLAUDE.md`, `.claude/settings.json`, hooks, plugins, and project-local agents if needed
+  `CLAUDE.md`, `.claude/settings.json`, hooks, plugins, and project-local agents if needed
 - Codex:
- `AGENTS.md`, `.codex/config.toml`, repo or global skills, and project-local agents if needed
-- Cursor:
- editor and review surface only unless a future repo explicitly promotes it beyond that role
+  `AGENTS.md`, `.codex/config.toml`, repo or global skills, and project-local agents if needed
+- opencode:
+  `~/.config/opencode/agents/cognitive-os-governance.md` (global governance subagent),
+  `AGENTS.md` (per-project behavioral contract, same file Codex reads)
 - Hermes:
- `~/.hermes/OPERATOR.md` (synced composite), `~/.hermes/SOUL.md` (auto-created on first sync),
- `~/.hermes/skills/` (managed skills)
+  `~/.hermes/OPERATOR.md` (synced composite), `~/.hermes/SOUL.md` (auto-created on first sync),
+  `~/.hermes/skills/` (managed skills)
 - OMO / OMX (Oh-My-OpenAgent / Oh-My-Codex):
- Syncs shared skills, agent personas, and structural governance policy to `~/.omo` or `~/.omx`
+  Syncs shared skills, agent personas, and structural governance policy to `~/.omo` or `~/.omx`
 
 ### 5. Managed Runtime Bridges (additive)
-Managed runtimes (for example Anthropic Managed Agents) are execution substrates that can emit durable event logs.
-`cognitive-os` can ingest those events through bridge commands and convert them into Memory Contract envelopes.
+
+Managed runtimes (for example Anthropic Managed Agents) are execution substrates that emit durable event logs.
+`cognitive-os` ingests those events through bridge commands and converts them into Memory Contract envelopes.
 
 Current bridge:
 - `cognitive-os bridge anthropic-managed --input <events.json>`
   - outputs `memory-contract-v1` envelopes under `core/memory/bridges/anthropic-managed/`
   - does not modify existing adapter sync behavior
 
-### 6. Optional Plugin Or Service Layer
+### 6. Optional Plugin or Service Layer
+
 This layer is optional and non-authoritative.
 
 Examples:
@@ -102,10 +121,11 @@ Examples:
 - MCP servers
 - Codex-side memory tooling
 
-These additions may accelerate work, but they must not become the only place where project truth lives.
+These additions may accelerate work but must never become the only place where project truth lives.
 
-## Source Of Truth Order
-When layers disagree, use this order:
+## Source of Truth Order
+
+When layers disagree, this order wins:
 1. Repo requirements and execution docs
 2. Repo runtime files
 3. Global `cognitive-os` defaults
@@ -114,6 +134,7 @@ When layers disagree, use this order:
 Plugins and local memory services are helpers, not authorities.
 
 ## Memory Model
+
 The memory model is split on purpose.
 
 `cognitive-os profile` adds a deterministic onboarding layer that generates explainable scorecards and compiles workflow policy from explicit rules. Generated artifacts live under `core/memory/global/.generated/` and remain non-authoritative until compiled to global memory markdown (`--write`). Survey-driven modes also support non-interactive `--answers-file` JSON input.
@@ -121,6 +142,7 @@ The memory model is split on purpose.
 `cognitive-os cognition` adds a deterministic cognitive layer for philosophy, decision attitude, and thinking posture. It supports survey, infer, and hybrid modes, and compiles into `cognitive_profile.md` when requested.
 
 ### Memory Contract v1
+
 For portable integrations and deterministic reconciliation, see:
 - Spec: `docs/MEMORY_CONTRACT.md`
 - Schemas: `core/schemas/memory-contract/*.json`
@@ -131,6 +153,7 @@ Contract highlights:
 - deterministic conflict semantics with human override precedence
 
 ### Evolution Contract v1
+
 For safe, auditable self-improvement, see:
 - Spec: `docs/EVOLUTION_CONTRACT.md`
 - Schemas: `core/schemas/evolution/*.json`
@@ -142,6 +165,7 @@ Contract highlights:
 - human-approved promotion with rollback linkage
 
 ### Global Memory
+
 Put stable, cross-project information here:
 - operator preferences
 - naming conventions
@@ -149,8 +173,9 @@ Put stable, cross-project information here:
 - runtime policy
 - cross-project workflow defaults
 
-### Repo Memory
-Put project truth here:
+### Project Memory
+
+Put project-specific truth here:
 - what is being built
 - current milestone
 - current blockers
@@ -159,11 +184,13 @@ Put project truth here:
 - next handoff
 
 ### Plugin Memory
+
 Treat plugin-managed memory as a cache or retrieval layer, not as the authoritative record.
 
 If a plugin retrieves something important enough to matter later, write it back into repo docs or the relevant global memory file.
 
 ## Tool Matrix
+
 ### Claude
 Strengths:
 - hooks
@@ -189,32 +216,36 @@ Use Codex when you want:
 - direct use inside Codex CLI or IDE surfaces
 - the same shared repo memory with lighter tool-specific overhead
 
-### Cursor
+### opencode
 Strengths:
-- editing
-- diff review
-- navigation
+- open-source, provider-agnostic (Claude, OpenAI, local models)
+- TUI-first, built by terminal power users
+- AGENTS.md-compatible (same contract as Codex)
+- strong multi-agent / subagent support via @agent-name invocation
 
-Use Cursor as the editing and inspection surface, not as the primary runtime authority.
+cognitive-os syncs a global governance subagent to `~/.config/opencode/agents/`.
+Per-project contract is AGENTS.md, same as Codex. No per-project adapter file needed.
 
 ## Execution Model
-The standard execution pattern is:
+
+The standard execution pattern:
 1. Explore
 2. Plan
 3. Implement
 4. Review
 5. Handoff
 
-The standard scaling pattern is:
+The standard scaling pattern:
 - one bounded objective per worktree
 - one active owner per worktree
 - review gate before merge
 
-The standard automation boundary is:
+The standard automation boundary:
 - allow bounded loops for clearly defined search or evaluation tasks
 - block unattended destructive changes, auto-merge, and uncontrolled code-writing loops
 
-## Safety And Governance
+## Safety and Governance
+
 - Keep credentials, auth state, and machine-specific overrides local.
 - Keep shared workflow docs and reproducible runtime files in Git.
 - Use Conventional Commits.
@@ -222,13 +253,15 @@ The standard automation boundary is:
 - Keep local Python-backed `cognitive-os` work on Conda `base`.
 
 ## Plugin Integration Policy
-Use this test before adding a plugin or memory layer:
+
+Before adding a plugin or memory layer, verify:
 1. Is it cross-tool or Claude-only?
 2. Does it replace authoritative docs, or only accelerate retrieval?
 3. Can the project still operate without it?
 4. Does it introduce a second source of truth?
 
 ### Optional adapters
+
 `claude-mem` overlaps with `cognitive-os` only partially.
 
 What `cognitive-os` already covers:
@@ -244,7 +277,8 @@ What `claude-mem` adds:
 
 So `claude-mem` is a useful optional Claude layer, but it does not replace `cognitive-os`.
 
-### Codex And `claude-mem`
+### Codex and `claude-mem`
+
 `claude-mem` is Claude-specific. It should not be treated as a Codex memory solution.
 
 For Codex, the current base is:
@@ -255,14 +289,16 @@ For Codex, the current base is:
 
 If deeper Codex memory is needed later, add a Codex-native or tool-neutral layer rather than depending on a Claude-only plugin.
 
-## Bootstrap And Sync
-The workflow is:
+## Bootstrap and Sync
+
+The workflow:
 1. Edit `cognitive-os`
 2. Run `cognitive-os sync`
 3. Bootstrap new repos with `cognitive-os bootstrap`
 4. Use worktrees and repo memory inside each project
 
 ## Non-Goals
+
 - no automatic merge to `main`
 - no plugin-specific lock-in as the base architecture
 - no assumption that one tool's private memory is enough for team-visible project truth

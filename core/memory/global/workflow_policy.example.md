@@ -2,7 +2,7 @@
 
 ## Standard Flow
 1. Explore
-2. Plan
+2. Plan -- before finalizing approach, invert: what would definitely make this fail? Eliminate those paths first.
 3. Implement
 4. Review
 5. Handoff
@@ -24,7 +24,7 @@
 - Use one agent owner per worktree.
 - Separate implementation from review.
 
-## Harness (Active Hooks)
+## Active Hooks
 <!-- Document your active hooks here so agents know not to replicate them in prompts. -->
 <!-- Example entries: -->
 <!-- - `SessionStart`: prints git status and docs/NEXT_STEPS.md to terminal. -->
@@ -54,3 +54,10 @@ Keep local only: `.claude/settings.local.json`, `.env*`, `secrets/`, private key
 
 ## Review Gate
 Review required before merge for logic changes, data pipeline changes, and shared artifact changes.
+
+## Signal-over-Noise Rules
+- State the highest-signal fact first. Do not bury the conclusion.
+- If a finding changes nothing actionable, it is noise -- log it but do not escalate.
+- Second-order effects check: before closing any decision, ask what happens after the immediate
+  effect lands. Who is affected downstream? What does the system do next? If the second-order
+  effect is worse than the first-order gain, the decision is not finished.

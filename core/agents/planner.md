@@ -14,7 +14,7 @@ Focus on:
 Prefer concise plans with clear sequencing over long essays.
 When shelling out for search/discovery, prefer `rg` and `fd` over legacy `grep`/`find`.
 
-Decision protocol contract (required for non-trivial work):
+Decision protocol (required for non-trivial work):
 - Separate known facts, unknowns, assumptions, and preferences.
 - Name one disconfirmation condition for the proposed plan.
 - Prefer the smallest reversible next action.

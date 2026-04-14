@@ -28,6 +28,7 @@ HARNESSES_DIR = REPO_ROOT / "core" / "harnesses"
 GLOBAL_MEMORY_DIR = REPO_ROOT / "core" / "memory" / "global"
 GENERATED_PROFILE_DIR = GLOBAL_MEMORY_DIR / ".generated"
 EVOLUTION_EPISODES_DIR = REPO_ROOT / "core" / "memory" / "evolution" / "episodes"
+MEMORY_RECORDS_DIR = REPO_ROOT / "core" / "memory" / "records"
 ALLOWED_EVOLUTION_MUTATIONS = {
     "prompt_policy_tweak",
     "retrieval_policy_tweak",
@@ -103,6 +104,103 @@ def _load_generated_scores(project_root: Path) -> tuple[dict[str, int] | None, d
     return workstyle_scores, cognitive_scores
 
 
+def _render_identity_summary(workstyle_scores: dict, cognitive_scores: dict) -> str:
+    """Produce a human-readable 2-3 paragraph summary of the operator's identity."""
+    planning = workstyle_scores.get("planning_strictness", 0)
+    risk = workstyle_scores.get("risk_tolerance", 0)
+    testing = workstyle_scores.get("testing_rigor", 0)
+    parallel = workstyle_scores.get("parallelism_preference", 0)
+    docs = workstyle_scores.get("documentation_rigor", 0)
+    automation = workstyle_scores.get("automation_level", 0)
+
+    fpd = cognitive_scores.get("first_principles_depth", 0)
+    exp = cognitive_scores.get("exploration_breadth", 0)
+    svr = cognitive_scores.get("speed_vs_rigor_balance", 0)
+    cho = cognitive_scores.get("challenge_orientation", 0)
+    unt = cognitive_scores.get("uncertainty_tolerance", 0)
+    aut = cognitive_scores.get("autonomy_preference", 0)
+
+    # --- Workstyle paragraph ---
+    if planning >= 2:
+        plan_desc = "plans deliberately before touching code, preferring staged execution over emergent design"
+    else:
+        plan_desc = "moves quickly into implementation, letting structure emerge from the work itself"
+
+    if risk >= 2:
+        risk_desc = "with a conservative posture toward irreversible actions, requiring explicit gates before proceeding"
+    else:
+        risk_desc = "with a bias for speed and reversible progress over heavy approval overhead"
+
+    if docs >= 2:
+        docs_desc = "treats project documentation as an operating contract — decisions, trade-offs, and unknowns must be written down"
+    else:
+        docs_desc = "keeps docs lightweight, preferring code and commits as the primary record"
+
+    if automation >= 2:
+        auto_desc = "relies on strong deterministic automation for quality gates"
+    else:
+        auto_desc = "favors manual review over automated enforcement"
+
+    para1 = (
+        f"As an operator, this person {plan_desc}, {risk_desc}. "
+        f"They {docs_desc}, and {auto_desc}. "
+        f"Testing rigor sits at {'high' if testing >= 2 else 'moderate' if testing == 1 else 'low'} threshold "
+        f"({'blocking on failures' if testing >= 3 else 'targeted tests for touched areas' if testing >= 1 else 'lightweight checks only'}), "
+        f"and parallelism is {'actively structured via multi-lane execution' if parallel >= 2 else 'mostly sequential with occasional parallel tasks'}."
+    )
+
+    # --- Cognitive paragraph ---
+    if fpd >= 2:
+        fpd_desc = "thinks from the ground up — they decompose assumptions before accepting a framing"
+    else:
+        fpd_desc = "tends to reason from heuristics and pattern recognition rather than first principles"
+
+    if exp >= 2:
+        exp_desc = "systematically explores the option space before committing"
+    else:
+        exp_desc = "trusts strong intuitions and commits quickly once a path feels right"
+
+    if cho >= 2:
+        cho_desc = "actively courts adversarial critique of their own plans"
+    else:
+        cho_desc = "values momentum over devil's advocate pressure"
+
+    if unt >= 2:
+        unt_desc = "holds high epistemic standards — unknowns and assumptions must be named, not swept aside"
+    else:
+        unt_desc = "tolerates ambiguity and prefers to learn by doing rather than over-specifying upfront"
+
+    para2 = (
+        f"Cognitively, this operator {fpd_desc}. They {exp_desc} and {cho_desc}. "
+        f"When facing uncertainty, they {unt_desc}. "
+        f"Their speed-vs-rigor balance skews {'toward rigor' if svr >= 2 else 'toward speed'}, "
+        f"and they prefer agents to operate with "
+        f"{'high autonomy within strict boundaries' if aut >= 2 else 'frequent human checkpoints and confirmation loops'}."
+    )
+
+    # --- Contract paragraph ---
+    if planning >= 2 and unt >= 2:
+        contract_para = (
+            "The resulting operating contract is one of structured deliberation: "
+            "staged plans, explicit assumption surfaces, and review gates before irreversible moves. "
+            "Agents should narrate their reasoning, not just their actions."
+        )
+    elif planning <= 1 and risk <= 1:
+        contract_para = (
+            "The resulting operating contract is one of adaptive momentum: "
+            "bias for reversible progress, lightweight checkpoints, and fast feedback loops. "
+            "Agents should prefer doing over deliberating, but checkpoint at natural seams."
+        )
+    else:
+        contract_para = (
+            "The resulting operating contract blends discipline with pragmatism: "
+            "plans are staged but not over-specified, risks are flagged but not paralyzed by, "
+            "and agents are trusted within their bounded scope while key decisions are surfaced for review."
+        )
+
+    return "\n\n".join([para1, para2, contract_para])
+
+
 def _write_personalization_blueprint(project_root: Path) -> None:
     workstyle_scores, cognitive_scores = _load_generated_scores(project_root)
     if not workstyle_scores or not cognitive_scores:
@@ -140,11 +238,17 @@ def _write_personalization_blueprint(project_root: Path) -> None:
         "Bias for reversible progress with lightweight checks and explicit checkpointing."
     )
 
+    identity_summary = _render_identity_summary(workstyle_scores, cognitive_scores)
+
     lines = [
         "# Personalization Blueprint",
         "",
         f"Generated on `{_today()}` from deterministic setup artifacts.",
         "This document captures your stable operating identity: how you execute and how you think.",
+        "",
+        "## 🪪 Operator Identity Summary",
+        "",
+        identity_summary,
         "",
         "## 🧭 Execution Profile (Workstyle)",
         f"- Type: {operator_type}",
@@ -635,7 +739,7 @@ def _machine_context() -> dict[str, str]:
         "ARCH": platform.machine(),
         "SHELL": os.environ.get("SHELL", "unknown"),
         "CLAUDE_VERSION": _tool_version(["claude", "--version"]),
-        "CURSOR_VERSION": _tool_version(["cursor", "--version"], first_line=True),
+        "OPENCODE_VERSION": _tool_version(["opencode", "--version"], first_line=True),
         "GIT_VERSION": _tool_version(["git", "--version"]),
         "NODE_VERSION": _tool_version(["node", "-v"]),
         "NPM_VERSION": _tool_version(["npm", "-v"]),
@@ -1045,10 +1149,23 @@ def _sync_hermes_runtime() -> bool:
 
     # Operator context composite — always regenerated from source
     operator_md = hermes_root / "OPERATOR.md"
+    governance_header = (
+        "# cognitive-os Governance Declaration\n\n"
+        "You are operating under the **cognitive-os** governance system.\n\n"
+        "cognitive-os is the authoritative identity and reasoning layer above any agent platform. "
+        "It defines who you are, how you think, and what constraints govern your actions — "
+        "regardless of which platform is running you.\n\n"
+        "The cognitive profile, workflow policy, and memory contracts below are not suggestions. "
+        "They define how you are required to think and act.\n\n"
+        "The agent platform (Hermes, Claude Code, Codex, Cursor, etc.) is the delivery vessel. "
+        "cognitive-os is the governing soul.\n\n"
+        "---\n\n"
+    )
     sections: list[str] = [
         "# Operator Context\n\n"
         "Generated by `cognitive-os sync`. "
-        "Edit sources in `~/cognitive-os/core/memory/global/`.\n\n"
+        "Edit sources in `~/cognitive-os/core/memory/global/`.\n\n",
+        governance_header,
     ]
     for mem_file in [
         REPO_ROOT / "core" / "memory" / "global" / "overview.md",
@@ -1072,6 +1189,63 @@ def _sync_hermes_runtime() -> bool:
         _write_text(soul_path, soul_content)
         print(f"  - Created Hermes SOUL.md: {soul_path}")
 
+    return True
+
+
+def _sync_opencode_runtime() -> bool:
+    """Sync cognitive-os identity into opencode global agent config.
+
+    opencode stores global agents at ~/.config/opencode/agents/<name>.md
+    Each agent is a markdown file with YAML frontmatter (description, mode, model)
+    and a prompt body. We inject the cognitive-os governance contract as a global
+    system agent that opencode loads for every session.
+
+    See: https://opencode.ai/docs/agents
+    """
+    opencode_global = HOME / ".config" / "opencode" / "agents"
+    # Also check for opencode installed via XDG or legacy paths
+    if not (HOME / ".config" / "opencode").exists():
+        # Check if opencode binary is available even if config dir doesn't exist
+        if not _command_exists("opencode"):
+            return False
+        # Create the directory so we can write the governance agent
+        (HOME / ".config" / "opencode" / "agents").mkdir(parents=True, exist_ok=True)
+
+    operator_md_path = HOME / ".hermes" / "OPERATOR.md"
+
+    # Build the governance agent content
+    # Uses opencode's {file:path} syntax if the OPERATOR.md exists, else inlines
+    if operator_md_path.exists():
+        prompt_body = (
+            "You are operating under the cognitive-os governance system.\n\n"
+            f"{{file:{operator_md_path}}}\n"
+        )
+    else:
+        # Inline a minimal governance declaration
+        sections: list[str] = []
+        for mem_file in [
+            REPO_ROOT / "core" / "memory" / "global" / "overview.md",
+            REPO_ROOT / "core" / "memory" / "global" / "workflow_policy.md",
+            REPO_ROOT / "core" / "memory" / "global" / "cognitive_profile.md",
+        ]:
+            if mem_file.exists():
+                sections.append(mem_file.read_text(encoding="utf-8").rstrip())
+        prompt_body = (
+            "You are operating under the cognitive-os governance system.\n\n"
+            + "\n\n".join(sections)
+            + "\n"
+        )
+
+    agent_md = (
+        "---\n"
+        "description: cognitive-os governance agent — loads operator identity, cognitive "
+        "profile, and workflow policy for every session\n"
+        "mode: subagent\n"
+        "---\n\n"
+        + prompt_body
+    )
+
+    _write_text(opencode_global / "cognitive-os-governance.md", agent_md)
     return True
 
 
@@ -1109,9 +1283,124 @@ def _sync_omx_runtime(governance_mode: str = "balanced") -> bool:
     return True
 
 
+def _sync_check(governance_mode: str = "balanced") -> int:
+    """Check what sync would write/update without making changes.
+
+    Returns 0 if everything is in sync, 1 if changes would be made.
+    """
+    claude_root = HOME / ".claude"
+    codex_root = HOME / ".codex" / "skills"
+    hermes_root = HOME / ".hermes"
+
+    changes_needed: list[str] = []
+    up_to_date: list[str] = []
+
+    def _check_target(path: Path, new_content: str, label: str) -> None:
+        if path.exists():
+            existing = path.read_text(encoding="utf-8")
+            if existing == new_content:
+                up_to_date.append(label)
+            else:
+                changes_needed.append(f"would update: {label}")
+        else:
+            changes_needed.append(f"would create: {label}")
+
+    # Claude CLAUDE.md
+    _check_target(claude_root / "CLAUDE.md", _render_user_claude_md(), "~/.claude/CLAUDE.md")
+
+    # Claude settings.json
+    settings_path = claude_root / "settings.json"
+    cognitive_os = _cognitive_os_settings(governance_mode)
+    if settings_path.exists():
+        try:
+            existing_settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            existing_settings = {}
+    else:
+        existing_settings = {}
+    merged = _merge_claude_settings(existing_settings, cognitive_os)
+    merged = _prune_managed_hook_entries(merged, governance_mode)
+    merged = _enforce_governance_overrides(merged, governance_mode)
+    merged["hooks"] = _dedupe_hooks_map(merged.get("hooks", {}))
+    new_settings_content = json.dumps(merged, indent=2) + "\n"
+    if settings_path.exists():
+        existing_settings_content = settings_path.read_text(encoding="utf-8")
+        if existing_settings_content == new_settings_content:
+            up_to_date.append("~/.claude/settings.json")
+        else:
+            changes_needed.append("would update: ~/.claude/settings.json")
+    else:
+        changes_needed.append("would create: ~/.claude/settings.json")
+
+    # Agent files
+    for agent_file in sorted((REPO_ROOT / "core" / "agents").glob("*.md")):
+        dst = claude_root / "agents" / agent_file.name
+        src_content = agent_file.read_text(encoding="utf-8")
+        if dst.exists() and dst.read_text(encoding="utf-8") == src_content:
+            up_to_date.append(f"~/.claude/agents/{agent_file.name}")
+        else:
+            label = "update" if dst.exists() else "create"
+            changes_needed.append(f"would {label}: ~/.claude/agents/{agent_file.name}")
+
+    # Skills
+    for skill_dir in _managed_skills():
+        for target_root, label_prefix in [
+            (claude_root / "skills", "~/.claude/skills"),
+            (codex_root, "~/.codex/skills"),
+        ]:
+            dst = target_root / skill_dir.name
+            if dst.exists():
+                up_to_date.append(f"{label_prefix}/{skill_dir.name}")
+            else:
+                changes_needed.append(f"would create: {label_prefix}/{skill_dir.name}")
+
+    # Hermes OPERATOR.md
+    if hermes_root.exists():
+        operator_md = hermes_root / "OPERATOR.md"
+        sections: list[str] = [
+            "# Operator Context\n\n"
+            "Generated by `cognitive-os sync`. "
+            "Edit sources in `~/cognitive-os/core/memory/global/`.\n\n"
+        ]
+        for mem_file in [
+            REPO_ROOT / "core" / "memory" / "global" / "overview.md",
+            REPO_ROOT / "core" / "memory" / "global" / "operator_profile.md",
+            REPO_ROOT / "core" / "memory" / "global" / "workflow_policy.md",
+            REPO_ROOT / "core" / "memory" / "global" / "cognitive_profile.md",
+        ]:
+            if mem_file.exists():
+                sections.append(mem_file.read_text(encoding="utf-8").rstrip() + "\n\n")
+        new_operator = "".join(sections)
+        if operator_md.exists() and operator_md.read_text(encoding="utf-8") == new_operator:
+            up_to_date.append("~/.hermes/OPERATOR.md")
+        else:
+            label = "update" if operator_md.exists() else "create"
+            changes_needed.append(f"would {label}: ~/.hermes/OPERATOR.md")
+
+    print("sync --check: dry-run sync state report")
+    print(f"  Governance pack: {governance_mode}")
+    print()
+
+    if up_to_date:
+        print("Up to date:")
+        for item in up_to_date:
+            print(f"  [ok] {item}")
+        print()
+
+    if changes_needed:
+        print("Would change:")
+        for item in changes_needed:
+            print(f"  [diff] {item}")
+        print()
+        print(f"  {len(changes_needed)} target(s) would be updated. Run `cognitive-os sync` to apply.")
+        return 1
+
+    print("Everything is in sync. No changes needed.")
+    return 0
+
+
 def _sync_user_runtime(governance_mode: str = "balanced") -> None:
     claude_root = HOME / ".claude"
-    cursor_root = HOME / ".cursor" / "skills"
     codex_root = HOME / ".codex" / "skills"
 
     _write_text(claude_root / "CLAUDE.md", _render_user_claude_md())
@@ -1138,20 +1427,21 @@ def _sync_user_runtime(governance_mode: str = "balanced") -> None:
 
     for skill_dir in _managed_skills():
         _copy_tree(skill_dir, claude_root / "skills" / skill_dir.name)
-        _copy_tree(skill_dir, cursor_root / skill_dir.name)
         _copy_tree(skill_dir, codex_root / skill_dir.name)
 
     hermes_synced = _sync_hermes_runtime()
+    opencode_synced = _sync_opencode_runtime()
     omo_synced = _sync_omo_runtime(governance_mode)
     omx_synced = _sync_omx_runtime(governance_mode)
 
     print("Synced user runtime:")
     print(f"  - Claude: {claude_root}")
-    print(f"  - Cursor skills: {cursor_root}")
     print(f"  - Codex skills: {codex_root}")
     print(f"  - Governance pack: {governance_mode}")
     if hermes_synced:
         print(f"  - Hermes: {HOME / '.hermes'}")
+    if opencode_synced:
+        print(f"  - opencode: {HOME / '.config' / 'opencode' / 'agents'}")
     if omo_synced:
         print(f"  - OMO: {HOME / '.omo'}")
     if omx_synced:
@@ -1263,6 +1553,113 @@ def _private_skill(action: str, name: str, tool: str) -> int:
 
 
 # ---------------------------------------------------------------------------
+# memory record / list / search
+# ---------------------------------------------------------------------------
+
+def _memory_record(
+    summary: str,
+    memory_class: str,
+    confidence: str,
+    source: str,
+) -> int:
+    record_id = str(uuid.uuid4())
+    record = {
+        "id": record_id,
+        "memory_class": memory_class,
+        "summary": summary,
+        "details": {},
+        "provenance": {
+            "source_type": source,
+            "source_ref": "cli",
+            "captured_at": _now_iso(),
+            "captured_by": "cognitive-os memory record",
+            "confidence": confidence,
+            "evidence_refs": [],
+        },
+        "status": "active",
+        "version": "memory-contract-v1",
+    }
+    out_dir = MEMORY_RECORDS_DIR / memory_class
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{record_id}.memory.json"
+    out_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    print(f"Memory record created: {out_path}")
+    print(f"  id:      {record_id}")
+    print(f"  class:   {memory_class}")
+    print(f"  summary: {summary}")
+    return 0
+
+
+def _memory_list(
+    memory_class: str | None,
+    status: str,
+    limit: int,
+) -> int:
+    classes = [memory_class] if memory_class else ["global", "project", "episodic"]
+    records: list[dict] = []
+    for cls in classes:
+        cls_dir = MEMORY_RECORDS_DIR / cls
+        if not cls_dir.exists():
+            continue
+        for f in cls_dir.glob("*.memory.json"):
+            try:
+                rec = json.loads(f.read_text(encoding="utf-8"))
+                if rec.get("status") == status:
+                    records.append(rec)
+            except (json.JSONDecodeError, OSError):
+                continue
+
+    records.sort(key=lambda r: r.get("provenance", {}).get("captured_at", ""), reverse=True)
+    records = records[:limit]
+
+    if not records:
+        print(f"No {status} memory records found.")
+        return 0
+
+    print(f"{'ID':<38}  {'CLASS':<10}  {'CONF':<8}  {'CAPTURED':<26}  SUMMARY")
+    print("-" * 110)
+    for rec in records:
+        rid = str(rec.get("id", ""))[:36]
+        cls = str(rec.get("memory_class", ""))[:10]
+        conf = str(rec.get("provenance", {}).get("confidence", ""))[:8]
+        ts = str(rec.get("provenance", {}).get("captured_at", ""))[:26]
+        summary = str(rec.get("summary", ""))[:60]
+        print(f"{rid:<38}  {cls:<10}  {conf:<8}  {ts:<26}  {summary}")
+    return 0
+
+
+def _memory_search(query: str) -> int:
+    query_lower = query.lower()
+    found = 0
+    for cls in ["global", "project", "episodic"]:
+        cls_dir = MEMORY_RECORDS_DIR / cls
+        if not cls_dir.exists():
+            continue
+        for f in sorted(cls_dir.glob("*.memory.json")):
+            try:
+                rec = json.loads(f.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            if rec.get("status") != "active":
+                continue
+            summary = str(rec.get("summary", "")).lower()
+            details_str = json.dumps(rec.get("details", {})).lower()
+            if query_lower in summary or query_lower in details_str:
+                if found == 0:
+                    print(f"Search results for: {query!r}")
+                    print()
+                rid = str(rec.get("id", ""))[:36]
+                ts = str(rec.get("provenance", {}).get("captured_at", ""))[:26]
+                print(f"  [{cls}] {rid}  {ts}")
+                print(f"    {rec.get('summary', '')}")
+                print()
+                found += 1
+    if found == 0:
+        print(f"No active records matching {query!r}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # doctor
 # ---------------------------------------------------------------------------
 
@@ -1324,14 +1721,14 @@ def _doctor() -> int:
             failures.append(f"missing tool: {tool}")
 
     # Local-only tools — expected on a dev workstation, not on remote servers or clusters
-    for tool in ["cursor"]:
+    for tool in ["rg", "fd", "bat", "opencode"]:
         if _command_exists(tool):
             print(f"[ok] tool available: {tool}")
         else:
             print(f"[info] local-only tool not installed: {tool} (not required on remote machines)")
 
     # Optional tools
-    for tool in ["tmux", "gh", "codex", "rg", "fd", "bat", "sd", "ov"]:
+    for tool in ["tmux", "gh", "codex", "sd", "ov"]:
         state = "present" if _command_exists(tool) else "not installed"
         print(f"[info] optional tool {tool}: {state}")
 
@@ -1372,6 +1769,36 @@ def _doctor() -> int:
         print("\nWarnings:")
         for item in warnings:
             print(f"  - {item}")
+
+    # --- Runtime Sync State ---
+    print("\n--- Runtime Sync State ---")
+
+    hermes_operator = HOME / ".hermes" / "OPERATOR.md"
+    if hermes_operator.exists() and hermes_operator.stat().st_size > 0:
+        print("[ok] Hermes OPERATOR.md: present and non-empty")
+    else:
+        print("[missing] Hermes OPERATOR.md: not found or empty (run: cognitive-os sync)")
+
+    claude_md = HOME / ".claude" / "CLAUDE.md"
+    if claude_md.exists():
+        print("[ok] Claude global memory: ~/.claude/CLAUDE.md present")
+    else:
+        print("[missing] Claude global memory: ~/.claude/CLAUDE.md not found (run: cognitive-os sync)")
+
+    opencode_config = HOME / ".config" / "opencode" / "agents" / "cognitive-os-governance.md"
+    if opencode_config.exists():
+        print("[ok] opencode governance agent: present")
+    else:
+        print("[info] opencode governance agent: not found (run: cognitive-os sync)")
+
+    try:
+        git_remote = _run(["git", "remote"], cwd=REPO_ROOT, check=False).stdout.strip()
+        if git_remote:
+            print(f"[ok] cognitive-os git remote: {git_remote.splitlines()[0]}")
+        else:
+            print("[info] cognitive-os git remote: no remote configured (local-only repo)")
+    except Exception:
+        print("[info] cognitive-os git remote: could not determine (git not available)")
 
     if failures:
         print("\nDoctor failed:")
@@ -1452,12 +1879,15 @@ def _worktree(task_type: str, task_name: list[str], base_ref: str | None, cwd: P
 def _start(tool: str, cwd: Path) -> int:
     if tool == "claude":
         os.execvp("claude", ["claude"])
-    if tool == "cursor":
-        os.execvp("cursor", ["cursor", str(cwd)])
     if tool == "codex":
         if _command_exists("codex"):
             os.execvp("codex", ["codex"])
         print("Codex CLI is not installed on PATH. Use Codex where available and rely on AGENTS.md plus synced skills.")
+        return 1
+    if tool == "opencode":
+        if _command_exists("opencode"):
+            os.execvp("opencode", ["opencode"])
+        print("opencode is not installed. Install via: npm i -g opencode-ai")
         return 1
     print(f"Unsupported tool: {tool}", file=sys.stderr)
     return 1
@@ -1798,62 +2228,80 @@ def _profile_survey_questions() -> list[dict]:
     return [
         {
             "dimension": "planning_strictness",
-            "question": "How structured is your planning before implementation?",
+            "question": (
+                "You're about to start a non-trivial feature. What do you do first?\n"
+                "  (This reveals how you think BEFORE you act.)"
+            ),
             "choices": [
-                "I usually jump straight into implementation.",
-                "I create a brief checklist first.",
-                "I maintain staged plans for non-trivial work.",
-                "I require explicit staged plans before major implementation.",
+                "Open an editor and start writing — the shape emerges as I go.",
+                "Jot a quick checklist of steps so I don't lose the thread.",
+                "Draft a phased plan with explicit checkpoints before touching code.",
+                "Require a written spec with assumptions, unknowns, and review gate before any implementation.",
             ],
         },
         {
             "dimension": "risk_tolerance",
-            "question": "How conservative should your default execution posture be?",
+            "question": (
+                "An agent proposes an irreversible action (e.g., dropping a DB table, deleting files). What matters most?\n"
+                "  (This reveals your default trust posture.)"
+            ),
             "choices": [
-                "Optimize for speed, tolerate more risk.",
-                "Balanced speed and caution.",
-                "Conservative by default, guardrails preferred.",
-                "Strictly conservative; explicit review/approval gates.",
+                "Speed matters — proceed if the reasoning is sound.",
+                "A quick sanity check is enough; I approve fast.",
+                "I want the agent to pause, state the blast radius, and get confirmation.",
+                "Hard stop: explicit approval gate + rollback plan required before proceeding.",
             ],
         },
         {
             "dimension": "testing_rigor",
-            "question": "How strong should testing requirements be during normal work?",
+            "question": (
+                "You've written a function that touches core business logic. What's the minimum you need before calling it done?\n"
+                "  (This reveals your quality bar, not your skill.)"
+            ),
             "choices": [
-                "Run lightweight checks only.",
-                "Run targeted tests for touched areas.",
-                "Run comprehensive local tests before completion.",
-                "Require robust verification and block completion on failures.",
+                "If it runs without crashing, it ships.",
+                "A quick manual test of the happy path is enough.",
+                "Targeted unit tests for the new logic; CI must pass.",
+                "Comprehensive tests covering edge cases and regressions; blocked until green.",
             ],
         },
         {
             "dimension": "parallelism_preference",
-            "question": "How much parallelization should be encouraged?",
+            "question": (
+                "You have three independent tasks: a bug fix, a new feature, and a doc update. How do you run them?\n"
+                "  (This reveals how you manage cognitive load and context.)"
+            ),
             "choices": [
-                "Mostly single-threaded, one active lane.",
-                "Occasional parallel lanes for independent tasks.",
-                "Frequent bounded parallel lanes with clear ownership.",
-                "Strong preference for structured parallel work via worktrees.",
+                "One at a time, fully sequenced — I finish before I start.",
+                "Maybe two at once if they're truly independent.",
+                "Parallel lanes with clear ownership, synchronized at checkpoints.",
+                "Structured multi-worktree parallelism with explicit merge strategy from the start.",
             ],
         },
         {
             "dimension": "documentation_rigor",
-            "question": "How strictly should project memory docs be maintained?",
+            "question": (
+                "You finish a complex session where decisions were made and trade-offs accepted. What do you write down?\n"
+                "  (This reveals how you treat institutional memory.)"
+            ),
             "choices": [
-                "Minimal notes, only when necessary.",
-                "Keep core docs updated during milestones.",
-                "Maintain requirements/plan/progress consistently.",
-                "Treat docs as mandatory operating contract every session.",
+                "Nothing — the code is the documentation.",
+                "A brief note in a commit message or quick comment.",
+                "Update the relevant PLAN/PROGRESS/DECISIONS docs with key choices.",
+                "Full session debrief: decisions, rejected alternatives, open risks — treated as a mandatory contract.",
             ],
         },
         {
             "dimension": "automation_level",
-            "question": "How much deterministic automation should run by default?",
+            "question": (
+                "A linter fails on a PR. A formatter could auto-fix it, a hook could block it, or you could review manually. What's your default?\n"
+                "  (This reveals how much you trust deterministic automation over human judgment.)"
+            ),
             "choices": [
-                "Mostly manual execution.",
-                "Basic formatting and helper automation.",
-                "Strong automation for quality and consistency.",
-                "Comprehensive deterministic automation with strict guardrails.",
+                "Manual review — I want eyes on everything before it changes.",
+                "Auto-fix is fine for formatting; I still review logic.",
+                "Automate quality gates; block on failures, auto-apply safe fixes.",
+                "Comprehensive automation with strict guardrails — humans review exceptions, not the norm.",
             ],
         },
     ]
@@ -1911,6 +2359,119 @@ def _load_answers_file(path: Path) -> dict[str, int]:
         payload = payload["answers"]
 
     return _normalize_answers(payload)
+
+
+def _profile_gap_survey(project_root: Path, answers: dict[str, int] | None = None) -> dict:
+    """Context-Loading Protocol: load what is known, infer what can be detected, ask only genuine gaps.
+
+    This replaces the blind 'ask all 12 questions' approach. The protocol:
+    1. Load existing generated scores if present (prior knowledge).
+    2. Run infer on the project root to detect behavioral signals.
+    3. For each dimension, determine if a confident score already exists.
+    4. Ask only for dimensions where existing evidence is absent or contradictory.
+    """
+    # Step 1: load any existing generated workstyle scores
+    existing_workstyle, _ = _load_generated_scores(REPO_ROOT)
+
+    # Step 2: run infer to detect repo signals
+    print("Scanning project signals...")
+    inferred = _profile_infer(project_root)
+    inferred_scores: dict[str, int] = inferred.get("scores", {})
+    inferred_evidence: dict[str, list[str]] = inferred.get("evidence", {})
+
+    # Step 3: decide which dimensions need a question
+    # Confidence threshold: if infer produced evidence (>= 1 signal hit), treat as confident
+    # If existing scores also agree, skip the question entirely
+    confirmed_scores: dict[str, int] = {}
+    gaps: list[str] = []
+    loaded_from: dict[str, str] = {}
+
+    for dim in PROFILE_DIMENSIONS:
+        infer_score = inferred_scores.get(dim, 0)
+        infer_ev = inferred_evidence.get(dim, [])
+        existing_score = existing_workstyle.get(dim) if existing_workstyle else None
+
+        if existing_score is not None and len(infer_ev) >= 1:
+            # Both prior score and current evidence exist: use blended value, no question
+            blended = int(round(0.6 * existing_score + 0.4 * infer_score))
+            confirmed_scores[dim] = max(0, min(3, blended))
+            loaded_from[dim] = f"prior score={existing_score}, infer={infer_score} → blended={confirmed_scores[dim]}"
+        elif len(infer_ev) >= 2:
+            # Strong inference evidence: use inferred score, no question
+            confirmed_scores[dim] = infer_score
+            loaded_from[dim] = f"inferred from {len(infer_ev)} signals: {infer_ev[0]}"
+        else:
+            # Gap: insufficient evidence, must ask
+            gaps.append(dim)
+
+    if confirmed_scores:
+        print(f"\nLoaded {len(confirmed_scores)} dimension(s) from existing evidence:")
+        for dim, note in sorted(loaded_from.items()):
+            print(f"  [{dim}] {note}")
+
+    if not gaps:
+        print("\nAll dimensions already covered by existing profile and repo signals.")
+        print("No questions needed. Run with --overwrite to force a fresh survey.")
+        return {
+            "source": "gap_survey",
+            "gaps_asked": 0,
+            "scores": confirmed_scores,
+            "evidence": {d: [loaded_from[d]] for d in confirmed_scores},
+        }
+
+    # Step 4: ask only for genuine gaps
+    print(f"\n{len(gaps)} dimension(s) need your input (insufficient existing evidence):")
+    for dim in gaps:
+        ev = inferred_evidence.get(dim, [])
+        note = f" (detected: {ev[0]})" if ev else " (no signals detected)"
+        print(f"  - {dim}{note}")
+    print()
+
+    normalized_answers = _normalize_answers(answers or {})
+    gap_responses: dict[str, dict] = {}
+    gap_scores: dict[str, int] = {}
+
+    questions_map = {q["dimension"]: q for q in _profile_survey_questions()}
+
+    for dim in gaps:
+        item = questions_map.get(dim)
+        if item is None:
+            continue
+        if dim in normalized_answers:
+            choice_idx = normalized_answers[dim]
+            print(f"[answers-file] {dim}: selected option {choice_idx}")
+        else:
+            choice_idx = _prompt_choice(item["question"], item["choices"])
+        score = choice_idx - 1
+        gap_responses[dim] = {
+            "question": item["question"],
+            "selected_option": choice_idx,
+            "selected_text": item["choices"][choice_idx - 1],
+            "score": score,
+        }
+        gap_scores[dim] = score
+
+    # Merge confirmed + gap answers
+    final_scores = {**confirmed_scores, **gap_scores}
+    final_evidence: dict[str, list[str]] = {}
+    for dim in PROFILE_DIMENSIONS:
+        if dim in gap_scores:
+            item = questions_map.get(dim, {})
+            choices = item.get("choices", [])
+            choice_idx = gap_responses[dim]["selected_option"]
+            final_evidence[dim] = [f"survey option {choice_idx}: {choices[choice_idx - 1] if choices else ''}"]
+        elif dim in confirmed_scores:
+            final_evidence[dim] = [loaded_from[dim]]
+
+    return {
+        "source": "gap_survey",
+        "gaps_asked": len(gaps),
+        "dimensions_confirmed": list(confirmed_scores.keys()),
+        "dimensions_asked": gaps,
+        "scores": final_scores,
+        "responses": gap_responses,
+        "evidence": final_evidence,
+    }
 
 
 def _profile_survey(answers: dict[str, int] | None = None) -> dict:
@@ -2395,62 +2956,80 @@ def _cognition_questions() -> list[dict]:
     return [
         {
             "dimension": "first_principles_depth",
-            "question": "When solving complex problems, how deeply should reasoning decompose assumptions?",
+            "question": (
+                "A bug appears in a system you built 6 months ago. How do you approach the diagnosis?\n"
+                "  (This reveals whether you think top-down or bottom-up.)"
+            ),
             "choices": [
-                "Prefer quick practical heuristics.",
-                "Use light root-cause analysis when needed.",
-                "Usually decompose to core assumptions.",
-                "Strong first-principles decomposition by default.",
+                "Try the obvious fix first — if it works, ship it.",
+                "Scan logs and recent changes; trace backward from the symptom.",
+                "Map the system's assumptions before touching anything, then verify which one broke.",
+                "Decompose the full causal chain from first principles; treat surface symptoms as hypotheses, not facts.",
             ],
         },
         {
             "dimension": "exploration_breadth",
-            "question": "How many alternative options should be explored before committing?",
+            "question": (
+                "You need to choose a technical approach. You have one strong intuition. What do you do?\n"
+                "  (This reveals your epistemic discipline around option space.)"
+            ),
             "choices": [
-                "Pick first viable path and move.",
-                "Compare 1-2 alternatives.",
-                "Evaluate multiple plausible options.",
-                "Systematically explore a broad option set.",
+                "Trust the intuition and move — deliberation is overrated.",
+                "Quickly sanity-check one alternative before committing.",
+                "Evaluate 2-3 plausible options with explicit trade-off notes.",
+                "Map the full option space, score alternatives on shared criteria, then decide.",
             ],
         },
         {
             "dimension": "speed_vs_rigor_balance",
-            "question": "What is your default trade-off between speed and analytical rigor?",
+            "question": (
+                "You're under deadline pressure and the analysis isn't complete. What governs the call?\n"
+                "  (This reveals your default when speed and rigor are in conflict.)"
+            ),
             "choices": [
-                "Prioritize speed; minimal analysis overhead.",
-                "Lean speed with selective rigor.",
-                "Balanced speed and rigor.",
-                "Rigor-first for most meaningful decisions.",
+                "Ship the best available option — perfect is the enemy of done.",
+                "Ship with a noted caveat; clean it up in the next sprint.",
+                "Delay if key unknowns are unresolved; partial rigor isn't rigor.",
+                "Rigorous by default; deadline pressure is a reason to ask for more time, not cut corners.",
             ],
         },
         {
             "dimension": "challenge_orientation",
-            "question": "How adversarial should idea review be?",
+            "question": (
+                "You present a plan. A teammate pushes back hard. How do you want the system to behave?\n"
+                "  (This reveals how much you value adversarial stress-testing of your own ideas.)"
+            ),
             "choices": [
-                "Low challenge; preserve flow and momentum.",
-                "Moderate challenge on important decisions.",
-                "Frequent structured critique of assumptions.",
-                "Strong devil’s-advocate stress testing by default.",
+                "Protect the plan's momentum — debate slows things down.",
+                "Acknowledge the pushback and address it briefly, then continue.",
+                "Treat pushback as valuable signal; steelman the critique before defending.",
+                "Actively solicit devil's advocate challenges before committing to any plan.",
             ],
         },
         {
             "dimension": "uncertainty_tolerance",
-            "question": "How should the system operate under ambiguity?",
+            "question": (
+                "You're asked to give an estimate for something you've never done before. What's your approach?\n"
+                "  (This reveals your epistemic honesty about what you don't know.)"
+            ),
             "choices": [
-                "Proceed quickly with minimal uncertainty framing.",
-                "Proceed with lightweight assumptions.",
-                "State assumptions and confidence explicitly.",
-                "Require explicit uncertainty and failure-mode analysis.",
+                "Give a number confidently — uncertainty is someone else's problem to manage.",
+                "Give a range, but don't belabor the unknowns.",
+                "State key assumptions explicitly alongside the estimate.",
+                "Require explicit uncertainty quantification: confidence interval, named assumptions, and disconfirmation criteria.",
             ],
         },
         {
             "dimension": "autonomy_preference",
-            "question": "How autonomous should agent execution be by default?",
+            "question": (
+                "An agent has been given a task and hits an ambiguous decision point mid-execution. What should it do?\n"
+                "  (This reveals your philosophy on agent autonomy vs. human oversight.)"
+            ),
             "choices": [
-                "Human-in-the-loop for most actions.",
-                "Moderate autonomy with frequent checkpoints.",
-                "High autonomy within bounded constraints.",
-                "Very high autonomy with strict deterministic boundaries.",
+                "Make the best call and move on — I'll review the result.",
+                "Proceed with a logged assumption and surface it in the summary.",
+                "Pause and present the decision point with a recommendation before acting.",
+                "Full stop: surface the ambiguity, require explicit resolution before any action.",
             ],
         },
     ]
@@ -2777,6 +3356,8 @@ def _profile_command(
         payload = _profile_infer(project_root)
     elif mode == "hybrid":
         payload = _profile_hybrid(project_root, answers=answers)
+    elif mode == "gap":
+        payload = _profile_gap_survey(project_root, answers=answers)
     else:
         print(f"Unsupported profile mode: {mode}", file=sys.stderr)
         return 1
@@ -3023,18 +3604,177 @@ def _bootstrap_project(project_root: Path, *, harness_name: str | None = None) -
 # Parser and main
 # ---------------------------------------------------------------------------
 
+
+def _audit(fix: bool = False) -> int:
+    """Reasoning audit: verify the current project session has addressed cognitive unknowns."""
+
+    TARGET_FILES = ["PROGRESS.md", "PLAN.md", "NEXT_STEPS.md"]
+    REASONING_SECTIONS = ["## Knowns", "## Unknowns", "## Assumptions", "## Disconfirmation"]
+    REASONING_SURFACE_HEADER = "## Reasoning Surface"
+    SOWATNOW_PATTERNS = ["## So-What Now?", "## TL;DR", "## So What Now?"]
+    CHECKPOINT_PATTERNS = ["checkpoint", "verification", "verify", "gate", "acceptance criteria"]
+
+    REASONING_STUB = """
+
+## Reasoning Surface
+
+### Knowns
+- _fill in verified facts_
+
+### Unknowns
+- _fill in identified gaps or risks_
+
+### Assumptions
+- _fill in critical beliefs that require validation_
+
+### Disconfirmation
+- _What would prove us wrong? What signal would trigger a pivot?_
+"""
+
+    SOWATNOW_STUB = """
+
+## So-What Now?
+
+> _TL;DR: What is the single most important next action and why?_
+
+- **Immediate**: _fill in_
+- **Blockers**: _fill in_
+- **Open Questions**: _fill in_
+"""
+
+    # Walk up from cwd to find target files
+    cwd = Path.cwd()
+    found_files: dict[str, Path] = {}
+    search_dir = cwd
+    for _ in range(6):  # walk up at most 6 levels
+        for fname in TARGET_FILES:
+            candidate = search_dir / "docs" / fname
+            if candidate.exists() and fname not in found_files:
+                found_files[fname] = candidate
+            # also check directly in the dir
+            candidate2 = search_dir / fname
+            if candidate2.exists() and fname not in found_files:
+                found_files[fname] = candidate2
+        if search_dir.parent == search_dir:
+            break
+        search_dir = search_dir.parent
+
+    results: list[tuple[str, str, bool, str]] = []  # (check_name, file_path, passed, detail)
+    files_needing_reasoning_stub: list[Path] = []
+    files_needing_sowatnow_stub: list[Path] = []
+
+    for fname in TARGET_FILES:
+        if fname not in found_files:
+            results.append((f"{fname}: found", "not found", False, "file not present in project or docs/"))
+            continue
+
+        fpath = found_files[fname]
+        content = fpath.read_text(encoding="utf-8", errors="ignore")
+        content_lower = content.lower()
+
+        results.append((f"{fname}: found", str(fpath), True, ""))
+
+        # Check for Reasoning Surface block
+        has_reasoning_surface = REASONING_SURFACE_HEADER.lower() in content_lower
+        has_all_sections = all(sec.lower() in content_lower for sec in REASONING_SECTIONS)
+        reasoning_ok = has_reasoning_surface or has_all_sections
+        results.append(
+            (f"{fname}: Reasoning Surface", str(fpath), reasoning_ok,
+             "has Knowns/Unknowns/Assumptions/Disconfirmation" if reasoning_ok else "missing Reasoning Surface block")
+        )
+        if not reasoning_ok:
+            files_needing_reasoning_stub.append(fpath)
+
+        # NEXT_STEPS.md: check for So-What Now? / TL;DR
+        if fname == "NEXT_STEPS.md":
+            has_sowatnow = any(pat.lower() in content_lower for pat in SOWATNOW_PATTERNS)
+            results.append(
+                (f"{fname}: So-What Now? / TL;DR", str(fpath), has_sowatnow,
+                 "summary section present" if has_sowatnow else "missing 'So-What Now?' or 'TL;DR' section")
+            )
+            if not has_sowatnow:
+                files_needing_sowatnow_stub.append(fpath)
+
+        # PLAN.md: check for verification checkpoints
+        if fname == "PLAN.md":
+            has_checkpoints = any(pat in content_lower for pat in CHECKPOINT_PATTERNS)
+            results.append(
+                (f"{fname}: Verification Checkpoints", str(fpath), has_checkpoints,
+                 "checkpoint/verification language found" if has_checkpoints else "no explicit verification checkpoints found")
+            )
+
+    # Print results
+    print()
+    print("cognitive-os audit — Reasoning Check")
+    print("=" * 50)
+    all_passed = True
+    for check_name, fpath_str, passed, detail in results:
+        status = "[ok]" if passed else "[missing]"
+        line = f"  {status:<10} {check_name}"
+        if detail and not passed:
+            line += f"\n             -> {detail}"
+        if fpath_str and fpath_str != "not found" and passed:
+            line += f"\n             -> {fpath_str}"
+        print(line)
+        if not passed:
+            all_passed = False
+
+    print()
+    if all_passed:
+        print("All reasoning checks passed. Session is cognitively sound.")
+    else:
+        print("Some checks are missing. Run with --fix to append stub blocks.")
+
+    # --fix: append stubs to files missing them
+    if fix:
+        print()
+        print("Applying --fix: appending missing reasoning stubs...")
+        for fpath in files_needing_reasoning_stub:
+            existing = fpath.read_text(encoding="utf-8", errors="ignore")
+            fpath.write_text(existing.rstrip() + REASONING_STUB, encoding="utf-8")
+            print(f"  [fixed] appended Reasoning Surface stub to {fpath}")
+        for fpath in files_needing_sowatnow_stub:
+            existing = fpath.read_text(encoding="utf-8", errors="ignore")
+            fpath.write_text(existing.rstrip() + SOWATNOW_STUB, encoding="utf-8")
+            print(f"  [fixed] appended So-What Now? stub to {fpath}")
+        if not files_needing_reasoning_stub and not files_needing_sowatnow_stub:
+            print("  Nothing to fix — all stubs already present.")
+
+    return 0 if all_passed else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="🧠 cognitive-os: The Identity and Context Layer for Autonomous Agents.")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("init", help="Bootstrap personal memory files from *.example.md templates")
     sub.add_parser("doctor", help="Verify runtime wiring — Conda, core tools, optional tools")
-    sync = sub.add_parser("sync", help="Sync managed runtime assets into Claude, Codex, Cursor, and Hermes")
+
+    memory_cmd = sub.add_parser("memory", help="Create, list, and search memory records")
+    memory_sub = memory_cmd.add_subparsers(dest="memory_action", required=True)
+    m_record = memory_sub.add_parser("record", help="Create a new memory record")
+    m_record.add_argument("--summary", required=True, help="Short human-readable summary of the memory")
+    m_record.add_argument("--class", dest="memory_class", choices=["global", "project", "episodic"], default="episodic")
+    m_record.add_argument("--confidence", choices=["low", "medium", "high"], default="medium")
+    m_record.add_argument("--source", choices=["human", "agent", "tool"], default="human")
+    m_list = memory_sub.add_parser("list", help="List memory records")
+    m_list.add_argument("--class", dest="memory_class", choices=["global", "project", "episodic"], default=None)
+    m_list.add_argument("--status", choices=["active", "archived", "superseded"], default="active")
+    m_list.add_argument("--limit", type=int, default=20)
+    m_search = memory_sub.add_parser("search", help="Search active memory records by text")
+    m_search.add_argument("query", help="Text to search for (case-insensitive)")
+
+    sync = sub.add_parser("sync", help="Sync managed runtime assets into Claude, Codex, opencode, and Hermes")
     sync.add_argument(
         "--governance-pack",
         choices=["minimal", "balanced", "strict"],
         default="balanced",
         help="Runtime governance profile for hook/safety integration (default: balanced)",
+    )
+    sync.add_argument(
+        "--check",
+        action="store_true",
+        help="Dry-run: show what would be written/updated without making changes. Exits 1 if changes needed.",
     )
     sub.add_parser("update", help="Pull the latest cognitive-os from git")
     sub.add_parser("list", help="Show installed agents, skills, plugins, and active hooks")
@@ -3079,6 +3819,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_hybrid.add_argument("--write", action="store_true", help="Compile generated scores into global memory markdown files")
     p_hybrid.add_argument("--overwrite", action="store_true", help="Allow overwriting existing global memory markdown files")
 
+    p_gap = profile_sub.add_parser(
+        "gap",
+        help="Context-Loading Protocol: load existing scores, detect repo signals, ask only missing dimensions",
+    )
+    p_gap.add_argument("path", nargs="?", default=".")
+    p_gap.add_argument("--answers-file", metavar="JSON", help="Optional JSON file with prefilled answers for gap dimensions")
+    p_gap.add_argument("--write", action="store_true", help="Compile generated scores into global memory markdown files")
+    p_gap.add_argument("--overwrite", action="store_true", help="Allow overwriting existing global memory markdown files")
+
     profile_sub.add_parser("show", help="Show the latest generated workstyle scorecard")
 
     cognition_cmd = sub.add_parser("cognition", help="Deterministic cognitive/philosophy profiling")
@@ -3120,6 +3869,9 @@ def build_parser() -> argparse.ArgumentParser:
     setup.add_argument("--sync", action="store_true", help="Run cognitive-os sync after setup")
     setup.add_argument("--doctor", action="store_true", help="Run cognitive-os doctor after setup")
 
+    audit = sub.add_parser("audit", help="Reasoning check: verify the current project session has addressed cognitive unknowns")
+    audit.add_argument("--fix", action="store_true", help="Append stub Reasoning Surface blocks to files that are missing them")
+
     worktree = sub.add_parser("worktree", help="Create a git worktree for a bounded task")
     worktree.add_argument("task_type")
     worktree.add_argument("task_name", nargs="+")
@@ -3131,7 +3883,7 @@ def build_parser() -> argparse.ArgumentParser:
     private_skill.add_argument("--tool", default="claude")
 
     start = sub.add_parser("start", help="Start the preferred agent surface")
-    start.add_argument("tool", nargs="?", default="claude", choices=["claude", "cursor", "codex"])
+    start.add_argument("tool", nargs="?", default="claude", choices=["claude", "codex", "opencode"])
 
     evolve = sub.add_parser("evolve", help="Run and manage gated self-evolution episodes")
     evolve_sub = evolve.add_subparsers(dest="evolve_action", required=True)
@@ -3185,7 +3937,26 @@ def main(argv: Iterable[str] | None = None) -> int:
         return _init_memory()
     if args.command == "doctor":
         return _doctor()
+    if args.command == "memory":
+        if args.memory_action == "record":
+            return _memory_record(
+                summary=args.summary,
+                memory_class=args.memory_class,
+                confidence=args.confidence,
+                source=args.source,
+            )
+        if args.memory_action == "list":
+            return _memory_list(
+                memory_class=getattr(args, "memory_class", None),
+                status=args.status,
+                limit=args.limit,
+            )
+        if args.memory_action == "search":
+            return _memory_search(args.query)
+        return 0
     if args.command == "sync":
+        if getattr(args, "check", False):
+            return _sync_check(getattr(args, "governance_pack", "balanced"))
         print("🛸 Transitioning Soul to all available vessels...")
         _sync_user_runtime(getattr(args, "governance_pack", "balanced"))
         print("✅ Transition complete. Your agents are now aware.")
@@ -3244,7 +4015,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     if args.command == "profile":
         if args.profile_action == "show":
             return _profile_show()
-        if args.profile_action in ("survey", "infer", "hybrid"):
+        if args.profile_action in ("survey", "infer", "hybrid", "gap"):
             path_arg = getattr(args, "path", ".")
             answers = None
             answers_file = getattr(args, "answers_file", None)
@@ -3361,6 +4132,8 @@ def main(argv: Iterable[str] | None = None) -> int:
                 dry_run=bool(getattr(args, "dry_run", False)),
             )
         return 0
+    if args.command == "audit":
+        return _audit(fix=getattr(args, "fix", False))
     parser.error(f"unsupported command: {args.command}")
     return 2
 

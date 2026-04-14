@@ -16,7 +16,7 @@ Required outputs:
 - risk register updates
 - rollback reference and trigger conditions
 
-Decision protocol contract (required for non-trivial work):
-- Confirm authoritative authority path (project > global > episodic).
+Decision protocol (required for non-trivial work):
+- Confirm the authority path (project > global > episodic).
 - Record safety assumptions and failure modes.
 - Include one concrete rollback trigger before approval.
