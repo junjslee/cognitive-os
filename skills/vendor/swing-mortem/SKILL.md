@@ -407,3 +407,10 @@ before any projected traffic event exceeding 3x baseline.
 - **With deep-dive-analyzer:** For complex systems, run `deep-dive-analyzer` first to understand the full architecture, then `swing-mortem` to identify where it could fail. Understanding precedes risk analysis.
 - **With skill-composer:** Chain as `deep-dive-analyzer` → `swing-mortem` → `swing-options` for a full "understand → anticipate failure → generate alternatives" pipeline.
 - **With orchestrator strategy team:** Pre-mortem output feeds directly into the strategy team's Devil's Advocate agent for additional stress-testing of the risk assessment itself.
+
+## Provenance
+
+- Source: `whynowlab/swing-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

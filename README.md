@@ -185,12 +185,20 @@ Note: this matrix describes current adapter capabilities, not architectural auth
 
 Hooks run deterministically — they can't be overridden by model behavior.
 
+Governance packs for `sync`/`setup --sync`:
+- `minimal`: baseline safety hooks only (`block_dangerous`, formatter/test/checkpoint/quality gate)
+- `balanced` (default): `minimal` + workflow/context/prompt advisories
+- `strict`: `balanced` + removes generic `PermissionRequest` auto-allow fallback while preserving custom permission hooks
+
 | Hook | Event | What it does |
 |---|---|---|
 | `session_context.py` | `SessionStart` | Prints branch, git status, and `NEXT_STEPS.md` at session open |
 | `block_dangerous.py` | `PreToolUse Bash` | Blocks `rm -rf`, `git reset --hard`, `git push --force`, `sudo`, `pkill`, and more |
+| `workflow_guard.py` | `PreToolUse Write\|Edit\|MultiEdit` | Advisory nudge to keep `docs/PLAN.md`, `docs/PROGRESS.md`, and `docs/NEXT_STEPS.md` aligned with implementation edits |
+| `prompt_guard.py` | `PreToolUse Write\|Edit\|MultiEdit` | Advisory detection of prompt-injection-like patterns when writing durable context files (`docs/`, `AGENTS.md`, `CLAUDE.md`) |
 | `format.py` | `PostToolUse Write\|Edit` | Auto-runs `ruff` (Python) or `prettier` (JS/TS) after every file write |
 | `test_runner.py` | `PostToolUse Write\|Edit` | Runs pytest / jest on the file if it's a test file |
+| `context_guard.py` | `PostToolUse Bash\|Edit\|Write\|MultiEdit\|Agent\|Task` | Advisory warning when session context budget approaches compaction thresholds |
 | `quality_gate.py` | `Stop` | Blocks completion if tests fail (opt-in via `.quality-gate` in project root) |
 | `checkpoint.py` | `Stop` | Auto-commits uncommitted changes as `chkpt:` after every turn |
 | `precompact_backup.py` | `PreCompact` | Backs up session transcripts before context compaction |
@@ -245,13 +253,13 @@ settings.local.json  machine-local overrides (gitignored)
 ```bash
 cognitive-os init
 cognitive-os doctor
-cognitive-os sync
+cognitive-os sync [--governance-pack minimal|balanced|strict]
 cognitive-os new-project [path] --harness auto
 cognitive-os detect [path]
 cognitive-os harness apply <type> [path]
 cognitive-os profile [survey|infer|hybrid] [path] [--write]
 cognitive-os cognition [survey|infer|hybrid] [path] [--write]
-cognitive-os setup [path] [--interactive] [--write] [--sync] [--doctor]
+cognitive-os setup [path] [--interactive] [--governance-pack minimal|balanced|strict] [--write] [--sync] [--doctor]
 cognitive-os bridge anthropic-managed --input <managed-events.json> [--project-id <id>] [--dry-run]
 cognitive-os evolve [run|report|promote|rollback] ...
 ```
@@ -460,6 +468,7 @@ Defaults:
 - `overwrite=false`
 - `sync=false`
 - `doctor=false`
+- `governance-pack=balanced` (applies when `--sync` is enabled)
 
 Important:
 - In non-interactive setup, `survey` or `hybrid` requires complete answers via `--profile-answers-file` / `--cognition-answers-file` (or shared `--answers-file`).
@@ -472,7 +481,7 @@ Important:
 cognitive-os setup . --interactive
 
 # non-interactive with explicit post-steps
-cognitive-os setup . --write --sync --doctor
+cognitive-os setup . --write --sync --governance-pack strict --doctor
 
 # fully scripted with separate answer files (required for survey/hybrid in non-interactive mode)
 cognitive-os setup . \
@@ -515,3 +524,9 @@ Before publishing:
 - `git status` and `git rev-list --left-right --count @{u}...HEAD`
 
 If these pass, the repo is in a clean, reproducible state for push.
+
+## Vendor skill provenance (inspired, not copied)
+
+- Required vendor attribution map: `skills/vendor/SOURCES.md`
+- Every vendor skill should include a `## Provenance` section in `SKILL.md` when imported/adapted
+- Run `cognitive-os validate` to surface manifest/provenance warnings before shipping

@@ -74,3 +74,10 @@ If the user provides files (sprint data, velocity charts, team feedback, or prev
    ```
 
 Save as markdown. Keep the tone constructive — the goal is improvement, not blame.
+
+## Provenance
+
+- Source: `phuryn/pm-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

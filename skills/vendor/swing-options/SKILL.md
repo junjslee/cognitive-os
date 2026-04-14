@@ -220,3 +220,10 @@ Why this is better:
 - **Ignoring constraints:** Wild card options should still be achievable within stated constraints, just via unexpected paths.
 - **Toothless Hidden Assumptions:** "Option 1 is probably best" is not an assumption analysis. Name the specific assumption, state what would break it, and point to which options benefit.
 - **Criteria laundering:** Don't pick Decision Matrix criteria that naturally favor the conventional choice. If Option 1 wins every row, your criteria are biased — call it out.
+
+## Provenance
+
+- Source: `whynowlab/swing-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

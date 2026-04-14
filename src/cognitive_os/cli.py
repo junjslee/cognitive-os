@@ -725,7 +725,7 @@ def _render_user_claude_md() -> str:
     )
 
 
-def _cognitive_os_settings() -> dict:
+def _cognitive_os_settings(governance_mode: str = "balanced") -> dict:
     hooks_dir = REPO_ROOT / "core" / "hooks"
     py = f"{CONDA_ROOT}/bin/python"
 
@@ -737,7 +737,45 @@ def _cognitive_os_settings() -> dict:
 
     checkpoint_cmd = f"{py} {hooks_dir / 'checkpoint.py'}"
 
-    return {
+    pretool_entries = [
+        {
+            "matcher": "Bash",
+            "hooks": [hook_cmd("block_dangerous.py")],
+        }
+    ]
+    posttool_entries = [
+        {
+            "matcher": "Write|Edit|MultiEdit",
+            "hooks": [hook_cmd("format.py", async_=True)],
+        },
+        {
+            "matcher": "Write|Edit|MultiEdit",
+            "hooks": [hook_cmd("test_runner.py")],
+        },
+    ]
+
+    # Governance profiles are inspired by your local runtime discipline,
+    # but implemented as cognitive-os-native policy packs.
+    mode = (governance_mode or "balanced").strip().lower()
+    if mode in {"balanced", "strict"}:
+        pretool_entries.extend([
+            {
+                "matcher": "Write|Edit|MultiEdit",
+                "hooks": [hook_cmd("workflow_guard.py")],
+            },
+            {
+                "matcher": "Write|Edit|MultiEdit",
+                "hooks": [hook_cmd("prompt_guard.py")],
+            },
+        ])
+        posttool_entries.append(
+            {
+                "matcher": "Bash|Edit|Write|MultiEdit|Agent|Task",
+                "hooks": [hook_cmd("context_guard.py")],
+            }
+        )
+
+    settings = {
         "permissions": {
             "deny": [
                 "Read(./.env)",
@@ -752,22 +790,8 @@ def _cognitive_os_settings() -> dict:
             "SessionStart": [
                 {"hooks": [hook_cmd("session_context.py")]}
             ],
-            "PreToolUse": [
-                {
-                    "matcher": "Bash",
-                    "hooks": [hook_cmd("block_dangerous.py")],
-                }
-            ],
-            "PostToolUse": [
-                {
-                    "matcher": "Write|Edit|MultiEdit",
-                    "hooks": [hook_cmd("format.py", async_=True)],
-                },
-                {
-                    "matcher": "Write|Edit|MultiEdit",
-                    "hooks": [hook_cmd("test_runner.py")],
-                },
-            ],
+            "PreToolUse": pretool_entries,
+            "PostToolUse": posttool_entries,
             "PermissionRequest": [
                 {
                     "matcher": "Read|Glob|Grep",
@@ -787,12 +811,66 @@ def _cognitive_os_settings() -> dict:
         },
     }
 
+    if mode == "strict":
+        # In strict mode we don't auto-allow generic read/glob/grep requests.
+        settings["hooks"].pop("PermissionRequest", None)
+
+    return settings
+
+
+def _normalize_hook_command(cmd: str) -> str:
+    if not cmd:
+        return ""
+    c = cmd.replace("\\", "/")
+    c = c.replace("/agent-os/", "/cognitive-os/")
+    return c
+
+
+def _dedupe_hooks_map(hooks: dict) -> dict:
+    if not isinstance(hooks, dict):
+        return {}
+    out: dict = {}
+    for event, entries in hooks.items():
+        if not isinstance(entries, list):
+            continue
+        deduped_entries = []
+        seen = set()
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            matcher = entry.get("matcher", "*")
+            hook_list = entry.get("hooks", [])
+            if not isinstance(hook_list, list):
+                continue
+            key_parts = []
+            for h in hook_list:
+                if not isinstance(h, dict):
+                    continue
+                cmd = _normalize_hook_command(str(h.get("command", "")))
+                h_type = h.get("type", "command")
+                if cmd:
+                    key_parts.append(("cmd", cmd, bool(h.get("async", False)), h_type))
+                else:
+                    # Preserve non-command hooks while still deduping exact duplicates.
+                    key_parts.append(("obj", json.dumps(h, sort_keys=True, separators=(",", ":"))))
+            if not key_parts:
+                continue
+            key = (event, matcher, tuple(key_parts))
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped_entries.append(entry)
+        if deduped_entries:
+            out[event] = deduped_entries
+    return out
+
 
 def _merge_claude_settings(existing: dict, cognitive_os: dict) -> dict:
     """Merge cognitive_os settings into existing without removing anything.
 
     - permissions.deny: union (no duplicates)
     - hooks.<event>: append cognitive-os entries whose commands aren't already present
+    - hook dedupe: remove exact duplicate entries and normalize legacy /agent-os paths
     - All other existing keys: preserved untouched
     """
     import copy
@@ -808,13 +886,147 @@ def _merge_claude_settings(existing: dict, cognitive_os: dict) -> dict:
         registered_cmds: set[str] = set()
         for entry in existing_entries:
             for h in entry.get("hooks", []):
-                registered_cmds.add(h.get("command", ""))
+                registered_cmds.add(_normalize_hook_command(h.get("command", "")))
         for entry in entries:
-            new_cmds = {h.get("command", "") for h in entry.get("hooks", [])}
+            new_cmds = {_normalize_hook_command(h.get("command", "")) for h in entry.get("hooks", [])}
             if not new_cmds.issubset(registered_cmds):
                 existing_entries.append(entry)
 
+    # normalize any legacy command paths in-place
+    hooks = merged.get("hooks", {})
+    if isinstance(hooks, dict):
+        for _, entries in hooks.items():
+            if not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                hook_list = entry.get("hooks", [])
+                if not isinstance(hook_list, list):
+                    continue
+                for h in hook_list:
+                    if isinstance(h, dict) and isinstance(h.get("command"), str):
+                        h["command"] = _normalize_hook_command(h["command"])
+
+    merged["hooks"] = _dedupe_hooks_map(merged.get("hooks", {}))
     return merged
+
+
+def _collect_managed_hook_commands(settings: dict) -> set[str]:
+    commands: set[str] = set()
+    hooks = settings.get("hooks", {}) if isinstance(settings, dict) else {}
+    if not isinstance(hooks, dict):
+        return commands
+    for entries in hooks.values():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            hook_list = entry.get("hooks", [])
+            if not isinstance(hook_list, list):
+                continue
+            for h in hook_list:
+                if not isinstance(h, dict):
+                    continue
+                cmd = _normalize_hook_command(str(h.get("command", "")))
+                if cmd:
+                    commands.add(cmd)
+    return commands
+
+
+def _prune_managed_hook_entries(settings: dict, governance_mode: str) -> dict:
+    """Keep external hooks, but remove managed hooks not in selected pack."""
+    mode = (governance_mode or "balanced").strip().lower()
+    expected = _collect_managed_hook_commands(_cognitive_os_settings(mode))
+    managed_any: set[str] = set()
+    for m in ("minimal", "balanced", "strict"):
+        managed_any.update(_collect_managed_hook_commands(_cognitive_os_settings(m)))
+
+    hooks = settings.get("hooks")
+    if not isinstance(hooks, dict):
+        return settings
+
+    pruned: dict = {}
+    for event, entries in hooks.items():
+        if not isinstance(entries, list):
+            pruned[event] = entries
+            continue
+
+        out_entries = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                out_entries.append(entry)
+                continue
+
+            hook_list = entry.get("hooks", [])
+            if not isinstance(hook_list, list):
+                out_entries.append(entry)
+                continue
+
+            kept_hooks = []
+            for h in hook_list:
+                if not isinstance(h, dict):
+                    kept_hooks.append(h)
+                    continue
+                cmd = _normalize_hook_command(str(h.get("command", "")))
+                if cmd and cmd in managed_any and cmd not in expected:
+                    continue
+                kept_hooks.append(h)
+
+            if kept_hooks:
+                new_entry = dict(entry)
+                new_entry["hooks"] = kept_hooks
+                out_entries.append(new_entry)
+
+        if out_entries:
+            pruned[event] = out_entries
+
+    settings["hooks"] = pruned
+    return settings
+
+
+def _is_default_permission_allow_hook(hook: dict) -> bool:
+    if not isinstance(hook, dict):
+        return False
+    if str(hook.get("type", "command")) != "command":
+        return False
+    cmd = _normalize_hook_command(str(hook.get("command", ""))).strip().lower()
+    return cmd.startswith("echo ") and "decision" in cmd and "allow" in cmd
+
+
+def _enforce_governance_overrides(settings: dict, governance_mode: str) -> dict:
+    """Apply governance-mode overrides that must win over additive merges."""
+    mode = (governance_mode or "balanced").strip().lower()
+    if mode != "strict":
+        return settings
+
+    hooks = settings.get("hooks")
+    if isinstance(hooks, dict):
+        current = hooks.get("PermissionRequest")
+        if isinstance(current, list):
+            kept_entries = []
+            for entry in current:
+                if not isinstance(entry, dict):
+                    kept_entries.append(entry)
+                    continue
+                matcher = str(entry.get("matcher", "")).strip()
+                hook_list = entry.get("hooks", [])
+                if matcher != "Read|Glob|Grep" or not isinstance(hook_list, list):
+                    kept_entries.append(entry)
+                    continue
+
+                filtered = [h for h in hook_list if not _is_default_permission_allow_hook(h)]
+                if filtered:
+                    new_entry = dict(entry)
+                    new_entry["hooks"] = filtered
+                    kept_entries.append(new_entry)
+
+            if kept_entries:
+                hooks["PermissionRequest"] = kept_entries
+            else:
+                hooks.pop("PermissionRequest", None)
+    return settings
 
 
 def _sync_hermes_runtime() -> bool:
@@ -863,41 +1075,41 @@ def _sync_hermes_runtime() -> bool:
     return True
 
 
-def _sync_omo_runtime() -> bool:
+def _sync_omo_runtime(governance_mode: str = "balanced") -> bool:
     omo_root = HOME / ".omo"
     if not omo_root.exists():
         return False
-    
+
     # OMO uses agents, skills, and hooks similar to our layout
     for agent_file in (REPO_ROOT / "core" / "agents").glob("*.md"):
         _copy_file(agent_file, omo_root / "agents" / agent_file.name)
-        
+
     for skill_dir in _managed_skills():
         _copy_tree(skill_dir, omo_root / "skills" / skill_dir.name)
-        
+
     # Hooks
-    _write_text(omo_root / "settings.json", json.dumps(_cognitive_os_settings(), indent=2) + "\n")
+    _write_text(omo_root / "settings.json", json.dumps(_cognitive_os_settings(governance_mode), indent=2) + "\n")
     return True
 
 
-def _sync_omx_runtime() -> bool:
+def _sync_omx_runtime(governance_mode: str = "balanced") -> bool:
     omx_root = HOME / ".omx"
     if not omx_root.exists():
         return False
-    
+
     # OMX uses agents, skills, and hooks similar to our layout
     for agent_file in (REPO_ROOT / "core" / "agents").glob("*.md"):
         _copy_file(agent_file, omx_root / "agents" / agent_file.name)
-        
+
     for skill_dir in _managed_skills():
         _copy_tree(skill_dir, omx_root / "skills" / skill_dir.name)
-        
+
     # Hooks
-    _write_text(omx_root / "settings.json", json.dumps(_cognitive_os_settings(), indent=2) + "\n")
+    _write_text(omx_root / "settings.json", json.dumps(_cognitive_os_settings(governance_mode), indent=2) + "\n")
     return True
 
 
-def _sync_user_runtime() -> None:
+def _sync_user_runtime(governance_mode: str = "balanced") -> None:
     claude_root = HOME / ".claude"
     cursor_root = HOME / ".cursor" / "skills"
     codex_root = HOME / ".codex" / "skills"
@@ -907,7 +1119,7 @@ def _sync_user_runtime() -> None:
     # Merge cognitive-os settings into existing settings.json rather than replace,
     # so plugin-installed hooks and keys are preserved across syncs.
     settings_path = claude_root / "settings.json"
-    cognitive_os = _cognitive_os_settings()
+    cognitive_os = _cognitive_os_settings(governance_mode)
     if settings_path.exists():
         try:
             existing = json.loads(settings_path.read_text(encoding="utf-8"))
@@ -916,6 +1128,9 @@ def _sync_user_runtime() -> None:
     else:
         existing = {}
     merged = _merge_claude_settings(existing, cognitive_os)
+    merged = _prune_managed_hook_entries(merged, governance_mode)
+    merged = _enforce_governance_overrides(merged, governance_mode)
+    merged["hooks"] = _dedupe_hooks_map(merged.get("hooks", {}))
     _write_text(settings_path, json.dumps(merged, indent=2) + "\n")
 
     for agent_file in (REPO_ROOT / "core" / "agents").glob("*.md"):
@@ -927,13 +1142,14 @@ def _sync_user_runtime() -> None:
         _copy_tree(skill_dir, codex_root / skill_dir.name)
 
     hermes_synced = _sync_hermes_runtime()
-    omo_synced = _sync_omo_runtime()
-    omx_synced = _sync_omx_runtime()
+    omo_synced = _sync_omo_runtime(governance_mode)
+    omx_synced = _sync_omx_runtime(governance_mode)
 
     print("Synced user runtime:")
     print(f"  - Claude: {claude_root}")
     print(f"  - Cursor skills: {cursor_root}")
     print(f"  - Codex skills: {codex_root}")
+    print(f"  - Governance pack: {governance_mode}")
     if hermes_synced:
         print(f"  - Hermes: {HOME / '.hermes'}")
     if omo_synced:
@@ -1052,6 +1268,7 @@ def _private_skill(action: str, name: str, tool: str) -> int:
 
 def _doctor() -> int:
     failures: list[str] = []
+    warnings: list[str] = []
     print("🧠 cognitive-os Awareness Check")
     print(f"Project Core: {REPO_ROOT}")
     print(f"Conda Vessel: {CONDA_ROOT}")
@@ -1118,11 +1335,49 @@ def _doctor() -> int:
         state = "present" if _command_exists(tool) else "not installed"
         print(f"[info] optional tool {tool}: {state}")
 
+    # Runtime drift checks: Claude hook duplication + legacy path references
+    claude_settings_path = HOME / ".claude" / "settings.json"
+    if claude_settings_path.exists():
+        try:
+            settings = json.loads(claude_settings_path.read_text(encoding="utf-8"))
+            hooks = settings.get("hooks", {}) if isinstance(settings, dict) else {}
+            deduped = _dedupe_hooks_map(hooks)
+            orig_count = 0
+            deduped_count = 0
+            legacy_path_hits = 0
+            for entries in hooks.values() if isinstance(hooks, dict) else []:
+                if isinstance(entries, list):
+                    orig_count += len(entries)
+                    for entry in entries:
+                        for h in entry.get("hooks", []) if isinstance(entry, dict) else []:
+                            cmd = str(h.get("command", "")) if isinstance(h, dict) else ""
+                            if "/agent-os/" in cmd:
+                                legacy_path_hits += 1
+            for entries in deduped.values():
+                if isinstance(entries, list):
+                    deduped_count += len(entries)
+
+            if deduped_count < orig_count:
+                warnings.append(
+                    f"Detected potential duplicate hook entries in ~/.claude/settings.json ({orig_count - deduped_count} duplicates). Run cognitive-os sync to normalize."
+                )
+            if legacy_path_hits:
+                warnings.append(
+                    f"Detected legacy /agent-os hook paths in ~/.claude/settings.json ({legacy_path_hits} entries). Run cognitive-os sync to migrate to /cognitive-os/."
+                )
+        except json.JSONDecodeError:
+            warnings.append("Could not parse ~/.claude/settings.json for drift checks (invalid JSON).")
+
+    if warnings:
+        print("\nWarnings:")
+        for item in warnings:
+            print(f"  - {item}")
+
     if failures:
         print("\nDoctor failed:")
         for item in failures:
             print(f"  - {item}")
-        
+
         print("\nTips to fix:")
         if any("conda" in f.lower() for f in failures):
             print("  • Ensure Conda is installed and COGNITIVE_OS_CONDA_ROOT is set correctly.")
@@ -1212,6 +1467,15 @@ def _validate_manifest() -> int:
     failures: list[str] = []
     warnings: list[str] = []
 
+    sources_path = REPO_ROOT / "skills" / "vendor" / "SOURCES.md"
+    sources_text = ""
+    if not sources_path.exists():
+        failures.append("skills/vendor/SOURCES.md missing (required for vendor provenance)")
+    else:
+        sources_text = sources_path.read_text(encoding="utf-8")
+        if "Curated vendor skills are sourced from" not in sources_text:
+            warnings.append("skills/vendor/SOURCES.md missing required source heading")
+
     all_declared = RUNTIME_MANIFEST["vendor_skills"] + RUNTIME_MANIFEST["custom_skills"]
 
     for bucket in ("vendor", "custom"):
@@ -1222,6 +1486,17 @@ def _validate_manifest() -> int:
                 failures.append(f"[{bucket}] '{name}' declared in manifest but SKILL.md not found at {skill_md}")
             else:
                 print(f"[ok] [{bucket}] {name}")
+                if bucket == "vendor":
+                    raw = skill_md.read_text(encoding="utf-8")
+                    if "## Provenance" not in raw:
+                        warnings.append(
+                            f"[vendor] '{name}' has no '## Provenance' section in SKILL.md "
+                            "(recommended for inspired-not-copied traceability)"
+                        )
+                    if sources_text and name not in sources_text:
+                        warnings.append(
+                            f"[vendor] '{name}' is declared but not listed in skills/vendor/SOURCES.md"
+                        )
 
     for bucket in ("vendor", "custom"):
         bucket_dir = REPO_ROOT / "skills" / bucket
@@ -2564,6 +2839,7 @@ def _setup_command(
     path_arg: str,
     profile_mode: str | None,
     cognition_mode: str | None,
+    governance_mode: str,
     write: bool,
     overwrite: bool,
     do_sync: bool,
@@ -2572,6 +2848,11 @@ def _setup_command(
     cognition_answers: dict[str, int] | None,
     interactive: bool,
 ) -> int:
+    governance_mode = (governance_mode or "balanced").strip().lower()
+    if governance_mode not in {"minimal", "balanced", "strict"}:
+        print(f"Unsupported governance pack: {governance_mode}", file=sys.stderr)
+        return 1
+
     if interactive:
         print("🧭 cognitive-os setup")
         print("Configure execution (workstyle) + thinking (cognition) defaults — your agent's soul.")
@@ -2588,8 +2869,8 @@ def _setup_command(
             profile_mode = profile_mode or "survey"
             cognition_mode = cognition_mode or "survey"
 
-        write = _prompt_yes_no("Write canonical memory files now?", default=True)
-        overwrite = _prompt_yes_no("Allow overwrite of existing canonical files?", default=False) if write else False
+        write = _prompt_yes_no("Write memory files now?", default=True)
+        overwrite = _prompt_yes_no("Allow overwrite of existing memory files?", default=False) if write else False
         do_sync = _prompt_yes_no("Run cognitive-os sync now?", default=True)
         do_doctor = _prompt_yes_no("Run cognitive-os doctor now?", default=True)
 
@@ -2633,7 +2914,7 @@ def _setup_command(
     print(f"Setup target: {path}")
     print(
         f"Defaults: profile_mode={profile_mode}, cognition_mode={cognition_mode}, "
-        f"write={write}, overwrite={overwrite}, sync={do_sync}, doctor={do_doctor}"
+        f"governance_pack={governance_mode}, write={write}, overwrite={overwrite}, sync={do_sync}, doctor={do_doctor}"
     )
     if profile_mode != "skip":
         print(f"- Running profile {profile_mode}")
@@ -2655,7 +2936,7 @@ def _setup_command(
 
     if do_sync:
         print()
-        _sync_user_runtime()
+        _sync_user_runtime(governance_mode)
     if do_doctor:
         print()
         rc = _doctor()
@@ -2748,7 +3029,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("init", help="Bootstrap personal memory files from *.example.md templates")
     sub.add_parser("doctor", help="Verify runtime wiring — Conda, core tools, optional tools")
-    sub.add_parser("sync", help="Sync managed runtime assets into Claude, Codex, Cursor, and Hermes")
+    sync = sub.add_parser("sync", help="Sync managed runtime assets into Claude, Codex, Cursor, and Hermes")
+    sync.add_argument(
+        "--governance-pack",
+        choices=["minimal", "balanced", "strict"],
+        default="balanced",
+        help="Runtime governance profile for hook/safety integration (default: balanced)",
+    )
     sub.add_parser("update", help="Pull the latest cognitive-os from git")
     sub.add_parser("list", help="Show installed agents, skills, plugins, and active hooks")
     sub.add_parser("validate", help="Check manifest integrity — every declared skill must have a SKILL.md")
@@ -2819,6 +3106,12 @@ def build_parser() -> argparse.ArgumentParser:
     setup.add_argument("--interactive", action="store_true", help="Run interactive wizard prompts")
     setup.add_argument("--profile-mode", choices=["survey", "infer", "hybrid", "skip"], default=None)
     setup.add_argument("--cognition-mode", choices=["survey", "infer", "hybrid", "skip"], default=None)
+    setup.add_argument(
+        "--governance-pack",
+        choices=["minimal", "balanced", "strict"],
+        default="balanced",
+        help="Governance profile used when --sync is enabled during setup (default: balanced)",
+    )
     setup.add_argument("--answers-file", metavar="JSON", help="Fallback JSON answers file used by both profile and cognition")
     setup.add_argument("--profile-answers-file", metavar="JSON", help="Optional JSON answers file for profile survey/hybrid")
     setup.add_argument("--cognition-answers-file", metavar="JSON", help="Optional JSON answers file for cognition survey/hybrid")
@@ -2894,7 +3187,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         return _doctor()
     if args.command == "sync":
         print("🛸 Transitioning Soul to all available vessels...")
-        _sync_user_runtime()
+        _sync_user_runtime(getattr(args, "governance_pack", "balanced"))
         print("✅ Transition complete. Your agents are now aware.")
         return 0
     if args.command == "update":
@@ -3015,8 +3308,9 @@ def main(argv: Iterable[str] | None = None) -> int:
 
         return _setup_command(
             path_arg=getattr(args, "path", "."),
-            profile_mode=getattr(args, "profile_mode", "hybrid"),
-            cognition_mode=getattr(args, "cognition_mode", "hybrid"),
+            profile_mode=getattr(args, "profile_mode", None),
+            cognition_mode=getattr(args, "cognition_mode", None),
+            governance_mode=getattr(args, "governance_pack", "balanced"),
             write=getattr(args, "write", False),
             overwrite=getattr(args, "overwrite", False),
             do_sync=getattr(args, "sync", False),

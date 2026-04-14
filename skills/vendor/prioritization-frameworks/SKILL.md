@@ -73,3 +73,10 @@ Splits ICE's Impact into two separate factors. Useful for larger teams that need
 - [The Product Management Frameworks Compendium + Templates](https://www.productcompass.pm/p/the-product-frameworks-compendium)
 - [Kano Model: How to Delight Your Customers Without Becoming a Feature Factory](https://www.productcompass.pm/p/kano-model-how-to-delight-your-customers)
 - [Continuous Product Discovery Masterclass (CPDM)](https://www.productcompass.pm/p/cpdm) (video course)
+
+## Provenance
+
+- Source: `phuryn/pm-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

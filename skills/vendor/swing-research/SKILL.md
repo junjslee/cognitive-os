@@ -269,3 +269,10 @@ Classify every source on discovery.
 - **With brainstorming:** Can be invoked during brainstorming's "Explore context" phase for fact-based inputs
 - **With search-first:** search-first finds tools/libraries to USE; this skill VERIFIES factual claims. Different purposes.
 - **With swing-review:** Research findings can feed into adversarial review for stress-testing conclusions
+
+## Provenance
+
+- Source: `whynowlab/swing-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

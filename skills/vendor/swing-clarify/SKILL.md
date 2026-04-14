@@ -193,3 +193,10 @@ Why this is better:
 - **With swing-options:** Clarified constraints → better option generation (constraints define what's conventional vs unconventional)
 - **With swing-mortem:** Clarified assumptions → more specific failure scenarios
 - **With swing-trace:** Clarified scope → clearer claim isolation in Stage 1 (fewer ambiguous assumptions to trace)
+
+## Provenance
+
+- Source: `whynowlab/swing-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

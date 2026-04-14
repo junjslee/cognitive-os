@@ -349,3 +349,10 @@ but heavily weighted)
 - **With swing-options:** When swing-options generates options, swing-trace can trace why one option was selected over others.
 - **With deep-dive-analyzer:** Deep-dive produces exhaustive understanding; swing-trace adds the "so what" -- why that understanding leads to a specific conclusion.
 - **With skill-composer:** Common pipeline: `swing-research` -> `swing-trace` -> `swing-review` (gather facts -> trace reasoning -> stress-test conclusion).
+
+## Provenance
+
+- Source: `whynowlab/swing-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

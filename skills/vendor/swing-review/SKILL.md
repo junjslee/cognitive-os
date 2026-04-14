@@ -279,3 +279,10 @@ When reviewing pull requests:
 - **With swing-research:** Use research to verify claims made during review (e.g., "is this really a security risk?"). For a full-rigor workflow: `swing-research` → `swing-review`
 - **With deep-dive-analyzer:** For understanding before challenging: `deep-dive-analyzer` (understand) → `swing-review` (challenge). This skill focuses on finding flaws; deep-dive focuses on neutral exhaustive analysis.
 - **With orchestrator strategy team:** Complements the strategy team's Devil's Advocate agent with structured methodology
+
+## Provenance
+
+- Source: `whynowlab/swing-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

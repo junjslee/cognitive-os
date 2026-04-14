@@ -111,6 +111,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 path_arg=".",
                 profile_mode="hybrid",
                 cognition_mode="infer",
+                governance_mode="balanced",
                 write=True,
                 overwrite=False,
                 do_sync=True,
@@ -136,7 +137,7 @@ class ProfileCognitionTests(unittest.TestCase):
             answers={"first_principles_depth": 3},
         )
         blueprint_cmd.assert_called_once()
-        sync_cmd.assert_called_once()
+        sync_cmd.assert_called_once_with("balanced")
         doctor_cmd.assert_called_once()
 
     def test_setup_command_rejects_invalid_mode(self):
@@ -145,6 +146,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 path_arg=".",
                 profile_mode="bad",
                 cognition_mode="skip",
+                governance_mode="balanced",
                 write=False,
                 overwrite=False,
                 do_sync=False,
@@ -199,6 +201,119 @@ class ProfileCognitionTests(unittest.TestCase):
         args = parser.parse_args(["setup"])
         self.assertIsNone(args.profile_mode)
         self.assertIsNone(args.cognition_mode)
+        self.assertEqual(args.governance_pack, "balanced")
+
+    def test_setup_command_rejects_invalid_governance_pack(self):
+        with patch("sys.stderr", new_callable=io.StringIO) as fake_stderr:
+            rc = cli._setup_command(
+                path_arg=".",
+                profile_mode="skip",
+                cognition_mode="skip",
+                governance_mode="bad-pack",
+                write=False,
+                overwrite=False,
+                do_sync=False,
+                do_doctor=False,
+                profile_answers=None,
+                cognition_answers=None,
+                interactive=False,
+            )
+        self.assertEqual(rc, 1)
+        self.assertIn("Unsupported governance pack", fake_stderr.getvalue())
+
+    def test_strict_governance_removes_permission_request_after_merge(self):
+        existing = {
+            "hooks": {
+                "PermissionRequest": [
+                    {
+                        "matcher": "Read|Glob|Grep",
+                        "hooks": [{"type": "command", "command": "echo '{\"decision\":\"allow\"}'"}],
+                    }
+                ]
+            }
+        }
+        merged = cli._merge_claude_settings(existing, cli._cognitive_os_settings("strict"))
+        merged = cli._enforce_governance_overrides(merged, "strict")
+        hooks = merged.get("hooks", {})
+        self.assertNotIn("PermissionRequest", hooks)
+
+    def test_balanced_governance_keeps_permission_request(self):
+        existing = {
+            "hooks": {
+                "PermissionRequest": [
+                    {
+                        "matcher": "Read|Glob|Grep",
+                        "hooks": [{"type": "command", "command": "echo '{\"decision\":\"allow\"}'"}],
+                    }
+                ]
+            }
+        }
+        merged = cli._merge_claude_settings(existing, cli._cognitive_os_settings("balanced"))
+        merged = cli._enforce_governance_overrides(merged, "balanced")
+        hooks = merged.get("hooks", {})
+        self.assertIn("PermissionRequest", hooks)
+
+    def test_dedupe_preserves_non_command_hook_entries(self):
+        hooks = {
+            "PostToolUse": [
+                {
+                    "matcher": "Write",
+                    "hooks": [
+                        {"type": "webhook", "url": "https://example.invalid/hook"},
+                        {"type": "webhook", "url": "https://example.invalid/hook"},
+                    ],
+                }
+            ]
+        }
+        deduped = cli._dedupe_hooks_map(hooks)
+        self.assertIn("PostToolUse", deduped)
+        self.assertEqual(len(deduped["PostToolUse"]), 1)
+        out_hooks = deduped["PostToolUse"][0].get("hooks", [])
+        self.assertEqual(len(out_hooks), 2)
+        self.assertEqual(out_hooks[0].get("type"), "webhook")
+
+    def test_strict_governance_preserves_custom_permission_request_hooks(self):
+        existing = {
+            "hooks": {
+                "PermissionRequest": [
+                    {
+                        "matcher": "Read|Glob|Grep",
+                        "hooks": [{"type": "command", "command": "echo '{\"decision\":\"allow\"}'"}],
+                    },
+                    {
+                        "matcher": "Read",
+                        "hooks": [{"type": "command", "command": "python /tmp/custom_permission.py"}],
+                    },
+                ]
+            }
+        }
+        merged = cli._merge_claude_settings(existing, cli._cognitive_os_settings("strict"))
+        merged = cli._enforce_governance_overrides(merged, "strict")
+        hooks = merged.get("hooks", {})
+        self.assertIn("PermissionRequest", hooks)
+        entries = hooks.get("PermissionRequest", [])
+        self.assertTrue(any(isinstance(e, dict) and e.get("matcher") == "Read" for e in entries))
+
+    def test_prune_managed_hooks_for_minimal_pack(self):
+        merged = cli._cognitive_os_settings("balanced")
+        merged.setdefault("hooks", {}).setdefault("PreToolUse", []).append(
+            {
+                "matcher": "Write",
+                "hooks": [{"type": "command", "command": "python /tmp/external_guard.py"}],
+            }
+        )
+
+        out = cli._prune_managed_hook_entries(merged, "minimal")
+        hooks = out.get("hooks", {})
+        pre = hooks.get("PreToolUse", [])
+        post = hooks.get("PostToolUse", [])
+        pre_cmds = [h.get("command", "") for e in pre if isinstance(e, dict) for h in e.get("hooks", []) if isinstance(h, dict)]
+        post_cmds = [h.get("command", "") for e in post if isinstance(e, dict) for h in e.get("hooks", []) if isinstance(h, dict)]
+        self.assertFalse(any("workflow_guard.py" in c for c in pre_cmds))
+        self.assertFalse(any("prompt_guard.py" in c for c in pre_cmds))
+        self.assertFalse(any("context_guard.py" in c for c in post_cmds))
+        self.assertTrue(any("test_runner.py" in c for c in post_cmds))
+        self.assertTrue(any("external_guard.py" in c for c in pre_cmds))
 
     def test_setup_noninteractive_defaults_infer_when_modes_omitted(self):
         with patch.object(cli, "_resolve_bootstrap_target", return_value=Path(".")), patch.object(
@@ -210,6 +325,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 path_arg=".",
                 profile_mode=None,
                 cognition_mode=None,
+                governance_mode="balanced",
                 write=False,
                 overwrite=False,
                 do_sync=False,
@@ -229,6 +345,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 path_arg=".",
                 profile_mode="survey",
                 cognition_mode="skip",
+                governance_mode="balanced",
                 write=False,
                 overwrite=False,
                 do_sync=False,
@@ -249,6 +366,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 path_arg=".",
                 profile_mode=None,
                 cognition_mode=None,
+                governance_mode="balanced",
                 write=False,
                 overwrite=False,
                 do_sync=False,
@@ -272,6 +390,7 @@ class ProfileCognitionTests(unittest.TestCase):
                 path_arg=".",
                 profile_mode=None,
                 cognition_mode=None,
+                governance_mode="balanced",
                 write=False,
                 overwrite=False,
                 do_sync=False,

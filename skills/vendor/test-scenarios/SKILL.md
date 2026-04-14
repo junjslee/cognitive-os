@@ -84,3 +84,10 @@ Create comprehensive test scenarios from user stories with test objectives, star
 - Observable expected outcomes after each step
 - Edge case and error scenario coverage
 - Ready for QA team execution and documentation
+
+## Provenance
+
+- Source: `phuryn/pm-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+

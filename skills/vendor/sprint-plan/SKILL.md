@@ -65,3 +65,10 @@ Think step by step. Save as markdown.
 ### Further Reading
 
 - [Product Owner vs Product Manager: What's the difference?](https://www.productcompass.pm/p/product-manager-vs-product-owner)
+
+## Provenance
+
+- Source: `phuryn/pm-skills`
+- Adaptation: curated and modified for cognitive-os workflows; wording, constraints, and examples may differ from upstream.
+- Policy: inspired-by reference retained for attribution; this runtime copy is not presented as an upstream verbatim artifact.
+
