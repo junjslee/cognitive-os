@@ -13,18 +13,13 @@ labs/skills/*/runs/
 labs/skills/*/tmp/
 
 # ─── Personal cognitive-os memory files ──────────────────────────────────────
-# These are YOUR identity, philosophy, and working style encoded in markdown.
-# They are gitignored so forks stay private — each user has their own.
+# These ship with the repo as the author's real profiles (see core/memory/global/).
+# Forks: edit them to make them your own, then run `cognitive-os sync`.
 #
-# To get started: run `cognitive-os init` to generate from the *.example.md templates.
-#
-# To share yours as a reference: copy to *.reference.md and add that to git instead.
-# See docs/OPEN_SOURCE_YOUR_PROFILE.md for the full pattern.
-core/memory/global/overview.md
-core/memory/global/operator_profile.md
-core/memory/global/workflow_policy.md
+# python_runtime_policy.md is gitignored because it contains machine-specific
+# paths (Conda root) that differ per user. Run `cognitive-os init` to generate it
+# from examples/python_runtime_policy.example.md.
 core/memory/global/python_runtime_policy.md
-core/memory/global/cognitive_profile.md
 
 # ─── Machine-generated profile artifacts ─────────────────────────────────────
 # Output of `cognitive-os profile` and `cognitive-os cognition` commands.

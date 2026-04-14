@@ -769,11 +769,11 @@ def _managed_skills() -> list[Path]:
 
 
 def _resolve_memory_file(name: str) -> Path:
-    """Return the personal file if it exists, else fall back to the example."""
+    """Return the personal file if it exists, else fall back to the example in examples/."""
     personal = GLOBAL_MEMORY_DIR / f"{name}.md"
     if personal.exists():
         return personal
-    return GLOBAL_MEMORY_DIR / f"{name}.example.md"
+    return GLOBAL_MEMORY_DIR / "examples" / f"{name}.example.md"
 
 
 # ---------------------------------------------------------------------------
@@ -781,8 +781,15 @@ def _resolve_memory_file(name: str) -> Path:
 # ---------------------------------------------------------------------------
 
 def _init_memory() -> int:
-    """Bootstrap personal memory files from *.example.md templates."""
+    """Bootstrap personal memory files from examples/*.example.md templates.
+
+    If the personal files already exist (e.g. the repo ships with the author's
+    real profiles), init skips them so forks start from those real profiles.
+    Only python_runtime_policy.md is always regenerated from the template because
+    it contains machine-specific paths that differ per user.
+    """
     memory_dir = REPO_ROOT / "core" / "memory" / "global"
+    examples_dir = memory_dir / "examples"
     names = ["overview", "operator_profile", "workflow_policy", "python_runtime_policy", "cognitive_profile"]
 
     created: list[str] = []
@@ -790,12 +797,12 @@ def _init_memory() -> int:
 
     for name in names:
         personal = memory_dir / f"{name}.md"
-        example = memory_dir / f"{name}.example.md"
+        example = examples_dir / f"{name}.example.md"
         if personal.exists():
             skipped.append(f"{name}.md")
             continue
         if not example.exists():
-            print(f"Warning: {name}.example.md not found, skipping.", file=sys.stderr)
+            print(f"Warning: examples/{name}.example.md not found, skipping.", file=sys.stderr)
             continue
         shutil.copy2(example, personal)
         created.append(f"{name}.md")
