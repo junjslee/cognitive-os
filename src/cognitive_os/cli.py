@@ -838,7 +838,7 @@ def _render_user_claude_md() -> str:
 
 def _cognitive_os_settings(governance_mode: str = "balanced") -> dict:
     hooks_dir = REPO_ROOT / "core" / "hooks"
-    py = f"{CONDA_ROOT}/bin/python"
+    py = sys.executable
 
     def hook_cmd(script: str, *, async_: bool = False) -> dict:
         h: dict = {"type": "command", "command": f"{py} {hooks_dir / script}"}
@@ -934,6 +934,11 @@ def _normalize_hook_command(cmd: str) -> str:
         return ""
     c = cmd.replace("\\", "/")
     c = c.replace("/agent-os/", "/cognitive-os/")
+    # Normalize away the Python interpreter prefix so that commands pointing to
+    # the same script with different interpreters deduplicate correctly.
+    # e.g. "/opt/cray/.../python3 /repo/hooks/foo.py" -> "python3 /repo/hooks/foo.py"
+    import re as _re
+    c = _re.sub(r"^(/\S+/)(python\S*)\s+", r"python3 ", c)
     return c
 
 
