@@ -1035,7 +1035,6 @@ def _normalize_hook_command(cmd: str) -> str:
     if not cmd:
         return ""
     c = cmd.replace("\\", "/")
-    c = c.replace("/agent-os/", "/cognitive-os/")
     # Normalize away the Python interpreter prefix so that commands pointing to
     # the same script with different interpreters deduplicate correctly.
     # e.g. "/opt/cray/.../python3 /repo/hooks/foo.py" -> "python3 /repo/hooks/foo.py"
@@ -1088,7 +1087,7 @@ def _merge_claude_settings(existing: dict, cognitive_os: dict) -> dict:
 
     - permissions.deny: union (no duplicates)
     - hooks.<event>: append cognitive-os entries whose commands aren't already present
-    - hook dedupe: remove exact duplicate entries and normalize legacy /agent-os paths
+    - hook dedupe: remove exact duplicate entries
     - All other existing keys: preserved untouched
     """
     import copy
@@ -1109,22 +1108,6 @@ def _merge_claude_settings(existing: dict, cognitive_os: dict) -> dict:
             new_cmds = {_normalize_hook_command(h.get("command", "")) for h in entry.get("hooks", [])}
             if not new_cmds.issubset(registered_cmds):
                 existing_entries.append(entry)
-
-    # normalize any legacy command paths in-place
-    hooks = merged.get("hooks", {})
-    if isinstance(hooks, dict):
-        for _, entries in hooks.items():
-            if not isinstance(entries, list):
-                continue
-            for entry in entries:
-                if not isinstance(entry, dict):
-                    continue
-                hook_list = entry.get("hooks", [])
-                if not isinstance(hook_list, list):
-                    continue
-                for h in hook_list:
-                    if isinstance(h, dict) and isinstance(h.get("command"), str):
-                        h["command"] = _normalize_hook_command(h["command"])
 
     merged["hooks"] = _dedupe_hooks_map(merged.get("hooks", {}))
     return merged
@@ -1802,7 +1785,7 @@ def _doctor() -> int:
         state = "present" if _command_exists(tool) else "not installed"
         print(f"[info] optional tool {tool}: {state}")
 
-    # Runtime drift checks: Claude hook duplication + legacy path references
+    # Runtime drift checks: Claude hook duplication
     claude_settings_path = HOME / ".claude" / "settings.json"
     if claude_settings_path.exists():
         try:
@@ -1811,15 +1794,9 @@ def _doctor() -> int:
             deduped = _dedupe_hooks_map(hooks)
             orig_count = 0
             deduped_count = 0
-            legacy_path_hits = 0
             for entries in hooks.values() if isinstance(hooks, dict) else []:
                 if isinstance(entries, list):
                     orig_count += len(entries)
-                    for entry in entries:
-                        for h in entry.get("hooks", []) if isinstance(entry, dict) else []:
-                            cmd = str(h.get("command", "")) if isinstance(h, dict) else ""
-                            if "/agent-os/" in cmd:
-                                legacy_path_hits += 1
             for entries in deduped.values():
                 if isinstance(entries, list):
                     deduped_count += len(entries)
@@ -1827,10 +1804,6 @@ def _doctor() -> int:
             if deduped_count < orig_count:
                 warnings.append(
                     f"Detected potential duplicate hook entries in ~/.claude/settings.json ({orig_count - deduped_count} duplicates). Run cognitive-os sync to normalize."
-                )
-            if legacy_path_hits:
-                warnings.append(
-                    f"Detected legacy /agent-os hook paths in ~/.claude/settings.json ({legacy_path_hits} entries). Run cognitive-os sync to migrate to /cognitive-os/."
                 )
         except json.JSONDecodeError:
             warnings.append("Could not parse ~/.claude/settings.json for drift checks (invalid JSON).")
