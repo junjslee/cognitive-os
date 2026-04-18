@@ -139,3 +139,13 @@ When auditing a decision or a change, walk the list:
 
 Six questions, six failure modes. If any goes uncovered, the corresponding
 kernel artifact is the place to reach for.
+
+---
+
+## Attribution
+
+The six-mode taxonomy is Kahneman's (*Thinking, Fast and Slow*, 2011),
+re-expressed in kernel language and mapped against specific artifacts rather
+than left as general advice. Counter-artifacts draw on Popper
+(disconfirmation), Shannon (signal vs noise), and Dalio
+(weight-by-track-record). Full citations: [REFERENCES.md](./REFERENCES.md).

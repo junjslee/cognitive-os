@@ -94,3 +94,16 @@ that can be corrected.
   not disconfirmation. Name the observable outcome.
 - **The surface as ceremony.** If filling it out did not change what was
   about to happen, the surface was not engaged with.
+
+---
+
+## Attribution
+
+- **Disconfirmation** is Popper's falsification criterion operationalized
+  for a per-decision artifact. A plan that cannot be falsified is a story.
+- **Knowns / Unknowns / Assumptions** separation counters Kahneman's WYSIATI
+  (what-you-see-is-all-there-is) and the narrative fallacy.
+- **Assumptions with falsification conditions** follow Dalio's radical
+  transparency: the debt is named, not hidden under confident phrasing.
+
+Full citations: [REFERENCES.md](./REFERENCES.md).

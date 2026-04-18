@@ -181,6 +181,10 @@ stated.
 that accepts system-level context. The platform is the delivery vessel.
 The kernel is what travels in it.
 
+**Not universally applicable.** The kernel has a declared boundary. See
+[KERNEL_LIMITS.md](./KERNEL_LIMITS.md) for the conditions under which it
+should be suspended, relaxed, or replaced.
+
 ---
 
 ## The distinction that matters
@@ -197,5 +201,19 @@ That is the project.
 
 ---
 
-Attribution for concepts informing the principles above lives in
-[REFERENCES.md](./REFERENCES.md).
+## Attribution
+
+Concepts informing each principle are documented in
+[REFERENCES.md](./REFERENCES.md). Brief pointers:
+
+- **Principle I** (Explicit > implicit) — Polanyi on tacit vs explicit
+  knowledge; Orwell on language and clarity; Dalio on radical transparency.
+- **Principle II** (Orientation precedes observation) — Boyd's OODA loop;
+  Meadows on leverage points and mental models as system structure.
+- **Principle III** (No model is sufficient alone) — Munger's latticework;
+  Alexander's pattern language on composable partial models; Simon on bounded
+  rationality.
+- **Principle IV** (The loop is the unit of progress) — Deming/Shewhart's
+  PDSA cycle; Boyd on OODA tempo; Popper on conjecture and refutation.
+
+Failure-mode taxonomy: Kahneman (*Thinking, Fast and Slow*, 2011).

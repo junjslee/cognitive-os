@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1320" viewBox="0 0 1600 1320" role="img" aria-label="cognitive-os — a portable cognitive kernel for AI agents. The kernel is markdown; adapters deliver it; the kernel is what travels.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1380" viewBox="0 0 1600 1380" role="img" aria-label="cognitive-os — a portable cognitive kernel for AI agents. The kernel is markdown; adapters deliver it; the kernel is what travels.">
 
   <defs>
     <style type="text/css"><![CDATA[
@@ -63,7 +63,7 @@
   </defs>
 
   <!-- Warm paper ground -->
-  <rect width="1600" height="1320" fill="#F5EFE2"/>
+  <rect width="1600" height="1380" fill="#F5EFE2"/>
 
   <!-- =========================================================
        MASTHEAD (y 40 – 120)
@@ -164,68 +164,74 @@
   <text x="1520" y="914" class="a-path end">kernel/OPERATOR_PROFILE_SCHEMA.md</text>
   <line x1="80" y1="934" x2="1520" y2="934" class="hair-row"/>
 
-  <!-- =========================================================
-       SECTION — INSTANCE & DELIVERY (y 970 – 1180)
-       ========================================================= -->
-  <text x="80"   y="976" class="section">INSTANCE &amp; DELIVERY  ·  What the kernel attaches to, and how it travels</text>
-  <text x="1520" y="976" class="section end">authority : project truth › global operator › episodic</text>
-  <line x1="80" y1="990" x2="1520" y2="990" class="section-hair"/>
-
-  <!-- Instance row (two typographic columns, no boxes) -->
-  <text x="110" y="1028" class="row-label">OPERATOR INSTANCE</text>
-  <text x="110" y="1054" class="row-gloss">The operator's cognitive posture, expressed as markdown.</text>
-  <text x="110" y="1076" class="row-path">core/memory/global/ · operator_profile.md · cognitive_profile.md · workflow_policy.md</text>
-
-  <line x1="780" y1="1010" x2="780" y2="1090" class="hair"/>
-
-  <text x="810" y="1028" class="row-label">PROJECT TRUTH</text>
-  <text x="810" y="1054" class="row-gloss">What this repository is building right now, and why.</text>
-  <text x="810" y="1076" class="row-path">docs/ · REQUIREMENTS · PLAN · PROGRESS · NEXT_STEPS · RUN_CONTEXT · DECISION_STORY</text>
-
-  <!-- Sync pill -->
-  <rect x="720" y="1108" width="160" height="34" rx="17" fill="#7A2E2A"/>
-  <text x="800" y="1130" class="sync-label center">cognitive-os sync</text>
-  <!-- Accent arrow down into delivery row -->
-  <line x1="800" y1="1146" x2="800" y2="1178" class="accent-thin" marker-end="url(#arrow-accent)"/>
+  <!-- Artifact row 05 -->
+  <text x="110"  y="966" class="a-index">05</text>
+  <text x="170"  y="966" class="a-title">Kernel Limits</text>
+  <text x="450"  y="966" class="a-gloss">When this kernel is the wrong tool. A discipline without a declared boundary is a creed.</text>
+  <text x="1520" y="966" class="a-path end">kernel/KERNEL_LIMITS.md</text>
+  <line x1="80" y1="986" x2="1520" y2="986" class="hair-row"/>
 
   <!-- =========================================================
-       DELIVERY — ADAPTERS (y 1200 – 1280)  (typographic, no boxes)
+       SECTION — INSTANCE & DELIVERY (shifted +52)
        ========================================================= -->
-  <line x1="80" y1="1190" x2="1520" y2="1190" class="hair"/>
+  <text x="80"   y="1028" class="section">INSTANCE &amp; DELIVERY  ·  What the kernel attaches to, and how it travels</text>
+  <text x="1520" y="1028" class="section end">authority : project truth › global operator › episodic</text>
+  <line x1="80" y1="1042" x2="1520" y2="1042" class="section-hair"/>
+
+  <!-- Instance row (two typographic columns, no boxes) — shifted +52 -->
+  <text x="110" y="1080" class="row-label">OPERATOR INSTANCE</text>
+  <text x="110" y="1106" class="row-gloss">The operator's cognitive posture, expressed as markdown.</text>
+  <text x="110" y="1128" class="row-path">core/memory/global/ · operator_profile.md · cognitive_profile.md · workflow_policy.md</text>
+
+  <line x1="780" y1="1062" x2="780" y2="1142" class="hair"/>
+
+  <text x="810" y="1080" class="row-label">PROJECT TRUTH</text>
+  <text x="810" y="1106" class="row-gloss">What this repository is building right now, and why.</text>
+  <text x="810" y="1128" class="row-path">docs/ · REQUIREMENTS · PLAN · PROGRESS · NEXT_STEPS · RUN_CONTEXT · DECISION_STORY</text>
+
+  <!-- Sync pill — shifted +52 -->
+  <rect x="720" y="1160" width="160" height="34" rx="17" fill="#7A2E2A"/>
+  <text x="800" y="1182" class="sync-label center">cognitive-os sync</text>
+  <line x1="800" y1="1198" x2="800" y2="1230" class="accent-thin" marker-end="url(#arrow-accent)"/>
+
+  <!-- =========================================================
+       DELIVERY — ADAPTERS (shifted +52)
+       ========================================================= -->
+  <line x1="80" y1="1242" x2="1520" y2="1242" class="hair"/>
 
   <!-- Claude Code -->
-  <text x="110" y="1224" class="adapter">Claude Code</text>
-  <text x="110" y="1248" class="adapter-line">CLAUDE.md index · deterministic safety hooks · personas &amp; skills</text>
-  <text x="110" y="1268" class="row-path">adapters/claude</text>
+  <text x="110" y="1276" class="adapter">Claude Code</text>
+  <text x="110" y="1300" class="adapter-line">CLAUDE.md index · deterministic safety hooks · personas &amp; skills</text>
+  <text x="110" y="1320" class="row-path">adapters/claude</text>
 
-  <line x1="430" y1="1200" x2="430" y2="1282" class="hair"/>
+  <line x1="430" y1="1252" x2="430" y2="1334" class="hair"/>
 
   <!-- Hermes -->
-  <text x="460" y="1224" class="adapter">Hermes</text>
-  <text x="460" y="1248" class="adapter-line">OPERATOR.md composite · SOUL.md identity · native skills</text>
-  <text x="460" y="1268" class="row-path">adapters/hermes</text>
+  <text x="460" y="1276" class="adapter">Hermes</text>
+  <text x="460" y="1300" class="adapter-line">OPERATOR.md composite · SOUL.md identity · native skills</text>
+  <text x="460" y="1320" class="row-path">adapters/hermes</text>
 
-  <line x1="780" y1="1200" x2="780" y2="1282" class="hair"/>
+  <line x1="780" y1="1252" x2="780" y2="1334" class="hair"/>
 
   <!-- OMO / OMX -->
-  <text x="810" y="1224" class="adapter">OMO / OMX</text>
-  <text x="810" y="1248" class="adapter-line">agents &amp; skills bundle · shared governance · Claude-format settings</text>
-  <text x="810" y="1268" class="row-path">core/adapters/*.json</text>
+  <text x="810" y="1276" class="adapter">OMO / OMX</text>
+  <text x="810" y="1300" class="adapter-line">agents &amp; skills bundle · shared governance · Claude-format settings</text>
+  <text x="810" y="1320" class="row-path">core/adapters/*.json</text>
 
-  <line x1="1160" y1="1200" x2="1160" y2="1282" class="hair"/>
+  <line x1="1160" y1="1252" x2="1160" y2="1334" class="hair"/>
 
   <!-- Future runtimes -->
   <g class="adapter-future">
-    <text x="1190" y="1224" class="adapter"><tspan style="font-style:italic">Future runtimes</tspan></text>
-    <text x="1190" y="1248" class="adapter-line">Codex · Cursor · opencode · MCP — same kernel, ~50-line shim each</text>
-    <text x="1190" y="1268" class="row-path">drop a core/adapters/*.json</text>
+    <text x="1190" y="1276" class="adapter"><tspan style="font-style:italic">Future runtimes</tspan></text>
+    <text x="1190" y="1300" class="adapter-line">Codex · Cursor · opencode · MCP — same kernel, ~50-line shim each</text>
+    <text x="1190" y="1320" class="row-path">drop a core/adapters/*.json</text>
   </g>
 
   <!-- =========================================================
-       DOMAIN PACKS (y 1290 – 1320) — the positioning stratum
+       DOMAIN PACKS & DEMOS (shifted +52) — the positioning stratum
        ========================================================= -->
-  <line x1="80" y1="1290" x2="1520" y2="1290" class="hair"/>
-  <text x="80"  y="1310" class="pack-heading">Domain packs ride atop delivery — any skill bundle inherits the kernel above.</text>
-  <text x="1520" y="1310" class="pack-chip end"><tspan style="font-style:italic">medsci-skills</tspan>  ·  ml-research  ·  web-app  ·  data-pipeline  ·  python-library  ·  &lt;your-pack&gt;</text>
+  <line x1="80" y1="1342" x2="1520" y2="1342" class="hair"/>
+  <text x="80"  y="1362" class="pack-heading">Domain packs ride atop delivery · demos/ ship reference deliverables of the loop itself.</text>
+  <text x="1520" y="1362" class="pack-chip end"><tspan style="font-style:italic">medsci-skills</tspan>  ·  ml-research  ·  web-app  ·  data-pipeline  ·  python-library  ·  <tspan style="font-style:italic">demos/</tspan></text>
 
 </svg>

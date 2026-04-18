@@ -1,0 +1,54 @@
+{
+  "schema": "cognitive-os/reasoning-surface@1",
+  "decision_id": "2026-04-17-attribution-audit",
+  "operator": "junlee",
+  "core_question": "Are the concepts load-bearing the cognitive-os kernel (WYSIATI, OODA, latticework, radical transparency, falsification, etc.) attributed to their primary sources — or is the kernel presenting borrowed ideas as its own?",
+  "constraint_regime": {
+    "allowed": [
+      "edits to kernel/*.md",
+      "new kernel files",
+      "new demos/ subdirectory",
+      "attribution footer additions"
+    ],
+    "forbidden": [
+      "rewriting the four principles or the six failure modes (scope creep)",
+      "adding secondary sources that don't carry weight in the kernel wording"
+    ],
+    "cost_limit": "single session; no dependency on external validation"
+  },
+  "decision_type": "reversible (markdown edits, all recoverable via git)",
+  "knowns": [
+    "kernel/CONSTITUTION.md cites 'confident wrongness' as the root failure — Kahneman's fluent-but-wrong pattern.",
+    "kernel/FAILURE_MODES.md names six modes that map 1:1 to Kahneman's taxonomy (WYSIATI, substitution, anchoring, narrative fallacy, planning fallacy, overconfidence).",
+    "kernel/REASONING_SURFACE.md's Disconfirmation field is Popper's falsification criterion applied per decision — but Popper is not named in the kernel file.",
+    "Principle II's 'orientation precedes observation' is Boyd's OODA; Boyd is attributed in the prior REFERENCES.md.",
+    "Principle III's lens stack is Munger's latticework; attributed.",
+    "The operator's own cognitive_profile.md cites Kahneman, Dalio, Boyd, Munger explicitly. Parity with kernel expected."
+  ],
+  "unknowns": [
+    "How many concepts in kernel wording are borrowed from sources NOT yet in REFERENCES.md? Initial scan suggests at least Popper (falsification), Shannon (signal vs noise), Polanyi (tacit knowledge boundary for KERNEL_LIMITS), Meadows (leverage / orientation), Alexander (pattern language analogue for kernel structure), Deming (PDSA as ancestor of Frame→Decompose→Execute→Verify→Handoff).",
+    "Does each kernel file tell the reader WHERE to find the attribution, or is attribution centralized in REFERENCES.md without inline pointers?",
+    "Are there concepts the kernel quietly INVENTS vs borrows? (Claims to borrow-ness are verifiable; claims to originality rarely are.)",
+    "Are there failure modes of the kernel itself that are not named — conditions under which applying cognitive-os makes decisions worse, not better?"
+  ],
+  "assumptions": [
+    {
+      "claim": "The operator's goal is an honest intellectual lineage, not a shorter file.",
+      "falsification": "False if the operator objects to additional citations as clutter. Mitigated by keeping REFERENCES.md structured and inline pointers terse."
+    },
+    {
+      "claim": "Ten primary citations is the right magnitude — fewer leaves load-bearing borrows unattributed; many more turns REFERENCES.md into a reading list rather than an attribution map.",
+      "falsification": "False if a reviewer identifies an additional load-bearing concept that is unattributed after this edit."
+    },
+    {
+      "claim": "Inline 'See also' lines at section ends are the correct attribution form — dense enough to be useful, terse enough to not fight the prose.",
+      "falsification": "False if the operator reads the result and feels the kernel files became cluttered with citations instead of reasoning."
+    }
+  ],
+  "disconfirmation": [
+    "A concept remains in kernel wording that is clearly not original AND not attributed — e.g., 'signal vs noise' without Shannon, 'falsifiable' without Popper, 'PDSA/closed loop' without Deming.",
+    "The kernel claims universal applicability without naming boundary conditions — fails Principle I (make constraints explicit).",
+    "REFERENCES.md entries list sources without specifying which kernel wording they informed — the attribution is present but not traceable."
+  ],
+  "hypothesis": "The kernel currently honors attribution for a minority of its load-bearing borrows (Kahneman, Boyd, Munger, Dalio) and is silent on at least ten more (Popper, Shannon, Polanyi, Meadows, Alexander, Deming, Simon, Argyris/Schön, Graham/Taleb, Pearl). Adding those with inline pointers will materially improve the repo's intellectual honesty without bloating the kernel files."
+}
