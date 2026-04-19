@@ -1,0 +1,20 @@
+{
+  "record": {
+    "id": "demo-1",
+    "memory_class": "episodic",
+    "summary": "end-to-end push roundtrip",
+    "provenance": {
+      "source_type": "imported",
+      "source_ref": "tmp",
+      "captured_at": "2026-04-19T00:00:00Z",
+      "captured_by": "cli-test",
+      "confidence": "medium"
+    },
+    "status": "active",
+    "version": "memory-contract-v1"
+  },
+  "scope": {
+    "user_id": "alice",
+    "project_id": "cog-os"
+  }
+}

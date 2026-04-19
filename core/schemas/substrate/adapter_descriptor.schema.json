@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitive-os.dev/schemas/substrate-v1/adapter_descriptor.json",
+  "title": "Substrate Adapter Descriptor v1",
+  "description": "Self-description emitted by every substrate adapter. Validated by `cognitive-os bridge substrate verify`. Declaring unsupported capabilities is worse than declaring none; the kernel uses this descriptor to route operations and skip those the substrate cannot honor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "version", "contract_version", "capabilities", "scope_keys"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique adapter id, e.g. `mem0`, `memori`, `memos`, `noop`."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semver of the adapter implementation (not the substrate it wraps)."
+    },
+    "contract_version": {
+      "type": "string",
+      "const": "substrate-v1"
+    },
+    "substrate": {
+      "type": "object",
+      "description": "Identity of the substrate this adapter wraps.",
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string"},
+        "homepage": {"type": "string", "format": "uri"},
+        "transport": {
+          "type": "string",
+          "enum": ["rest", "sdk", "filesystem", "mcp", "inprocess"]
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "What the substrate can honor. Absent or false means the operation is unsupported.",
+      "properties": {
+        "push": {"type": "boolean"},
+        "pull": {"type": "boolean"},
+        "delete": {"type": "boolean"},
+        "update": {"type": "boolean"},
+        "search": {"type": "boolean"},
+        "filter_by_scope": {"type": "boolean"},
+        "preserve_provenance": {
+          "type": "boolean",
+          "description": "True iff the substrate stores memory-contract provenance fields losslessly."
+        },
+        "native_entity_linking": {"type": "boolean"}
+      },
+      "required": ["push"]
+    },
+    "scope_keys": {
+      "type": "array",
+      "description": "Which ScopeMap keys the substrate honors natively. Keys not listed are stored in metadata, not used for filtering.",
+      "items": {
+        "type": "string",
+        "enum": ["user_id", "project_id", "agent_id", "session_id", "run_id", "app_id", "org_id"]
+      }
+    },
+    "config_schema": {
+      "type": "object",
+      "description": "JSON schema describing adapter-specific configuration (API keys, base URLs, local paths)."
+    },
+    "lossy_fields": {
+      "type": "array",
+      "description": "Memory-contract fields the substrate cannot preserve. Flagged so operators know what degrades when routing through this adapter.",
+      "items": {"type": "string"}
+    }
+  }
+}

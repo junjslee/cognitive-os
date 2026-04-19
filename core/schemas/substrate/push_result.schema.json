@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cognitive-os.dev/schemas/substrate-v1/push_result.json",
+  "title": "Substrate Push Result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "adapter", "pushed", "skipped", "failed"],
+  "properties": {
+    "contract_version": {"type": "string", "const": "substrate-v1"},
+    "adapter": {"type": "string"},
+    "pushed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "substrate_id"],
+        "properties": {
+          "source_id": {"type": "string", "description": "Record id inside the memory-contract envelope."},
+          "substrate_id": {"type": ["string", "null"], "description": "Id assigned by the substrate."}
+        }
+      }
+    },
+    "skipped": {
+      "type": "array",
+      "description": "Records the adapter intentionally did not push (e.g. substrate does not honor the memory_class).",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "reason"],
+        "properties": {
+          "source_id": {"type": "string"},
+          "reason": {"type": "string"}
+        }
+      }
+    },
+    "failed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "error"],
+        "properties": {
+          "source_id": {"type": "string"},
+          "error": {"type": "string"}
+        }
+      }
+    },
+    "lossy": {
+      "type": "array",
+      "description": "Fields the adapter dropped or coerced. Mirrors `lossy_fields` in the descriptor but scoped to this run.",
+      "items": {"type": "string"}
+    }
+  }
+}

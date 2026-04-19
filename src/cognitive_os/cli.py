@@ -744,6 +744,117 @@ def _bridge_anthropic_managed(
 
 
 # ---------------------------------------------------------------------------
+# Substrate bridge dispatch
+# ---------------------------------------------------------------------------
+
+
+def _build_scope_from_args(args: argparse.Namespace):
+    from cognitive_os.bridges.substrate import ScopeMap
+    return ScopeMap(
+        user_id=getattr(args, "user_id", None),
+        project_id=getattr(args, "project_id", None),
+        agent_id=getattr(args, "agent_id", None),
+        session_id=getattr(args, "session_id", None),
+        run_id=getattr(args, "run_id", None),
+        app_id=getattr(args, "app_id", None),
+        org_id=getattr(args, "org_id", None),
+    )
+
+
+def _load_adapter_config(path_str: str | None) -> dict:
+    if not path_str:
+        return {}
+    path = Path(path_str).expanduser()
+    if not path.exists():
+        raise FileNotFoundError(f"adapter config not found: {path}")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _bridge_substrate_dispatch(args: argparse.Namespace) -> int:
+    from cognitive_os.bridges.substrate import list_adapters, load_adapter
+    from cognitive_os.bridges.substrate.base import PullQuery
+
+    action = args.substrate_action
+
+    if action == "list-adapters":
+        for name in list_adapters():
+            print(name)
+        return 0
+
+    if action == "describe":
+        adapter = load_adapter(args.adapter)
+        print(json.dumps(adapter.describe().as_dict(), indent=2))
+        return 0
+
+    if action == "verify":
+        adapter = load_adapter(args.adapter)
+        desc = adapter.describe().as_dict()
+        required = {"name", "version", "contract_version", "capabilities", "scope_keys"}
+        missing = sorted(required - desc.keys())
+        if missing:
+            print(f"verify FAIL: missing fields {missing}", file=sys.stderr)
+            return 1
+        if desc["contract_version"] != "substrate-v1":
+            print(f"verify FAIL: contract_version {desc['contract_version']!r} != 'substrate-v1'", file=sys.stderr)
+            return 1
+        if "push" not in desc["capabilities"]:
+            print("verify FAIL: capabilities.push missing", file=sys.stderr)
+            return 1
+        print(f"verify OK: {desc['name']} v{desc['version']} ({desc.get('substrate', {}).get('transport', '?')})")
+        return 0
+
+    if action == "push":
+        try:
+            config = _load_adapter_config(args.config)
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
+            print(f"config error: {exc}", file=sys.stderr)
+            return 1
+        adapter = load_adapter(args.adapter, config)
+        input_path = Path(args.input).expanduser()
+        if not input_path.exists():
+            print(f"input envelope not found: {input_path}", file=sys.stderr)
+            return 1
+        envelope = json.loads(input_path.read_text(encoding="utf-8"))
+        result = adapter.push(envelope, _build_scope_from_args(args))
+        payload = json.dumps(result.as_dict(), indent=2) + "\n"
+        if args.output:
+            out = Path(args.output).expanduser()
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(payload, encoding="utf-8")
+            print(f"pushed {len(result.pushed)} / skipped {len(result.skipped)} / failed {len(result.failed)} -> {out}")
+        else:
+            print(payload, end="")
+        return 0 if not result.failed else 1
+
+    if action == "pull":
+        try:
+            config = _load_adapter_config(args.config)
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
+            print(f"config error: {exc}", file=sys.stderr)
+            return 1
+        adapter = load_adapter(args.adapter, config)
+        query = PullQuery(
+            query=args.query,
+            scope=_build_scope_from_args(args),
+            limit=args.limit,
+            since=args.since,
+        )
+        envelope = adapter.pull(query)
+        payload = json.dumps(envelope, indent=2) + "\n"
+        if args.output:
+            out = Path(args.output).expanduser()
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(payload, encoding="utf-8")
+            print(f"pulled {len(envelope.get('records', []))} records -> {out}")
+        else:
+            print(payload, end="")
+        return 0
+
+    print(f"unknown substrate action: {action}", file=sys.stderr)
+    return 2
+
+
+# ---------------------------------------------------------------------------
 # Machine context — cross-platform (macOS + Linux)
 # ---------------------------------------------------------------------------
 
@@ -3509,6 +3620,10 @@ def build_parser() -> argparse.ArgumentParser:
     start = sub.add_parser("start", help="Start the preferred agent surface")
     start.add_argument("tool", nargs="?", default="claude", choices=["claude"])
 
+    viewer = sub.add_parser("viewer", help="Start a local read-only dashboard over this repo")
+    viewer.add_argument("--host", default="127.0.0.1")
+    viewer.add_argument("--port", type=int, default=37776)
+
     evolve = sub.add_parser("evolve", help="Run and manage gated self-evolution episodes")
     evolve_sub = evolve.add_subparsers(dest="evolve_action", required=True)
 
@@ -3527,6 +3642,40 @@ def build_parser() -> argparse.ArgumentParser:
     b_am.add_argument("--captured-by", default="cognitive-os bridge", help="Provenance captured_by value")
     b_am.add_argument("--confidence", choices=["low", "medium", "high"], default="medium")
     b_am.add_argument("--dry-run", action="store_true", help="Parse and summarize without writing output")
+
+    b_sub = bridge_sub.add_parser(
+        "substrate",
+        help="Push/pull memory-contract envelopes to any external memory substrate via a pluggable adapter.",
+    )
+    b_sub_act = b_sub.add_subparsers(dest="substrate_action", required=True)
+
+    b_sub_act.add_parser("list-adapters", help="List installed substrate adapters")
+
+    b_sub_desc = b_sub_act.add_parser("describe", help="Print an adapter's capability descriptor")
+    b_sub_desc.add_argument("adapter")
+
+    b_sub_ver = b_sub_act.add_parser("verify", help="Load an adapter and validate its descriptor against the v1 schema")
+    b_sub_ver.add_argument("adapter")
+
+    def _add_scope_args(p: argparse.ArgumentParser) -> None:
+        for key in ("user-id", "project-id", "agent-id", "session-id", "run-id", "app-id", "org-id"):
+            p.add_argument(f"--{key}", dest=key.replace("-", "_"), default=None)
+
+    b_sub_push = b_sub_act.add_parser("push", help="Push a memory-contract-v1 envelope into the named substrate")
+    b_sub_push.add_argument("adapter")
+    b_sub_push.add_argument("--input", required=True, help="Path to memory-contract envelope JSON")
+    b_sub_push.add_argument("--output", help="Optional path to write the push result JSON (default: stdout)")
+    b_sub_push.add_argument("--config", help="Optional path to adapter config JSON")
+    _add_scope_args(b_sub_push)
+
+    b_sub_pull = b_sub_act.add_parser("pull", help="Pull from substrate, emit a memory-contract-v1 envelope")
+    b_sub_pull.add_argument("adapter")
+    b_sub_pull.add_argument("--query", default=None, help="Optional free-text query")
+    b_sub_pull.add_argument("--limit", type=int, default=50)
+    b_sub_pull.add_argument("--since", default=None, help="ISO-8601 timestamp lower bound")
+    b_sub_pull.add_argument("--output", help="Optional path to write the envelope JSON (default: stdout)")
+    b_sub_pull.add_argument("--config", help="Optional path to adapter config JSON")
+    _add_scope_args(b_sub_pull)
 
     e_run = evolve_sub.add_parser("run", help="Create a candidate evolution episode")
     e_run.add_argument("--hypothesis", required=True, help="Hypothesis this evolution episode tests")
@@ -3720,6 +3869,9 @@ def main(argv: Iterable[str] | None = None) -> int:
         return _private_skill(args.action, args.name, args.tool)
     if args.command == "start":
         return _start(args.tool, Path.cwd())
+    if args.command == "viewer":
+        from cognitive_os.viewer.server import serve
+        return serve(host=args.host, port=args.port)
     if args.command == "evolve":
         if args.evolve_action == "run":
             return _evolve_run(
@@ -3755,6 +3907,8 @@ def main(argv: Iterable[str] | None = None) -> int:
                 confidence=getattr(args, "confidence", "medium"),
                 dry_run=bool(getattr(args, "dry_run", False)),
             )
+        if args.bridge_action == "substrate":
+            return _bridge_substrate_dispatch(args)
         return 0
     if args.command == "audit":
         return _audit(fix=getattr(args, "fix", False))

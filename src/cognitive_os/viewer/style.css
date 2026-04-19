@@ -1,0 +1,36 @@
+:root {
+  --bg: #0f1115;
+  --fg: #e6e6e6;
+  --dim: #9aa0a6;
+  --accent: #6ee7b7;
+  --warn: #fbbf24;
+  --line: #2a2f38;
+  --card: #161a22;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 2rem 2.5rem 4rem; background: var(--bg); color: var(--fg); font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+header { border-bottom: 1px solid var(--line); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.5px; }
+header .sub { margin: 0.25rem 0 0; color: var(--dim); font-size: 0.85rem; }
+section { margin: 1.5rem 0 2rem; }
+section > h2 { font-size: 0.95rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 0.75rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 1rem; }
+.stat .label { color: var(--dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat .value { font-size: 1.5rem; color: var(--accent); font-weight: 600; margin-top: 0.25rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1rem; }
+.kv { display: flex; justify-content: space-between; padding: 0.2rem 0; border-bottom: 1px dashed var(--line); }
+.kv:last-child { border-bottom: 0; }
+.kv .k { color: var(--dim); }
+.kv .v { color: var(--fg); }
+dl { margin: 0; display: grid; grid-template-columns: 1fr auto; column-gap: 1rem; row-gap: 0.25rem; }
+dt { color: var(--dim); }
+dd { margin: 0; text-align: right; color: var(--accent); }
+table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.85rem; }
+th { text-align: left; color: var(--dim); font-weight: 500; border-bottom: 1px solid var(--line); padding: 0.35rem 0.5rem; }
+td { padding: 0.3rem 0.5rem; border-bottom: 1px dashed var(--line); }
+td a { color: var(--accent); text-decoration: none; }
+td a:hover { text-decoration: underline; }
+ul { margin: 0.25rem 0 0.5rem 1.2rem; padding: 0; }
+li { padding: 0.1rem 0; }
+footer { border-top: 1px solid var(--line); margin-top: 3rem; padding-top: 1rem; color: var(--dim); font-size: 0.8rem; }

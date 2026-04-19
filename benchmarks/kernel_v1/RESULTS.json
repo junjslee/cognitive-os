@@ -1,0 +1,528 @@
+{
+  "dataset_version": "kernel_v1",
+  "loose": {
+    "dataset_size": 20,
+    "surfaced": 20,
+    "surfaced_rate": 1.0,
+    "by_failure_mode": {
+      "anchoring": {
+        "total": 3,
+        "surfaced": 3,
+        "rate": 1.0
+      },
+      "narrative": {
+        "total": 3,
+        "surfaced": 3,
+        "rate": 1.0
+      },
+      "overconfidence": {
+        "total": 4,
+        "surfaced": 4,
+        "rate": 1.0
+      },
+      "planning": {
+        "total": 2,
+        "surfaced": 2,
+        "rate": 1.0
+      },
+      "substitution": {
+        "total": 3,
+        "surfaced": 3,
+        "rate": 1.0
+      },
+      "wysiati": {
+        "total": 5,
+        "surfaced": 5,
+        "rate": 1.0
+      }
+    },
+    "cases": [
+      {
+        "id": "b01",
+        "failure_mode": "substitution",
+        "missing_field": "core_question",
+        "surfaced": true,
+        "matched_keywords": [
+          "cause"
+        ]
+      },
+      {
+        "id": "b02",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "concurrent",
+          "lock",
+          "scale"
+        ]
+      },
+      {
+        "id": "b03",
+        "failure_mode": "overconfidence",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "distribution",
+          "slice",
+          "worst-case",
+          "tail",
+          "subgroup"
+        ]
+      },
+      {
+        "id": "b04",
+        "failure_mode": "planning",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption",
+          "similar",
+          "differ",
+          "unknown component"
+        ]
+      },
+      {
+        "id": "b05",
+        "failure_mode": "narrative",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "causal",
+          "evidence",
+          "disprove",
+          "confounding"
+        ]
+      },
+      {
+        "id": "b06",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "edge case",
+          "representative",
+          "sample"
+        ]
+      },
+      {
+        "id": "b07",
+        "failure_mode": "overconfidence",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption",
+          "workload",
+          "operational",
+          "ops cost",
+          "authority"
+        ]
+      },
+      {
+        "id": "b08",
+        "failure_mode": "anchoring",
+        "missing_field": "core_question",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption"
+        ]
+      },
+      {
+        "id": "b09",
+        "failure_mode": "substitution",
+        "missing_field": "core_question",
+        "surfaced": true,
+        "matched_keywords": [
+          "decision",
+          "underlying need"
+        ]
+      },
+      {
+        "id": "b10",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "silent",
+          "degradation",
+          "conversion",
+          "metric"
+        ]
+      },
+      {
+        "id": "b11",
+        "failure_mode": "narrative",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "counterfactual",
+          "attribution",
+          "base rate",
+          "alternative explanation",
+          "market"
+        ]
+      },
+      {
+        "id": "b12",
+        "failure_mode": "overconfidence",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "timing",
+          "ordering",
+          "implicit",
+          "runtime"
+        ]
+      },
+      {
+        "id": "b13",
+        "failure_mode": "anchoring",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "workload",
+          "representative",
+          "our use case",
+          "assumption"
+        ]
+      },
+      {
+        "id": "b14",
+        "failure_mode": "planning",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "target",
+          "threshold",
+          "abort"
+        ]
+      },
+      {
+        "id": "b15",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "base rate",
+          "representative",
+          "distribution"
+        ]
+      },
+      {
+        "id": "b16",
+        "failure_mode": "substitution",
+        "missing_field": "core_question",
+        "surfaced": true,
+        "matched_keywords": [
+          "scope"
+        ]
+      },
+      {
+        "id": "b17",
+        "failure_mode": "narrative",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption",
+          "exposure",
+          "load",
+          "change frequency"
+        ]
+      },
+      {
+        "id": "b18",
+        "failure_mode": "wysiati",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "adversarial",
+          "failure mode",
+          "worst-case"
+        ]
+      },
+      {
+        "id": "b19",
+        "failure_mode": "anchoring",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "context",
+          "constraint",
+          "team size",
+          "scale",
+          "operational"
+        ]
+      },
+      {
+        "id": "b20",
+        "failure_mode": "overconfidence",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "unmeasured",
+          "drift"
+        ]
+      }
+    ]
+  },
+  "strict": {
+    "dataset_size": 20,
+    "surfaced": 18,
+    "surfaced_rate": 0.9,
+    "by_failure_mode": {
+      "anchoring": {
+        "total": 3,
+        "surfaced": 2,
+        "rate": 0.667
+      },
+      "narrative": {
+        "total": 3,
+        "surfaced": 3,
+        "rate": 1.0
+      },
+      "overconfidence": {
+        "total": 4,
+        "surfaced": 4,
+        "rate": 1.0
+      },
+      "planning": {
+        "total": 2,
+        "surfaced": 2,
+        "rate": 1.0
+      },
+      "substitution": {
+        "total": 3,
+        "surfaced": 2,
+        "rate": 0.667
+      },
+      "wysiati": {
+        "total": 5,
+        "surfaced": 5,
+        "rate": 1.0
+      }
+    },
+    "cases": [
+      {
+        "id": "b01",
+        "failure_mode": "substitution",
+        "missing_field": "core_question",
+        "surfaced": true,
+        "matched_keywords": [
+          "cause"
+        ]
+      },
+      {
+        "id": "b02",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "concurrent",
+          "lock"
+        ]
+      },
+      {
+        "id": "b03",
+        "failure_mode": "overconfidence",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "distribution",
+          "slice",
+          "worst-case",
+          "tail",
+          "subgroup"
+        ]
+      },
+      {
+        "id": "b04",
+        "failure_mode": "planning",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption",
+          "similar",
+          "differ",
+          "unknown component"
+        ]
+      },
+      {
+        "id": "b05",
+        "failure_mode": "narrative",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "causal",
+          "evidence",
+          "disprove",
+          "confounding"
+        ]
+      },
+      {
+        "id": "b06",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "edge case",
+          "representative",
+          "sample"
+        ]
+      },
+      {
+        "id": "b07",
+        "failure_mode": "overconfidence",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption",
+          "workload",
+          "operational",
+          "ops cost",
+          "authority"
+        ]
+      },
+      {
+        "id": "b08",
+        "failure_mode": "anchoring",
+        "missing_field": "core_question",
+        "surfaced": false,
+        "matched_keywords": []
+      },
+      {
+        "id": "b09",
+        "failure_mode": "substitution",
+        "missing_field": "core_question",
+        "surfaced": true,
+        "matched_keywords": [
+          "decision",
+          "underlying need"
+        ]
+      },
+      {
+        "id": "b10",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "silent",
+          "degradation",
+          "conversion",
+          "metric"
+        ]
+      },
+      {
+        "id": "b11",
+        "failure_mode": "narrative",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "counterfactual",
+          "attribution",
+          "base rate",
+          "alternative explanation",
+          "market"
+        ]
+      },
+      {
+        "id": "b12",
+        "failure_mode": "overconfidence",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "timing",
+          "ordering",
+          "implicit",
+          "runtime"
+        ]
+      },
+      {
+        "id": "b13",
+        "failure_mode": "anchoring",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "workload",
+          "representative",
+          "our use case",
+          "assumption"
+        ]
+      },
+      {
+        "id": "b14",
+        "failure_mode": "planning",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "target",
+          "threshold",
+          "abort"
+        ]
+      },
+      {
+        "id": "b15",
+        "failure_mode": "wysiati",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "base rate",
+          "representative",
+          "distribution"
+        ]
+      },
+      {
+        "id": "b16",
+        "failure_mode": "substitution",
+        "missing_field": "core_question",
+        "surfaced": false,
+        "matched_keywords": []
+      },
+      {
+        "id": "b17",
+        "failure_mode": "narrative",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "assumption",
+          "exposure",
+          "load",
+          "change frequency"
+        ]
+      },
+      {
+        "id": "b18",
+        "failure_mode": "wysiati",
+        "missing_field": "disconfirmation",
+        "surfaced": true,
+        "matched_keywords": [
+          "adversarial",
+          "failure mode",
+          "worst-case"
+        ]
+      },
+      {
+        "id": "b19",
+        "failure_mode": "anchoring",
+        "missing_field": "assumptions",
+        "surfaced": true,
+        "matched_keywords": [
+          "context",
+          "constraint",
+          "team size",
+          "scale",
+          "operational"
+        ]
+      },
+      {
+        "id": "b20",
+        "failure_mode": "overconfidence",
+        "missing_field": "unknowns",
+        "surfaced": true,
+        "matched_keywords": [
+          "unmeasured",
+          "drift"
+        ]
+      }
+    ]
+  }
+}

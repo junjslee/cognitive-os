@@ -1,0 +1,21 @@
+{
+  "name": "cognitive-os",
+  "description": "A portable cognitive kernel for AI agents. Ships the Reasoning Surface protocol, named failure-mode counters, operator profile schema, and workflow loop as Claude Code skills, agents, and hooks. The kernel outlives the tooling.",
+  "version": "0.4.0",
+  "author": {
+    "name": "Jun Lee",
+    "url": "https://github.com/junjslee"
+  },
+  "homepage": "https://github.com/junjslee/cognitive-os",
+  "repository": "https://github.com/junjslee/cognitive-os",
+  "license": "MIT",
+  "keywords": [
+    "cognitive-os",
+    "reasoning",
+    "memory-contract",
+    "operator-profile",
+    "kernel",
+    "governance",
+    "evolution-contract"
+  ]
+}

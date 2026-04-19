@@ -1,0 +1,11 @@
+{
+  "record": {
+    "id": "x1",
+    "memory_class": "episodic",
+    "summary": "test push"
+  },
+  "scope": {
+    "user_id": "tester",
+    "project_id": "cog-os"
+  }
+}
