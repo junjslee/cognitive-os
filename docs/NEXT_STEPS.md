@@ -4,6 +4,51 @@ Exact next actions, in priority order. Update this file at every handoff.
 
 ---
 
+## Road to v1.0.0 RC — concrete checklist (drafted 2026-04-20)
+
+Derived from a read-only audit of the CLI + stateful interceptor (see *Deep Audit Discoveries* in `docs/PROGRESS.md`). Ordered by blocking-weight: items above a line block RC tag; items below are RC → GA polish.
+
+### Blocking for v1.0.0-rc1 tag
+
+1. **Close 0.11.0 first.** Phase 12 (profile-audit loop) + `kernel/CHANGELOG.md` 0.11.0 entry + version reconcile across `pyproject.toml`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` + `kernel/MANIFEST.sha256` regeneration. Carried forward from the 0.11.0 track below — no RC tag while 0.11.0 is mid-flight.
+2. **Fix `pytest` out-of-box.** `pyproject.toml` has no `[tool.pytest.ini_options]`. A fresh clone + `pip install pytest` + `pytest` produces 6 collection errors (`ModuleNotFoundError: episteme`). Only works with `PYTHONPATH=src pytest` or editable install. NEXT_STEPS already claims "176 passed, zero regressions" — true only under a non-obvious env. One-line fix: add `[tool.pytest.ini_options]` with `pythonpath = ["src"]` + `testpaths = ["tests"]`. Audit verified 176 pass under that config.
+3. **Redact secrets in telemetry before write.** `core/hooks/reasoning_surface_guard.py::_write_prediction` and `core/hooks/calibration_telemetry.py::_write_telemetry` log `command_executed` verbatim to `~/.episteme/telemetry/*-audit.jsonl`. Inline secrets (e.g. `curl -H "Authorization: Bearer …"`, `AWS_SECRET_ACCESS_KEY=… terraform apply`) land in plaintext indefinitely. `episodic_writer.py` already redacts; lift that helper out and reuse it in both telemetry writers. Zero-cost, high-leverage confidentiality fix.
+4. **Cross-platform support for `state_tracker.py`.** `import fcntl` at module top-level fails on Windows. Hook ships as part of a cross-platform repo; `pyproject.toml` classifiers don't exclude Windows. Wrap the import in `try/except ImportError` and fall back to no-lock (docstring already says "degrade to last-write-wins on exotic filesystems" — extend that path to "no fcntl available"). Small change; unblocks the Windows install story.
+5. **Install UX — one-command bootstrap.** `INSTALL.md` currently documents a multi-step flow. For RC, ship `curl https://raw.githubusercontent.com/junjslee/episteme/main/scripts/install.sh | sh` (or the equivalent via `pipx install episteme`), and verify `episteme doctor` green on macOS + Linux after a clean install. Windows path (WSL acceptable for RC; native for GA).
+6. **Release-signing + provenance.** Publish to PyPI with SLSA provenance / sigstore attestation. At minimum: tag signed with GPG, `pip install episteme==1.0.0rc1` lands the same bytes as `pip install git+…@v1.0.0rc1`.
+
+### Fix during RC cycle (non-blocking for rc1, blocking for GA)
+
+7. **Episode ID collision.** `_evolve_run` uses `ts.strftime('%Y%m%d-%H%M%S')` as `episode_id`; two `episteme evolve run` calls in the same second silently overwrite each other's episode files. Append microseconds or a short random suffix.
+8. **`episteme evolve friction --top-n` negative-value slip.** `argparse` accepts `--top-n -1`, which slices from the end of a Python list and produces garbage output. Either constrain via `type=` with a positive-int checker or clamp `max(0, top_n)` in `_render_friction_report`.
+9. **`evolve promote` / `evolve rollback` preserve provenance history.** Both overwrite `provenance.captured_at`, losing the original capture timestamp. Append to a `history: []` list instead of replacing.
+10. **`evolve promote --force` must write an audit entry.** Bypassing `gate_result.passed` currently has no tamper-evident trail. Append to `~/.episteme/audit.jsonl` with `forced: true` on every force-promote.
+11. **Corrupt `.episteme/reasoning-surface.json` silently reads as "missing".** A malformed JSON file produces the same message as an absent one, so the operator never learns their surface file is broken. Emit a one-line stderr note when the file exists but fails parse.
+12. **Auto-mutation of `kernel/CONSTITUTION.md` from friction reports (operator-review gated).** The heuristic already names which unknowns are chronically under-elaborated; wire a `--apply` flag that proposes a CONSTITUTION diff, never auto-merged. Same pattern at `OPERATOR_PROFILE_SCHEMA.md` level via the 0.11 profile-audit loop.
+13. **Fence-Check hook.** Failure mode 7 (constraint removal without understanding) is named in docs but has no hook counter. When the agent proposes removing an entry from an `.episteme/*` policy file or a security-relevant config, require a one-line "this constraint exists because …" note in the Reasoning Surface before allowing the edit.
+14. **Controller-variety escalation prototype.** Failure mode 9. For PreToolUse on actions matching *neither* allow nor deny pattern sets, route to explicit human confirmation rather than defaulting to allow. Start narrow (network egress) to bound blast radius.
+15. **Cross-runtime MCP proxy daemon.** Closes intra-call write-then-execute (see *Architectural bypass vectors* below). The v0.10.0 state tracker fires PostToolUse — *after* the write has landed inside a single Bash call. The daemon inspects at the syscall boundary and refuses to return control until the contract is satisfied.
+
+### Discretionary / polish (nice for RC, not blocking)
+
+16. **`evolve friction --since=30d` window.** `_load_telemetry_pairs` loads all history unbounded; long-running installs slow linearly.
+17. **`_should_track` signal-to-noise.** Currently tracks every extension-less file (Makefile, Dockerfile, README) — TTL bounds it but inflates the state file.
+18. **Lockfile cleanup.** `~/.episteme/state/session_context.json.lock` persists forever. Benign but lint-worthy.
+19. **Ship a reference evaluator for `episteme evolve run`.** Currently `_default_evaluation_report` is a zero-metric stub; an episode is always born with `gate_result.passed: False`. For 1.0: either (a) document this is stub-by-design and the operator wires their own, or (b) ship a minimal reference harness that exercises the demo suite.
+20. **Three-path adoption model** (already scoped to 0.12.0 below — lift into RC if it lands quickly; otherwise 1.0.1).
+
+### Verification for RC gate
+
+Before tagging `v1.0.0-rc1`:
+- `PYTHONPATH=src pytest` → 176/176 passing (or test count updated, zero regressions).
+- Plain `pytest` from a fresh clone → same result (item 2 closes this gap).
+- `episteme doctor` green on macOS + Linux.
+- Manual smoke: `episteme init`, `episteme sync`, declare a Reasoning Surface, run an allowed high-impact op, run a blocked one, verify audit + telemetry + episodic records written and redaction applied (item 3).
+- `episteme evolve friction` against ≥ 7 days of real telemetry — Friction Report renders, no crash, no secrets in output.
+- `episteme kernel verify` clean (item 1 — MANIFEST regen).
+
+---
+
 ## Immediate (0.11.0 — phases 9–11 landed, coherence pass landed, phase 12 + release-packaging to go)
 
 Phases 1–11 of the 0.11.0 plan are complete, plus the **11.5 coherence pass** (docs-only, specced in `docs/DESIGN_V0_11_COHERENCE_PASS.md`, logged in `docs/PROGRESS.md`), the **11.5-raster follow-up** (both arxiv-style figures rasterized to PNG), and the **Mermaid architecture replacement** (`docs/ARCHITECTURE.md` created; `README.md` Figures 1 and 2 replaced with a native Mermaid `graph TD` flowchart mapping doxa / episteme / praxis / 결 to exact file-level implementations — no external image assets required for the architecture story). The v2 profile modulates a hook (`disconfirmation_specificity_min`), the episodic tier has an active writer, the semantic promotion job emits proposals to the reflective tier, and the repo's visual + narrative story now matches what the code ships — two arxiv-style figures (structural stratification · runtime interposition) grounded on the doxa / episteme / praxis spine with 결 (gyeol) as the grain through it; a cinematic 75 s posture demo (`scripts/demo_posture.sh`) live-validated against the real guard; README leads thinking-first. Phase 12 closes the calibration loop; phases 13–14 package the release.
