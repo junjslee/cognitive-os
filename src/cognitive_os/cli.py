@@ -3335,6 +3335,89 @@ def _kernel_update() -> int:
     return 0
 
 
+def _inject(target: Path = Path("."), strict: bool = True) -> int:
+    cwd = target.resolve()
+    if not cwd.exists():
+        print(f"[inject] path does not exist: {cwd}", file=sys.stderr)
+        return 1
+    cognitive_dir = cwd / ".cognitive-os"
+    cognitive_dir.mkdir(parents=True, exist_ok=True)
+
+    if strict:
+        (cognitive_dir / "strict-surface").touch()
+        print(f"[inject] strict enforcement enabled  → {cognitive_dir / 'strict-surface'}")
+
+    surface_path = cognitive_dir / "reasoning-surface.json"
+    if not surface_path.exists():
+        from datetime import datetime, timezone as tz
+        template = {
+            "schema": "cognitive-os/reasoning-surface@1",
+            "timestamp": datetime.now(tz.utc).isoformat(),
+            "core_question": "",
+            "knowns": [],
+            "unknowns": ["[fill this in before any high-impact action]"],
+            "assumptions": [],
+            "disconfirmation": "",
+        }
+        surface_path.write_text(json.dumps(template, indent=2), encoding="utf-8")
+        print(f"[inject] surface template written    → {surface_path}")
+    else:
+        print(f"[inject] surface already present     → {surface_path}")
+
+    print()
+    print(f"cognitive-os enforcement active in: {cwd}")
+    print("Next: edit .cognitive-os/reasoning-surface.json")
+    print("      Fill in core_question, unknowns, disconfirmation.")
+    print("      Any high-impact op (git push, publish, migrations) will block until the surface is valid.")
+    return 0
+
+
+def _surface_log(limit: int = 50, blocked_only: bool = False) -> int:
+    audit_path = HOME / ".cognitive-os" / "audit.jsonl"
+    if not audit_path.exists():
+        print("No audit log found. Activate enforcement first:")
+        print("  cognitive-os inject [path]   # deploy to a project")
+        print("  cognitive-os sync            # deploy globally")
+        return 0
+
+    entries: list[dict] = []
+    with open(audit_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+
+    if blocked_only:
+        entries = [e for e in entries if e.get("action") == "blocked"]
+
+    entries = entries[-limit:]
+
+    if not entries:
+        label = " (blocked only)" if blocked_only else ""
+        print(f"No entries{label} in audit log.")
+        return 0
+
+    icons = {"blocked": "🔴", "advisory": "🟡", "passed": "🟢"}
+    print(f"{'TIME':<28} {'ACTION':<10} {'STATUS':<12} {'TOOL':<10} OP")
+    print("─" * 80)
+    for e in entries:
+        action = e.get("action", "?")
+        icon = icons.get(action, "⚪")
+        ts = (e.get("ts") or "?")[:19].replace("T", " ")
+        print(
+            f"{icon} {ts:<26} {action:<10} {e.get('status','?'):<12}"
+            f" {e.get('tool','?'):<10} {e.get('op','?')}"
+        )
+
+    blocked_count = sum(1 for e in entries if e.get("action") == "blocked")
+    print(f"\n{len(entries)} entries | {blocked_count} blocked")
+    return 0
+
+
 def _audit(fix: bool = False) -> int:
     """Reasoning audit: verify the current project session has addressed cognitive unknowns."""
 
@@ -3616,6 +3699,32 @@ def build_parser() -> argparse.ArgumentParser:
     private_skill.add_argument("action", choices=["enable", "disable", "status"])
     private_skill.add_argument("name")
     private_skill.add_argument("--tool", default="claude")
+
+    inject_cmd = sub.add_parser(
+        "inject",
+        help="Deploy cognitive enforcement to any directory in one command",
+    )
+    inject_cmd.add_argument(
+        "path", nargs="?", type=Path, default=Path("."),
+        help="Target directory (default: current dir)",
+    )
+    inject_cmd.add_argument(
+        "--no-strict", dest="no_strict", action="store_true",
+        help="Advisory mode only — do not enable hard blocking",
+    )
+
+    log_cmd = sub.add_parser(
+        "log",
+        help="Show audit log of reasoning-surface checks (passed / advisory / blocked)",
+    )
+    log_cmd.add_argument(
+        "--limit", type=int, default=50,
+        help="Number of recent entries to show (default: 50)",
+    )
+    log_cmd.add_argument(
+        "--blocked", action="store_true",
+        help="Show only blocked operations",
+    )
 
     start = sub.add_parser("start", help="Start the preferred agent surface")
     start.add_argument("tool", nargs="?", default="claude", choices=["claude"])
@@ -3949,6 +4058,16 @@ def main(argv: Iterable[str] | None = None) -> int:
         if args.bridge_action == "substrate":
             return _bridge_substrate_dispatch(args)
         return 0
+    if args.command == "inject":
+        return _inject(
+            target=getattr(args, "path", Path(".")),
+            strict=not getattr(args, "no_strict", False),
+        )
+    if args.command == "log":
+        return _surface_log(
+            limit=getattr(args, "limit", 50),
+            blocked_only=getattr(args, "blocked", False),
+        )
     if args.command == "audit":
         return _audit(fix=getattr(args, "fix", False))
     if args.command == "kernel":

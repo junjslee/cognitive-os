@@ -11,6 +11,18 @@ Format: `[version] — date — change`. Versions follow semantic intent:
 
 ---
 
+## [0.7.0] — 2026-04-19 — Real enforcement: audit log, inject command, strict blocking
+
+- **Added** `_write_audit()` to `core/hooks/reasoning_surface_guard.py` — every reasoning-surface check (passed / advisory / blocked) now writes a structured entry to `~/.cognitive-os/audit.jsonl`. Audit failure is silenced so it can never itself block an operation.
+- **Added** `cognitive-os inject [path] [--no-strict]` CLI command — deploys cognitive enforcement to any repository in one command: creates `.cognitive-os/strict-surface` (hard-block mode) and a blank reasoning-surface template. Default: strict. Closes onboarding friction gap.
+- **Added** `cognitive-os log [--limit N] [--blocked]` CLI command — reads `~/.cognitive-os/audit.jsonl` and renders a formatted time-series audit table with 🟢/🟡/🔴 action indicators. Closes observability gap.
+- **Bumped** `plugin.json` version to `0.6.0`.
+- **Added** `?` / `help [subcommand]` CLI aliases — `cognitive-os ?` and `cognitive-os help sync` both resolve to the correct help output.
+
+Rationale: 0.6.0 established the philosophical control plane. 0.7.0 makes it physically enforceable and observable. The hook now produces a real block (exit 2) when strict mode is active — not advisory text. The audit log turns governance from "trust the agent read the markdown" into "here is every check, timestamped." The inject command reduces onboarding from sync + setup + survey to one command for any repo that needs immediate coverage.
+
+Architectural gap still open: enforcement scope is currently limited to Claude Code's PreToolUse hook surface. A cross-runtime MCP proxy daemon that intercepts tool calls regardless of LLM runtime is the next level.
+
 ## [0.6.0] — 2026-04-19 — Epistemic control plane, DbC framing, zero-trust positioning
 
 - **Fixed** `.claude-plugin/marketplace.json` schema: `plugins[0].source` was `"."` (invalid relative path); corrected to `"https://github.com/junjslee/cognitive-os"`. Plugin is now installable via `/plugin marketplace add junjslee/cognitive-os`.

@@ -151,6 +151,25 @@ def _surface_status(cwd: Path) -> tuple[str, str]:
     return "ok", ""
 
 
+def _write_audit(tool: str, op: str, cwd: Path, status: str, action: str, strict: bool) -> None:
+    audit_path = Path.home() / ".cognitive-os" / "audit.jsonl"
+    audit_path.parent.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "tool": tool,
+        "op": op,
+        "cwd": str(cwd),
+        "status": status,
+        "action": action,
+        "strict": strict,
+    }
+    try:
+        with open(audit_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        pass  # Audit failure must never block operations
+
+
 def _surface_template() -> str:
     return (
         "Write .cognitive-os/reasoning-surface.json with:\n"
@@ -181,19 +200,23 @@ def main() -> int:
 
     cwd = Path(payload.get("cwd") or os.getcwd())
     status, detail = _surface_status(cwd)
+    strict = (cwd / ".cognitive-os" / "strict-surface").exists()
+
     if status == "ok":
+        _write_audit(tool_name, label, cwd, status, "passed", strict)
         return 0
 
-    strict = (cwd / ".cognitive-os" / "strict-surface").exists()
     header = f"REASONING SURFACE {status.upper()}: high-impact op `{label}` with {detail}."
     instruction = _surface_template()
 
     if strict:
+        _write_audit(tool_name, label, cwd, status, "blocked", strict)
         sys.stderr.write(
             f"{header}\nBlocked by strict-surface mode.\n{instruction}\n"
         )
         return 2
 
+    _write_audit(tool_name, label, cwd, status, "advisory", strict)
     advisory = {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

@@ -4,6 +4,15 @@ Running log of completed work. Most recent first.
 
 ---
 
+## 0.7.0 — 2026-04-19
+
+### Real enforcement pass
+- `core/hooks/reasoning_surface_guard.py` — added `_write_audit()` writing structured entries to `~/.cognitive-os/audit.jsonl` on every check (passed / advisory / blocked)
+- `src/cognitive_os/cli.py` — added `_inject()`, `_surface_log()`, parser registration, and dispatch for `inject` and `log` commands
+- `.claude-plugin/plugin.json` — version bumped to 0.6.0
+- `kernel/CHANGELOG.md` — 0.7.0 entry added
+- Verified: `cognitive-os inject /tmp` creates strict-surface + template; hook fires real exit-2 block; `cognitive-os log` shows timestamped audit entries
+
 ## 0.6.0 — 2026-04-19
 
 ### Gap closure (second pass)
