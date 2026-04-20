@@ -4,9 +4,22 @@ Running log of completed work. Most recent first.
 
 ---
 
-## 0.11.0 — 2026-04-20 — Kernel depth + profile v2 runtime + episodic tier writer
+## 0.11.0 — 2026-04-20 — Kernel depth + profile v2 runtime + episodic + semantic promotion
 
-Docs + code. Phases 1–10 complete; phases 11–14 remain (semantic promotion, profile-audit loop, CHANGELOG, MANIFEST regen).
+Docs + code. Phases 1–11 complete; phases 12–14 remain (profile-audit loop, CHANGELOG, MANIFEST regen).
+
+### Phase 11 — semantic-tier promotion
+
+- New module `src/episteme/_memory_promote.py`. Reads episodic records from `~/.episteme/memory/episodic/*.jsonl`; clusters by `(domain_marker, primary high-impact pattern)`; computes per-cluster outcome distribution + disconfirmation-fire-rate; emits **proposals** (not promotions) into `~/.episteme/memory/reflective/semantic_proposals.jsonl`. Stability labels: `typically-succeeds` (success_rate ≥ 0.8), `typically-fails` (≤ 0.2), `mixed` otherwise. Clusters below min-size (default 3) or with zero observed exit codes are dropped.
+- New CLI subcommand `episteme memory promote [--episodic-dir PATH] [--reflective-dir PATH] [--output PATH] [--min-cluster N]`. Wired into the existing `memory` subcommand group alongside `record`/`list`/`search`. Prints the report to stdout; writes file only when `--output` is given; the reflective jsonl is only created when there's at least one proposal (so "no candidates yet" never creates an empty noise file).
+- Deterministic: proposal ids are `prop_<sha1(signature|sorted_evidence_refs)[:16]>`, so re-running on the same episodic input produces byte-identical ids. Proposals sort stably by `(-sample_size, action_pattern)`. Re-run verified end-to-end.
+- Never touches the semantic tier. `~/.episteme/memory/semantic/` is not created by this command; proposal acceptance is a deferred phase. The design keeps the single most important discipline from MEMORY_ARCHITECTURE.md: *propose → review → accept*, never silent promotion.
+- End-to-end smoke: 6 synthetic records (3 `git push` mixed, 3 `npm publish` success) → 2 proposals with correct stability labels and disconfirmation fire rates (33% and 0% respectively). Report markdown + jsonl both landed.
+- Tests: `tests/test_memory_promote.py`, 19 cases. Load + cluster correctness, signature rules, proposal shape conforms to `memory-contract-v1`, determinism (same input → same ids + same order), write discipline (reflective only, never semantic), CLI-level `--output` and min-cluster gates, render of empty and populated reports.
+- Test suite 157 → 176 (+19). Zero regressions.
+- Interconnection: the proposal's `evidence_refs` carry episodic record ids, so phase 12 (profile audit) can trace back to source when it uses semantic-tier stability as a signal against profile axis claims.
+
+### Phases 9–10 — profile becomes control signal, memory becomes storage
 
 ### Phases 9–10 — profile becomes control signal, memory becomes storage
 
@@ -63,7 +76,8 @@ Three of the 9 cognitive-style axes originally read like generic best-practice a
 - `kernel/README.md` — file list adds `MEMORY_ARCHITECTURE.md` with a one-line description; `OPERATOR_PROFILE_SCHEMA.md` description updated to reflect v2 structure.
 
 ### What did *not* land in this pass (explicit)
-- **Phases 11–12 remain:** semantic-tier promotion job (`episteme memory promote`) that clusters episodic records into semantic patterns; profile-audit loop that compares claimed scored axes against episodic evidence and flags drift for re-elicitation. Phases 9–10 shipped the first two bridges (profile → hook, decision → episodic record); 11–12 close the calibration loop by letting episodic evidence propose profile updates.
+- **Phase 12 remains:** profile-audit loop that compares claimed scored axes against episodic + semantic evidence and flags drift for re-elicitation. Phases 9–11 shipped three bridges (profile → hook, decision → episodic record, episodic patterns → semantic proposals); phase 12 is the last bridge, closing the calibration loop by letting observed evidence propose profile updates.
+- **Proposal acceptance step is deferred.** Phase 11 writes proposals to the reflective tier but does not (yet) provide an `episteme memory accept <proposal-id>` affordance that promotes a reviewed proposal to the semantic tier. That step is scoped to 0.11.1 or 0.12, pending evidence from real usage about whether bulk-review or per-proposal-review is the right UX.
 - **Seven derived knobs still unwired:** phase 9 shipped one end-to-end (`disconfirmation_specificity_min` + its companion `unknown_specificity_min`). The other six knobs declared in OPERATOR_PROFILE_SCHEMA.md section 5 (`default_autonomy_class`, `preferred_lens_order`, `noise_watch_set`, `explanation_form`, `checkpoint_frequency`, `scaffold_vs_terse`, `fence_check_strictness`) are computed and written to `~/.episteme/derived_knobs.json` but no hook reads them yet. Each is a one-file wiring pattern-match on phase 9.
 - **Three episodic-tier triggers still deferred:** phase 10 fires only on high-impact Bash pattern match (trigger #1 of the four declared in MEMORY_ARCHITECTURE.md). Hook-blocked actions (trigger #2) need PreToolUse-side cooperation; Disconfirmation-fired (trigger #3) needs signal the writer doesn't see; operator-elected (trigger #4) needs UI affordance.
 - `kernel/MANIFEST.sha256` is stale — regenerated after phase 14. `episteme doctor` will emit drift warnings until then.

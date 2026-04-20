@@ -3910,6 +3910,32 @@ def build_parser() -> argparse.ArgumentParser:
     m_search = memory_sub.add_parser("search", help="Search active memory records by text")
     m_search.add_argument("query", help="Text to search for (case-insensitive)")
 
+    m_promote = memory_sub.add_parser(
+        "promote",
+        help="Scan episodic records for stable patterns; emit semantic-tier proposals (never auto-promotes)",
+    )
+    m_promote.add_argument(
+        "--episodic-dir",
+        default=None,
+        help="Override episodic-tier directory (default: ~/.episteme/memory/episodic)",
+    )
+    m_promote.add_argument(
+        "--reflective-dir",
+        default=None,
+        help="Override reflective-tier directory (default: ~/.episteme/memory/reflective)",
+    )
+    m_promote.add_argument(
+        "--output",
+        default=None,
+        help="Write the Markdown report to this path instead of only stdout",
+    )
+    m_promote.add_argument(
+        "--min-cluster",
+        type=int,
+        default=3,
+        help="Minimum cluster size to emit a proposal (default: 3)",
+    )
+
     sync = sub.add_parser("sync", help="Sync managed runtime assets into Claude Code and Hermes")
     sync.add_argument(
         "--governance-pack",
@@ -4218,6 +4244,19 @@ def main(argv: Iterable[str] | None = None) -> int:
             )
         if args.memory_action == "search":
             return _memory_search(args.query)
+        if args.memory_action == "promote":
+            from pathlib import Path as _Path
+            from . import _memory_promote as _mp
+            report, count, written_to = _mp.run_promote(
+                episodic_dir=_Path(args.episodic_dir) if args.episodic_dir else None,
+                reflective_dir=_Path(args.reflective_dir) if args.reflective_dir else None,
+                output_path=_Path(args.output) if args.output else None,
+                min_cluster_size=args.min_cluster,
+            )
+            print(report)
+            if written_to is not None:
+                print(f"\nWrote {count} proposal(s) to: {written_to}")
+            return 0
         return 0
     if args.command == "sync":
         if getattr(args, "check", False):

@@ -4,14 +4,13 @@ Exact next actions, in priority order. Update this file at every handoff.
 
 ---
 
-## Immediate (0.11.0 — phases 9–10 landed, phases 11–14 to go)
+## Immediate (0.11.0 — phases 9–11 landed, phase 12 + release-packaging to go)
 
-Phases 1–10 of the 0.11.0 plan are complete. The v2 profile now modulates at least one hook (`disconfirmation_specificity_min`), and the memory layer has its first active writer (episodic tier). Phases 11–12 close the calibration loop; phases 13–14 package the release.
+Phases 1–11 of the 0.11.0 plan are complete. The v2 profile modulates a hook (`disconfirmation_specificity_min`), the episodic tier has an active writer, and the semantic promotion job emits proposals to the reflective tier. Phase 12 closes the calibration loop; phases 13–14 package the release.
 
-1. **Semantic-tier promotion job (`episteme memory promote`).** Deterministic CLI subcommand. Clusters similar episodic records (embedding-free first pass: keyword + domain marker + action-class match). Emits proposals into the reflective tier; never auto-writes to semantic without an explicit review flag. Borrows its structure from `episteme evolve friction` — same shape of tool, operating one tier up. Unblocks phase 12 (profile audit needs the semantic tier for pattern-stability signals).
-2. **Profile-audit loop.** On-demand comparison of each claimed scored axis against the episodic record. Flags drift to the reflective tier; surfaces as a re-elicitation prompt at SessionStart. Operationalizes the *Audit Discipline* section of OPERATOR_PROFILE_SCHEMA.md. Without this loop, measure-as-target drift (failure mode 8) is named in docs but unchecked in running code. This is the loop that gives the 5 axes currently marked `inferred` in the maintainer's profile actual meaning — drift surfaces them for elicitation, rather than them silently decaying into defaults.
-3. **`kernel/CHANGELOG.md` 0.11.0 entry** + version reconcile (`pyproject.toml`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`). Deferred until items 1–2 land so the changelog describes a delivered, not aspirational, version.
-4. **`kernel/MANIFEST.sha256` regeneration** via `episteme kernel update`. Currently stale — `episteme doctor` emits drift warnings until regenerated. Run last so a single regen covers all 0.11 kernel edits.
+1. **Profile-audit loop (phase 12).** On-demand comparison of each claimed scored axis against the episodic record and the semantic proposals from phase 11. Flags drift to the reflective tier; surfaces as a re-elicitation prompt at SessionStart. Operationalizes the *Audit Discipline* section of OPERATOR_PROFILE_SCHEMA.md. Without this loop, measure-as-target drift (failure mode 8) is named in docs but unchecked in running code. This is the loop that gives the 5 axes currently marked `inferred` in the maintainer's profile actual meaning — drift surfaces them for elicitation, rather than them silently decaying into defaults. Reads: episodic tier + reflective/semantic_proposals.jsonl. Writes: reflective/profile_audit.jsonl + SessionStart prompt surface.
+2. **`kernel/CHANGELOG.md` 0.11.0 entry** + version reconcile (`pyproject.toml`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`). Deferred until phase 12 lands so the changelog describes a delivered, not aspirational, version.
+3. **`kernel/MANIFEST.sha256` regeneration** via `episteme kernel update`. Currently stale — `episteme doctor` emits drift warnings until regenerated. Run last so a single regen covers all 0.11 kernel edits.
 
 ## Follow-on wiring (can land alongside phases 11–14 or in 0.11.1)
 
@@ -35,6 +34,11 @@ Episodic-tier also has three declared triggers not yet firing (only high-impact 
 
 ## Short-term
 
+- **Three-path adoption model (scoped to 0.12.0; endorsed by operator).** Today the repo ships the maintainer's real profile in `core/memory/global/` and `.gitignore`'s comment tells forkers to "edit them to make them your own." That implicitly forces the author's values as the forker's starting point — a schema violation (OPERATOR_PROFILE_SCHEMA.md section 4b: "null = unknown, not default"). Replace with three explicit on-ramps:
+  - **Example mode** — maintainer's real filled profile ships at `examples/author/global/` as a worked reference. Forker reads, doesn't copy. Preserves the schema's "a profile must distinguish this operator" rule.
+  - **Ingest mode** — `episteme init --ingest=author` copies the example verbatim to `core/memory/global/` as a quickstart. Honest: the forker's agent behaves *as the maintainer's agent would*, with a visible `confidence: ingested-from-author` metadata flag per axis so the profile-audit loop surfaces it for re-elicitation over time.
+  - **Fill mode** — `episteme init` runs interactive elicitation, prompting axis-by-axis against the anchor text from the schema. Leaves anything unelicited as `null`.
+- **Proposal acceptance step (phase 11.5).** `episteme memory accept <proposal-id>` reads the reflective proposal, promotes it to `~/.episteme/memory/semantic/YYYY-MM-DD.jsonl` under the schema, and marks the proposal `status: accepted` with a back-reference to the semantic record. Deferred until real usage shows whether per-proposal or bulk review is the better UX.
 - **Auto-refinement of `CONSTITUTION.md` from the friction report.** The heuristic already names which unknowns are chronically under-elaborated; wire a `--apply` flag that proposes a CONSTITUTION.md diff, gated by human review — never auto-merged. Same pattern applied at `OPERATOR_PROFILE_SCHEMA.md` level via the 0.11 profile-audit loop.
 - **Fence-check enforcement in hooks.** Failure mode 7 (constraint removal without understanding) is named in the docs but has no hook counter. When the agent proposes removing an entry from an `.episteme/*` policy file, a forbidden-patterns file, or a security-relevant config, require a one-line "this constraint exists because …" note in the Reasoning Surface before allowing the edit. Smaller than a full constraint-archaeology feature; closes the cheapest version of the gap.
 - **Controller-variety escalation prototype.** Failure mode 9. For PreToolUse events on actions that match *neither* the allow nor deny pattern sets, route to explicit human confirmation rather than defaulting to allow. Start with a narrow action class (network egress) to bound the blast radius of a wrong default.
@@ -55,12 +59,13 @@ v0.10.0 closed write-then-execute *across tool calls* (state tracker + deep-scan
 
 ---
 
-## Closed in 0.11.0 (phases 1–10)
+## Closed in 0.11.0 (phases 1–11)
 
+- **Phase 11 — semantic-tier promotion job.** New `src/episteme/_memory_promote.py` + CLI subcommand `episteme memory promote`. Reads episodic tier, clusters by `(domain_marker, primary high-impact pattern)`, computes per-cluster success rate + disconfirmation fire rate, emits deterministic proposals to `~/.episteme/memory/reflective/semantic_proposals.jsonl`. Proposal ids are stable hashes of the signature + sorted evidence refs, so re-running on identical input produces byte-identical output. Never touches the semantic tier; promotion is explicit. End-to-end verified with 6 synthetic records → 2 proposals (git push mixed, npm publish typically-succeeds). 19 new tests.
 - **Phase 9 — profile becomes control signal.** New `core/hooks/_derived_knobs.py` (axis-to-knob derivation + reader/writer). `reasoning_surface_guard.py` replaces module-level `MIN_DISCONFIRMATION_LEN` / `MIN_UNKNOWN_LEN` constants with lookups against `~/.episteme/derived_knobs.json`, fallback 15. For the maintainer's v2 profile the minimum raises 15 → 27; an 18-char disconfirmation now fails, a 39-char passes. First end-to-end proof the v2 profile modulates hook behavior. 17 new tests.
 - **Phase 10 — episodic-tier writer.** New PostToolUse hook `core/hooks/episodic_writer.py` fires on high-impact Bash pattern match; assembles a record per the `memory-contract-v1` schema (common.json + episodic_record.json); appends to `~/.episteme/memory/episodic/YYYY-MM-DD.jsonl`. Reasoning-Surface snapshot attached when present; secrets redacted before write; provenance confidence reflects available signal. Wired into `hooks/hooks.json` PostToolUse/Bash alongside `state_tracker` and `calibration_telemetry`, all async. Correlation-id algorithm mirrors calibration telemetry so records join. 19 new tests; end-to-end smoke-test verified a real record at `~/.episteme/memory/episodic/2026-04-20.jsonl`.
 - **Operator profile v2 filled.** `core/memory/global/operator_profile.md` migrated. 6 process axes rescored 0–3 → 0–5. All 9 cognitive-style axes populated (3 flipped to `elicited` based on source-doc citations: `abstraction_entry`, `explanation_depth`, `asymmetry_posture`; 5 remain `inferred` pending phase-12 audit). Expertise map populated.
-- **Test suite 121 → 157** (36 new). Zero regressions.
+- **Test suite 121 → 176** (55 new across phases 9/10/11). Zero regressions.
 
 ## Closed in 0.11.0-entry (docs-only pass)
 
