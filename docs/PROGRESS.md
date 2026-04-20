@@ -34,9 +34,23 @@ Running log of completed work. Most recent first.
 - Pre-commit validate hook → all kernel, agents, skills pass
 - `pip install -e .` metadata resolves: `episteme = "episteme.cli:main"`
 
-### Known consequences (user must action)
-- `cognitive-os` console script is gone; reinstall via `pip install -e .` to register `episteme`
-- Shell env var `COGNITIVE_OS_CONDA_ROOT` should be renamed to `EPISTEME_CONDA_ROOT` in `~/.zshrc`
+### Environment completion (completed in-session)
+- GitHub repo renamed via `gh repo rename` → `github.com/junjslee/episteme` (old URL 301-redirects)
+- Local `origin` remote updated; all in-repo URLs now point at the new canonical URL
+- Physical repo directory renamed `/Users/junlee/cognitive-os` → `/Users/junlee/episteme`
+- Pip: `pip uninstall cognitive-os` → `pip install -e .` (registers `episteme` console script)
+- `~/.claude/settings.json` hook command paths rewritten to `/Users/junlee/episteme/core/hooks/*`
+- `~/.zshrc` aliases and hint function renamed (`ainit`, `awt`, `cci`, `aci`, `adoctor`, `aos`)
+- `episteme sync` regenerated `~/.claude/CLAUDE.md` with new `@/Users/junlee/episteme/...` includes
+
+### Dynamic Python runtime (0.8.0 follow-on)
+- `CONDA_ROOT` hardcoded to `~/miniconda3` → `PYTHON_PREFIX` derived from `sys.prefix`
+- New env vars: `EPISTEME_PYTHON_PREFIX`, `EPISTEME_PYTHON`, `EPISTEME_REQUIRE_CONDA`
+- Legacy `EPISTEME_CONDA_ROOT` / `COGNITIVE_OS_CONDA_ROOT` still honored as fallbacks
+- `episteme doctor` skips conda checks on non-conda runtimes unless `EPISTEME_REQUIRE_CONDA=1`
+
+### Temporary compatibility shim
+- Symlink `/Users/junlee/cognitive-os → /Users/junlee/episteme` created to keep the current shell session's cwd valid. Remove with `rm /Users/junlee/cognitive-os` after restarting any shells/editors that had the old path cached.
 
 ---
 
