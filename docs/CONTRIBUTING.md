@@ -50,7 +50,7 @@ agg docs/assets/strict_mode_demo.cast docs/assets/strict_mode_demo.gif \
   --cols 92 --rows 28 --font-size 16 --theme monokai
 ```
 
-Target size: ≤ 2 MB, ~30 seconds, readable at 1x on GitHub without zoom. If the GIF exceeds that budget, drop `--font-size` or re-record with a shorter `DEMO_PAUSE`.
+Keep it a quick demo — readable at 1x on GitHub without zoom, small enough to load instantly in the README. If the GIF is too heavy, drop `--font-size` or re-record with a shorter `DEMO_PAUSE`.
 
 ### 4. Commit both artifacts
 
