@@ -89,6 +89,15 @@ to surface risk warnings, and so on):
 
 A missing axis means "unknown." A filled-in axis is a commitment.
 
+**Required metadata (v0.10.0+):** the file MUST carry a
+`Last elicited: YYYY-MM-DD` line near the top. The sync path parses it and
+injects a visible "Stale Context Warning" into the rendered operator memory
+whenever the date is absent or older than 30 days. Priorities and risk
+tolerances drift; the warning exists so an agent does not silently act on
+stale posture. Form accepted by the parser:
+`Last elicited: 2026-04-20`, `_Last elicited: 2026-04-20_`,
+`- Last elicited: 2026-04-20`.
+
 ---
 
 ## Optional but recommended

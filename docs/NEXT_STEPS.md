@@ -4,33 +4,44 @@ Exact next actions, in priority order. Update this file at every handoff.
 
 ---
 
-## Immediate (0.9.0 remainder)
+## Immediate (0.10.0 remainder → 0.10.0 GA)
 
 1. **Record the Strict Mode demo GIF** — first maintainer to run it produces `docs/assets/strict_mode_demo.gif` and `.cast`. Instructions in [`docs/CONTRIBUTING.md`](./CONTRIBUTING.md#recording-the-strict-mode-demo). Budget ≤ 2 MB, ~30 s.
-2. **Add `last_elicited` timestamp** to operator profile schema (Gap B). Lowest-risk schema extension — additive field, no adapter break.
-3. **Replace ASCII control-plane diagram** in `README.md` with SVG. Concept already defined; asset production only.
-4. **First telemetry pass review** — after ~1 week of real use, scan `~/.episteme/telemetry/` and answer: do predictions and outcomes pair reliably? Is `tool_use_id` present in both halves? Do any legitimate commands show up repeatedly blocked (FP signal)? Feed back into Phase 4 tuning if FPs surface.
+2. **First friction-report pass** — after ~1 week of real v0.10.0-α use, run `episteme evolve friction` against accumulated telemetry. Answer: do the ranked unknowns point at real calibration debt? Are the friction-prone ops the same ones humans are already suspicious of? Tune the heuristic (currently: skip empty envelopes; rank by raw frequency) if the top-N doesn't track intuition.
+3. **Stateful-interception FP audit** — scan `~/.episteme/audit.jsonl` for blocks carrying the new `via agent-written <path>` label. Any false positive here is a regression-budget hit; surface them fast.
+4. **Tag and push `v0.10.0-alpha`** after one-week soak if no FP spike and no telemetry anomalies.
 
-## Short-term (0.9.0 remainder)
+## Short-term
 
-- `tacit-call` decision marker in Reasoning Surface schema (Gap D)
-- Cynefin domain classification field in `reasoning-surface.json` (companion to KERNEL_LIMITS.md addition)
+- `tacit-call` decision marker in Reasoning Surface schema (Gap D).
+- Cynefin domain classification field in `reasoning-surface.json` (companion to `kernel/KERNEL_LIMITS.md` addition).
+- **Auto-refinement of `CONSTITUTION.md` from the friction report.** The heuristic already names which unknowns are chronically under-elaborated; wire a `--apply` flag that proposes a CONSTITUTION.md diff, gated by human review — never auto-merged.
 
 ## Medium-term (roadmap)
 
-- Multi-operator mode design (Gap C) — deferred past 0.9.0; requires profile schema rework.
-- Cross-runtime MCP proxy daemon — unblocks write-then-execute interception; blocked on telemetry-informed demand evidence.
+- Multi-operator mode design (Gap C) — deferred past 0.10.0; requires profile schema rework.
+- **Cross-runtime MCP proxy daemon — the next real Sovereign Kernel step.** v0.10.0-α gives the kernel *memory* across calls. The cross-runtime daemon gives the kernel *mediation* at the syscall boundary: pause execution between the write and the exec, inspect every subprocess fork, and refuse to return control to the agent until the contract is satisfied. This is what closes intra-call indirection (see below). Blocked on telemetry-informed demand evidence from v0.10.0-α.
 
-## Architectural bypass vectors — remaining open
+## Architectural bypass vectors — remaining open after v0.10.0-α
 
-After the 0.9.0-entry hardening, the guard now handles: backtick substitution, `eval $VAR` indirection, and shell-script execution (`./x.sh`, `bash x.sh`, `source x.sh`) with a 64 KB content scan. These remain open:
+v0.10.0-α closed write-then-execute *across tool calls* (state tracker + deep-scan) and variable-indirection (`bash $F` against any recent tracked write). These remain:
 
-1. **Write-then-execute across calls.** Agent writes `run.sh` via `Write`, then runs it via `Bash`. Individually neither call is high-impact. Requires cross-call state persisted between `PreToolUse` invocations — not achievable in a stateless single-call hook. Candidate for the cross-runtime MCP proxy daemon (0.10+).
-2. **Dynamic shell assembly.** `A=git; B=push; $A $B` assembles the command at runtime from tokens that individually don't trip any pattern. Closing this requires a lightweight shell parser (risks correctness regressions) or a deny-by-default policy on `eval`/`$()`/backticks (breaks legitimate automation, and we already block `eval $VAR`). Deferred pending cost/benefit review.
-3. **Scripts larger than 64 KB.** The scanner truncates at 64 KB; high-impact ops in bytes 64k..∞ of a single script are missed. Raising the cap increases hook latency and creates a DoS surface on pathologically large files. Accepted tradeoff until a real-world FN is reported.
-4. **Scripts produced at runtime.** Agents who write a `.sh` in a `Write` call immediately followed by `bash ./that.sh` are caught by the current scan (the file exists at scan time). But scripts generated via `echo "…" > run.sh && bash run.sh` *in a single Bash call* — the scan reads the old file, or none — are a residual gap. Handled partially by item 1's cross-call state.
+1. **Intra-call write-then-execute.** `echo "git push" > s.sh && bash s.sh` as a single Bash tool call is caught today only by the in-command text scanner — state tracking fires PostToolUse, after the write has landed. Fix needs a cross-runtime proxy daemon. Targeted at 0.11+.
+2. **Dynamic shell assembly.** `A=git; B=push; $A $B` — unchanged from 0.8.1. Would require a lightweight shell parser, or a deny-by-default policy on `$()`/backticks (legitimate automation break). Deferred pending cost/benefit review.
+3. **Heredocs with variable terminators.** The v0.10-α redirect parser is regex-based and misses `cat <<"$EOF" > f`. A shell-parser dependency is the fix; weighed against its cost.
+4. **Scripts > 64 KB (scan) / > 256 KB (hash).** Unchanged caps. Raising them increases hook latency and creates a DoS surface on pathologically large files. Accepted until a real FN is reported.
 
 ---
+
+## Closed in 0.10.0-alpha
+
+- **Stateful interception.** Cross-call memory shipped. `core/hooks/state_tracker.py` persists agent-written file paths + sha256 + ts to `~/.episteme/state/session_context.json` (24 h TTL). `reasoning_surface_guard.py` consults the store at execute time, deep-scanning recently-written files referenced by name OR by variable-indirection shape (`bash $F`).
+- **Heuristic friction analyzer.** `episteme evolve friction` pairs prediction↔outcome telemetry by `correlation_id`, flags `exit_code ≠ 0` despite positive predictions, ranks most-violated unknowns and friction-prone ops, emits a Markdown Friction Report. Seed for automated CONSTITUTION.md refinement.
+- **SVG control-plane diagram.** `docs/assets/architecture_v2.svg` replaces the ASCII diagram in `README.md`. Three-layer schematic; Stateful Interceptor loop and Calibration Telemetry feed visible.
+- **Gap B — `last_elicited`.** Required metadata on `operator_profile.md`, mirrored to generated JSON; `episteme sync` injects a stale-context warning block when absent or >30 days old. Schema doc updated.
+- **Final neutrality sweep.** No literal absolute-user-home strings remain in any committed doc.
+- **Version reconcile** — `pyproject.toml` 0.10.0a0, plugin 0.10.0-alpha, marketplace 0.10.0-alpha.
+- Tests 86 → 121. 0 regressions.
 
 ## Closed in 0.9.0-entry
 - **Repository is neutral.** Personal filesystem paths and operator identifiers removed from docs and demo artifacts. Public GitHub identity (`junjslee`) retained intentionally.

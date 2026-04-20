@@ -4,11 +4,61 @@ Running log of completed work. Most recent first.
 
 ---
 
+## 0.10.0-alpha — 2026-04-20 — The Sovereign Kernel: stateful interception + heuristic friction analyzer + profile freshness gate
+
+Four atomic commits, 35 new tests, full suite 121 passing, zero regressions. High-level framing: 0.9.0-entry proved telemetry could be paired locally; 0.10.0-α carries that same file-on-disk discipline across the execution boundary between Write and Bash — the kernel now remembers what the agent just wrote.
+
+### Stateful interception (Phase 1)
+- New `core/hooks/state_tracker.py` — PostToolUse hook on Write/Edit/MultiEdit + Bash. Persists `{path → {sha256, ts, tool, source}}` to `~/.episteme/state/session_context.json`. 24 h rolling TTL, atomic `temp+os.replace`, `fcntl.flock` on a sibling lockfile.
+- Tracked inputs: `.sh`, `.bash`, `.zsh`, `.ksh`, `.py`, `.pyw`, `.js`, `.mjs`, `.cjs`, `.ts`, `.rb`, `.pl`, `.php`, plus extension-less files (frequently shell scripts). Bash redirect/tee targets (`>`, `>>`, `| tee [-a]`) also captured.
+- `core/hooks/reasoning_surface_guard.py` extended with `_match_agent_written_files`: two match modes — (1) literal file name or abs path in command → scan that file; (2) variable-indirection shape against any recent tracked write → scan every recent entry.
+- `hooks/hooks.json` — state_tracker wired to both PostToolUse matchers (Write/Edit/MultiEdit and Bash), async.
+- Tests (`tests/test_stateful_interception.py`, 12 cases): tracker records `.sh`/`.py`/`.js`/extension-less writes; skips `.md`; records Bash redirects and `tee`; purges stale entries; deep-scans `run.py` on `python run.py`; catches `bash $F` against recent write; innocuous agent-written files pass; empty state store is a no-op.
+
+### SVG architecture overhaul (Phase 2)
+- `docs/assets/architecture_v2.svg` — 1200×780 schematic, three layers (Agent Runtime / Episteme Control Plane / Hardware · OS). Dedicated nodes for Reasoning-Surface Guard, Stateful Interceptor (with the cross-call memory loop), and Calibration Telemetry (with the feedback arrow to the guard). Cybernetic aesthetic — near-black background, cyan/amber/emerald accents, mono typography.
+- `README.md` — ASCII box-drawing diagram under "System overview" removed; SVG embedded with a short narrative on PASS / BLOCK, stateful loop, and calibration feed.
+
+### Heuristic friction analyzer (Phase 3)
+- New CLI subcommand `episteme evolve friction [--telemetry-dir PATH] [--output PATH] [--top N]`. Scans `~/.episteme/telemetry/*-audit.jsonl`, pairs prediction↔outcome by `correlation_id`, flags `exit_code ≠ 0` against *positive* predictions (predictions with empty envelopes are skipped — not a calibration signal), and emits a Markdown Friction Report ranking most-violated unknowns, friction-prone ops, and recent events.
+- Empty telemetry → graceful "No friction detected yet" message. Malformed lines are skipped silently.
+- Tests (`tests/test_evolve_friction.py`, 7 cases): empty dir, unknowns ranked by frequency, empty envelope skipped, missing outcome ignored, malformed line survived, `--output` writes file, `--top N` truncates.
+
+### Gap B — `last_elicited` + stale warning (Phase 4a)
+- `core/memory/global/operator_profile.md` — added `Last elicited: 2026-04-13` metadata line.
+- `_compile_operator_profile` in `src/episteme/cli.py` — emits the line on every profile regenerate.
+- `_write_workstyle_artifacts` — mirrors `last_elicited` into both generated JSON artifacts.
+- New helpers `_read_last_elicited`, `_profile_staleness`, `_render_stale_profile_warning` (kernel const `PROFILE_STALE_DAYS = 30`).
+- `src/episteme/adapters/claude.py` — `render_user_claude_md()` now checks staleness and injects a visible "Stale Context Warning" block above the memory imports when absent or older than 30 days.
+- `kernel/OPERATOR_PROFILE_SCHEMA.md` — field documented as required.
+- Tests (`tests/test_last_elicited.py`, 16 cases): parser accepts `_italic_`, `bullet`, plain forms; rejects malformed dates; staleness classification (missing / unknown / fresh / stale); warning block content and suppression.
+
+### Final neutrality sweep (Phase 4b)
+- `docs/PLAN.md:18`, `docs/PROGRESS.md:10-11` — literal absolute-user-home strings in *descriptions of the prior scrub* replaced with generic `~/...` language. Public `junjslee` GitHub identity retained intentionally (open-source attribution).
+- `grep -r /Users/junlee episteme/` now returns zero matches.
+
+### Version bumps + changelog
+- `pyproject.toml` 0.8.0 → 0.10.0a0.
+- `.claude-plugin/plugin.json` 0.8.0 → 0.10.0-alpha.
+- `.claude-plugin/marketplace.json` plugin 0.8.0 → 0.10.0-alpha.
+- `kernel/CHANGELOG.md` — new 0.10.0-alpha entry + retroactive 0.9.0-entry entry to bring the audit trail in line (the 0.9.0 work had landed without a kernel-changelog bump).
+
+### Residual architectural gaps — honest
+1. **Intra-call indirection.** A single Bash call that both writes and executes (`echo "git push" > s.sh && bash s.sh` as *one* tool-use) is caught today only by the existing in-command text scanner. State tracking adds no new coverage because the PostToolUse recorder fires *after* the call. The true fix needs a cross-runtime proxy daemon that can pause between the write and the exec — the 0.11+ Sovereign Kernel. Naming v0.10 "The Sovereign Kernel" is directional, not complete.
+2. **Dynamic shell assembly.** `A=git; B=push; $A $B` — unchanged from 0.8.1.
+3. **Heredocs with variable terminators.** Redirect parser is regex-based; `cat <<"$EOF" > f` is missed.
+4. **Scripts > 256 KB (hash) / > 64 KB (scan).** Unchanged caps.
+
+### Test count
+- 86 → **121** passing, 8 subtests. 0 regressions.
+
+---
+
 ## 0.9.0-entry — 2026-04-20 — Privacy scrub + calibration telemetry + visual demo + bypass hardening
 
 ### Repository neutrality (Phase 1)
-- Replaced `/Users/junlee/...` paths with `~/...` or placeholder equivalents in `docs/PROGRESS.md`, `docs/NEXT_STEPS.md`, `docs/assets/setup-demo.svg`.
-- Neutralized `"operator": "junlee"` → `"operator": "default"` in `demos/01_attribution-audit/reasoning-surface.json`.
+- Replaced absolute user-home paths with `~/...` or placeholder equivalents in `docs/PROGRESS.md`, `docs/NEXT_STEPS.md`, `docs/assets/setup-demo.svg`.
+- Neutralized operator identifier to `"operator": "default"` in `demos/01_attribution-audit/reasoning-surface.json`.
 - `junjslee` GitHub references retained — public identity for the open-source repo.
 - `.gitignore` confirmed clean: `.episteme/`, `core/memory/global/*.md` (personal), secrets, and generated profile artifacts all covered. New telemetry writes to `~/.episteme/telemetry/` (outside repo), no gitignore change needed.
 

@@ -11,6 +11,35 @@ Format: `[version] — date — change`. Versions follow semantic intent:
 
 ---
 
+## [0.10.0-alpha] — 2026-04-20 — The Sovereign Kernel: stateful interception + heuristic friction analyzer + profile freshness gate
+
+- **Added** `core/hooks/state_tracker.py` — PostToolUse recorder that persists every agent-written file path, sha256, and timestamp to `~/.episteme/state/session_context.json` (24 h TTL, atomic temp+rename, `fcntl.flock` serialization). Tracks `Write`/`Edit`/`MultiEdit` targets across a curated extension set (`.sh`, `.bash`, `.zsh`, `.ksh`, `.py`, `.pyw`, `.js`, `.mjs`, `.cjs`, `.ts`, `.rb`, `.pl`, `.php`, plus extension-less files) and `Bash` redirect targets (`>`, `>>`, `| tee [-a]`).
+- **Extended** `core/hooks/reasoning_surface_guard.py` to consult the state store. Two new match modes: (1) literal path/basename reference in a Bash command → deep-scan that file's current content against the high-impact pattern set; (2) variable-indirection shape (`bash $F`, `python $F`, `./$X`, `source $X`) against any recent tracked write → deep-scan every recent entry. Closes the write-then-execute-across-calls bypass and the `F=run.sh; bash $F` indirection shape.
+- **Added** `episteme evolve friction` heuristic telemetry analyzer. Pairs prediction↔outcome JSONL records by `correlation_id`, flags `exit_code ≠ 0` against positive predictions, ranks most-violated unknowns and friction-prone ops, and emits a Markdown Friction Report. Deterministic, no ML. Seed for future automated `CONSTITUTION.md` refinement — see `docs/NEXT_STEPS.md`.
+- **Added** `Last elicited: YYYY-MM-DD` required metadata on the operator profile markdown (Gap B). `episteme sync` parses it and injects a visible "Stale Context Warning" block into the rendered CLAUDE.md when absent or older than 30 days. Mirror field `last_elicited` also written to `.generated/workstyle_profile.json` and `.generated/workstyle_scores.json`. Schema doc (`kernel/OPERATOR_PROFILE_SCHEMA.md`) updated to make the field required.
+- **Replaced** the ASCII control-plane diagram in `README.md` with `docs/assets/architecture_v2.svg` — three-layer schematic (Agent Runtime / Episteme Control Plane / Hardware · OS) with the Stateful Interceptor loop and Calibration Telemetry feed visible.
+- **Neutrality sweep.** Final pass on historical narrative in `docs/PLAN.md` and `docs/PROGRESS.md`: residual absolute-user-home string references in *descriptions of the prior scrub* replaced with generic `~/...` language. Public `junjslee` GitHub identity retained intentionally.
+- **Versions reconciled:** `pyproject.toml` (0.8.0 → 0.10.0a0), `.claude-plugin/plugin.json` (0.8.0 → 0.10.0-alpha), `.claude-plugin/marketplace.json` (0.8.0 → 0.10.0-alpha).
+- **Tests:** 86 → 121 passing (35 new: 12 stateful interception, 7 friction analyzer, 16 last_elicited). Zero regressions.
+
+**Architectural gaps that remain open (honest):**
+1. **Intra-call indirection.** A single `Bash` call that both writes and executes a script (`echo "git push" > s.sh && bash s.sh` as *one* tool call) is caught today only by the existing in-command scanner (normalized text contains `git push`). State tracking adds no new coverage for this case because the PostToolUse recorder fires *after* the call completes. The true fix — pausing execution between the write and the exec — requires a cross-runtime proxy daemon (the next-phase Sovereign Kernel, 0.11+). The "Sovereign Kernel" name is used intentionally in 0.10-α as a directional claim, not a finished one.
+2. **Dynamic shell assembly.** `A=git; B=push; $A $B` still passes — same reasoning as 0.8.1.
+3. **Heredocs with variable terminators.** The redirect parser is regex-based and will miss `cat <<"$EOF" > f`.
+4. **Scripts > 256 KB (hash) / > 64 KB (scan).** Unchanged caps from 0.9.0.
+
+Rationale: 0.9.0-entry proved that a file-on-disk telemetry feed is enough to pair prediction↔outcome for a single operator. 0.10.0-α extends that same discipline — file-on-disk state — across the *execution boundary* between a Write and a Bash. The kernel still rides the hook runtime; it does not yet mediate every syscall. The claim of a "Sovereign Kernel" is directionally honest: the control plane now remembers what the agent just wrote, which is the smallest step that meaningfully closes write-then-execute while staying within the Claude Code hook contract. The cross-runtime proxy daemon is the version of this that deserves the name without qualification — it is deferred to 0.11+ and explicitly gated on real-world FN evidence from 0.10-α telemetry.
+
+## [0.9.0-entry] — 2026-04-20 — Privacy scrub + calibration telemetry + visual demo + bypass hardening
+
+- **Repository neutralized.** Personal filesystem paths and operator identifiers stripped from `docs/PROGRESS.md`, `docs/NEXT_STEPS.md`, `docs/assets/setup-demo.svg`, and `demos/01_attribution-audit/reasoning-surface.json`. Public `junjslee` GitHub identity retained intentionally.
+- **Calibration telemetry shipped (Gap A).** `reasoning_surface_guard.py` writes a `prediction` record (correlation_id, command_executed, epistemic_prediction) to `~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl` on every allowed high-impact Bash. New `core/hooks/calibration_telemetry.py` (PostToolUse) writes the matching `outcome` record carrying `exit_code` and status. Local-only; never transmitted.
+- **Backtick substitution closed.** Command normalization maps backticks to whitespace; `` `git push` `` now trips the same patterns as bare shell.
+- **`eval $VAR` blocked.** New indirection pattern label `"eval with variable indirection"` blocks `eval "$CMD"` / `eval $CMD`. Literal `eval "echo hi"` still passes.
+- **Shell-script execution scanned.** `_match_script_execution` resolves and scans up to 64 KB of `.sh` files referenced by `./x.sh`, `bash x.sh`, `sh x.sh`, `zsh x.sh`, `source x.sh`, `. x.sh`. Missing scripts pass through (FP-averse).
+- **Visual demo harness.** `scripts/demo_strict_mode.sh` is reproducible and recording-ready; `docs/CONTRIBUTING.md` documents the `asciinema rec → agg` flow.
+- **Test coverage** 17 → 86 cases covering guard, telemetry, profile cognition, managed file, kernel integrity, workflow guard, context guard.
+
 ## [0.8.1] — 2026-04-20 — Strict-by-default enforcement + semantic validator + bypass-resistant matching
 
 - **Flipped** `core/hooks/reasoning_surface_guard.py` default from advisory to **strict (blocking)**. Missing / stale / incomplete / lazy surfaces now exit 2 and block the tool call. Opt-out per-project: `touch .episteme/advisory-surface` (legacy `.episteme/strict-surface` is now a no-op — strict is default).
