@@ -109,21 +109,77 @@ Authority hierarchy: **project docs > operator profile > kernel defaults > runti
 
 ---
 
-## Figure 1 · Structural stratification of the epistemic posture
+## Architecture · doxa → episteme → praxis → 결
 
-<p align="center">
-  <img src="docs/assets/system-overview.png" alt="Figure 1 — structural stratification of the epistemic posture. Three bands: doxa (what enters) lists the nine named failure modes with their counters; episteme (what the kernel demands) holds the four principles, seven kernel markdown files, and the runtime components grouped by role (texture of thought, texture of action, rationale, memory); praxis (what lands) holds the four canonical artifacts and four delivery adapters. Traversed by the grain (결 · gyeol) of epistemic discipline." width="100%" />
-</p>
+> Full diagram with node annotations and cross-references: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 
-Three strata, ancient Greek vocabulary, load-bearing: **doxa** (default output before discipline — nine named failure modes taxonomize it), **episteme** (what the kernel demands before irreversible action — four principles, seven kernel artifacts, four component roles), **praxis** (effects that land with their authorizing understanding intact — four canonical artifacts). They are traversed by the grain — **결** (*gyeol*) — the ordering of the Reasoning Surface fields: *settled → open → provisional → falsification-condition*. Prose counterpart: [`docs/NARRATIVE.md`](./docs/NARRATIVE.md).
+```mermaid
+graph TD
+    subgraph SG1["① The Agentic Mind — Intention"]
+        A["Agent\nGenerating intent for a high-impact op"]
+        B["Reasoning Surface\ncore_question · knowns · unknowns\nassumptions · disconfirmation"]
+        D["Doxa\nFluent hallucination\nnone / n/a / tbd / 해당 없음\n< 15 chars · missing fields"]
+        E["Episteme\nJustified true belief\nconcrete knowns · named unknowns\ndisconfirmation ≥ 15 chars · no placeholders"]
+    end
 
-## Figure 2 · Control-plane interposition at the tool-call boundary
+    subgraph SG2["② The Sovereign Kernel — Interception"]
+        F["Stateful Interceptor\ncore/hooks/reasoning_surface_guard.py\nnormalises cmd · deep-scans agent-written files\ncross-call stateful memory"]
+        G["Hard Block · exit 2\nExecution denied\nAgent forced to re-author surface"]
+        H["PASS · exit 0\nPrecondition satisfied\nExecution admitted to Praxis"]
+    end
 
-<p align="center">
-  <img src="docs/assets/architecture_v2.png" alt="Figure 2 — control-plane interposition. Doxa band (top): LLM reasoning, Tool dispatcher, Tool-use envelope. Episteme band (middle, six components): row 1 — Reasoning-Surface Guard (core), Stateful Interceptor, Calibration Telemetry; row 2 — Derived Knobs (phase 9), Episodic Writer (phase 10), Semantic Promoter (phase 11). Praxis band (bottom): Process, Persistent state, Remote effect. PASS arrow from Guard to Praxis; BLOCK arrow accent-stroked back to Doxa. Dashed phase-12 profile-audit loop from Semantic Promoter back to Derived Knobs, labelled pending." width="100%" />
-</p>
+    subgraph SG3["③ Praxis & Reality — Execution"]
+        I["Tool Execution\ngit push · bash script.sh · npm publish\nterraform apply · DB migrations · lockfile edits"]
+        J["Observed Outcome\ncore/hooks/calibration_telemetry.py\nexit_code 0 or non-zero · stderr captured"]
+    end
 
-Tool-call intents cross **doxa → episteme** at PreToolUse. The posture conditions their admission through six components — the **Reasoning-Surface Guard** (strict by default · BLOCK exit 2 / PASS exit 0), the **Stateful Interceptor** (cross-call memory · deep-scan on execute), and **Calibration Telemetry** (prediction ⇄ outcome · JSONL) in row 1; the v0.11.0 additions **Derived Knobs** (phase 9 · profile axes modulate runtime thresholds), **Episodic Writer** (phase 10 · per-action record paired with the surface), and **Semantic Promoter** (phase 11 · episodic → reflective proposals) in row 2. On PASS, effects cross **episteme → praxis** and are re-ingested by the memory tiers for calibration. The **phase 12 profile-audit loop** (drawn dashed, labelled *pending*) closes the circuit from praxis back to the operator profile — *episteme auditing praxis to detect when a claimed axis has drifted into doxa*. When phase 12 ships, the dashed stroke solidifies; no structural rework.
+    subgraph SG4["④ 결 · Gyeol — Cognitive Texture & Evolution"]
+        K["Prediction Record\ncorrelation_id stamped at PASS\n~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl"]
+        L["Outcome Record\ncorrelation_id · exit_code · stderr\n~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl"]
+        M["episteme evolve friction\nsrc/episteme/cli.py · _evolve_friction\npairs prediction ↔ outcome by correlation_id\nranks under-named unknowns · flags exit_code ≠ 0"]
+        N["결 · Gyeol\nRefined cognitive grain\nfriction hotspots · calibrated profile axes"]
+        O["Operator Profile\ncore/memory/global/operator_profile.md\nlast_elicited axes updated · confidence rescored"]
+        P["kernel/CONSTITUTION.md\nFour principles recalibrated\nfailure-mode counters sharpened"]
+    end
+
+    A --> B
+    B --> D
+    B --> E
+    D --> F
+    E --> F
+    F --> G
+    F --> H
+    G -.->|"cognitive retry"| A
+    H --> I
+    I --> J
+    E -.->|"correlation_id stamped at PASS"| K
+    J --> L
+    K --> M
+    L --> M
+    M --> N
+    N --> O
+    N --> P
+    O -.->|"posture loop closed"| A
+    P -.->|"posture loop closed"| A
+
+    classDef doxaStyle fill:#c0392b,stroke:#922b21,color:#fff
+    classDef episteStyle fill:#1e8449,stroke:#145a32,color:#fff
+    classDef passStyle fill:#27ae60,stroke:#1e8449,color:#fff
+    classDef praxisStyle fill:#2ecc71,stroke:#27ae60,color:#000
+    classDef gyeolStyle fill:#1a5276,stroke:#154360,color:#fff
+    classDef kernelStyle fill:#6c3483,stroke:#512e5f,color:#fff
+    classDef neutralStyle fill:#2c3e50,stroke:#1a252f,color:#fff
+
+    class D,G doxaStyle
+    class E episteStyle
+    class H,I passStyle
+    class J praxisStyle
+    class K,L,M,N,O,P gyeolStyle
+    class F kernelStyle
+    class A,B neutralStyle
+```
+
+Four subgraphs, one lifecycle. **Doxa** (red) — fluent-but-unvalidated agent output or a hard block — is the failure state the kernel exists to prevent. **Episteme** (green) — a validated Reasoning Surface with concrete Knowns, named Unknowns, and a falsifiable Disconfirmation ≥ 15 chars — is the precondition for execution. **Praxis** (light green) — the admitted tool execution and its observed outcome. **결 · Gyeol** (blue, lit. *grain*) — the calibration loop: prediction and outcome records joined by `correlation_id` into daily JSONL, analyzed by `episteme evolve friction`, feeding friction signals back into the Operator Profile and `kernel/CONSTITUTION.md`. The posture loop is closed. Prose spine: [`docs/NARRATIVE.md`](./docs/NARRATIVE.md).
 
 **Works with any stack.** Episteme is an agnostic layer that operates independently of the LLM runtime — LangChain, CrewAI, Claude Code, Cursor, MCP. Kernel is pure markdown; operator profile is plain JSON; workflow loop is vendor-neutral. Adapter layer (Claude Code, Hermes, OMO/OMX) is pluggable. The kernel outlives the tooling.
 

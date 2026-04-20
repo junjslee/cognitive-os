@@ -4,6 +4,12 @@ Running log of completed work. Most recent first.
 
 ---
 
+## 0.12.0-mermaid-architecture — 2026-04-20 — Mermaid architecture diagram replaces arxiv PNG figures
+
+`docs/ARCHITECTURE.md` created — arXiv-quality Mermaid flowchart (`graph TD`) mapping philosophical concepts to exact technical implementations. Four subgraphs: ① Agentic Mind (Intention) — Agent → Reasoning Surface → Doxa / Episteme; ② Sovereign Kernel (Interception) — `core/hooks/reasoning_surface_guard.py` stateful interceptor → Hard Block exit 2 / PASS exit 0; ③ Praxis & Reality (Execution) — tool execution → observed outcome via `core/hooks/calibration_telemetry.py`; ④ 결 · Gyeol (Cognitive Evolution) — prediction ↔ outcome joined by `correlation_id` in `~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl` → `episteme evolve friction` (`src/episteme/cli.py · _evolve_friction`) → Operator Profile + `kernel/CONSTITUTION.md` → posture loop closed. ClassDefs: red (Doxa / Hard Block), green (Episteme / Praxis), blue (Gyeol), purple (Kernel), dark-grey (neutral). `README.md` Figures 1 and 2 (PNG image tags) replaced with the embedded Mermaid diagram + link to `docs/ARCHITECTURE.md`. Architecture entry added to the "Read next" table.
+
+---
+
 ## 0.11.0-coherence-raster — 2026-04-20 — PNG rasterization of the two arxiv-style figures
 
 Follow-up to the coherence pass. `docs/assets/system-overview.svg` and `docs/assets/architecture_v2.svg` both rasterize cleanly via `rsvg-convert -w 1600` into deterministic PNG siblings (`system-overview.png` 361 KB · `architecture_v2.png` 287 KB). `README.md` Figures 1 and 2 now reference the PNGs directly — removes any GitHub-side SVG rendering variance (font fallback, CSS class handling, `<desc>` truncation). SVG sources remain in the repo as the authoring format; PNGs are the display format. No content change; no code change; test suite untouched. Regen command: `rsvg-convert -w 1600 docs/assets/<fig>.svg -o docs/assets/<fig>.png`.
