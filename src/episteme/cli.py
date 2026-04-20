@@ -596,6 +596,219 @@ def _evolve_promote(episode_id: str, *, force: bool = False) -> int:
     return 0
 
 
+def _telemetry_dir() -> Path:
+    return Path.home() / ".episteme" / "telemetry"
+
+
+def _load_telemetry_pairs(
+    telemetry_dir: Path,
+) -> tuple[dict[str, dict], dict[str, dict]]:
+    """Return (predictions_by_cid, outcomes_by_cid) across all day-scoped JSONL files.
+
+    Malformed lines are skipped silently; the scanner is best-effort because
+    telemetry is produced by never-blocking hooks that may truncate on
+    crash.
+    """
+    predictions: dict[str, dict] = {}
+    outcomes: dict[str, dict] = {}
+    if not telemetry_dir.exists() or not telemetry_dir.is_dir():
+        return predictions, outcomes
+    for path in sorted(telemetry_dir.glob("*-audit.jsonl")):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if not isinstance(rec, dict):
+                        continue
+                    cid = rec.get("correlation_id")
+                    event = rec.get("event")
+                    if not isinstance(cid, str) or not cid:
+                        continue
+                    if event == "prediction":
+                        predictions[cid] = rec
+                    elif event == "outcome":
+                        outcomes[cid] = rec
+        except OSError:
+            continue
+    return predictions, outcomes
+
+
+def _render_friction_report(
+    predictions: dict[str, dict],
+    outcomes: dict[str, dict],
+    top_n: int,
+) -> str:
+    """Render a Markdown Friction Report from paired telemetry.
+
+    Heuristic:
+        1. A "friction event" is any (prediction, outcome) pair where the
+           observed `exit_code` is non-zero. The prediction implies the
+           agent expected success — an LLM does not run a command it thinks
+           will fail.
+        2. Rank unknowns by frequency across friction events. The ones
+           named most often in failing runs are the unknowns the operator
+           is chronically under-elaborating at surface-time.
+        3. Also surface the most-recurring failing `op` label (git push,
+           terraform apply, …) so the operator sees *where* predictions
+           diverge from reality.
+
+    Non-positive-prediction filtering: if the prediction envelope is empty
+    (no unknowns, no disconfirmation) we skip it — the agent declined to
+    commit to a prediction, so the failure is not a calibration signal.
+    """
+    friction: list[tuple[str, dict, dict]] = []
+    for cid, pred in predictions.items():
+        out = outcomes.get(cid)
+        if not out:
+            continue
+        exit_code = out.get("exit_code")
+        if not isinstance(exit_code, int) or exit_code == 0:
+            continue
+        pred_env = pred.get("epistemic_prediction") or {}
+        unknowns = pred_env.get("unknowns") or []
+        disc = (pred_env.get("disconfirmation") or "").strip()
+        if not unknowns and not disc:
+            continue  # agent didn't actually predict; skip
+        friction.append((cid, pred, out))
+
+    total_pairs = len(
+        [cid for cid in predictions if cid in outcomes]
+    )
+
+    lines: list[str] = []
+    lines.append("# Episteme Friction Report")
+    lines.append("")
+    lines.append(f"_Generated: {_now_iso()}_")
+    lines.append("")
+    lines.append(
+        f"Paired predictions / outcomes: **{total_pairs}**  ·  "
+        f"Friction events (exit_code ≠ 0 despite positive prediction): **{len(friction)}**"
+    )
+    lines.append("")
+
+    if not friction:
+        lines.append(
+            "_No friction detected yet. Either the operator's predictions "
+            "are well-calibrated, or telemetry has not accumulated enough "
+            "paired records for an honest read._"
+        )
+        lines.append("")
+        return "\n".join(lines)
+
+    # Rank violated unknowns by frequency.
+    unknowns_count: dict[str, int] = {}
+    ops_count: dict[str, int] = {}
+    no_disc_count = 0
+    for _cid, pred, out in friction:
+        env = pred.get("epistemic_prediction") or {}
+        for u in env.get("unknowns") or []:
+            key = str(u).strip()
+            if not key:
+                continue
+            unknowns_count[key] = unknowns_count.get(key, 0) + 1
+        op_label = str(pred.get("op") or "").strip()
+        if op_label:
+            ops_count[op_label] = ops_count.get(op_label, 0) + 1
+        if not (env.get("disconfirmation") or "").strip():
+            no_disc_count += 1
+
+    ranked_unknowns = sorted(unknowns_count.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]
+    ranked_ops = sorted(ops_count.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]
+
+    lines.append("## Most-violated unknowns")
+    lines.append("")
+    lines.append("Unknowns named at prediction time that subsequently appeared in a failing run.")
+    lines.append("High frequency = the operator is chronically under-elaborating this dimension.")
+    lines.append("")
+    if ranked_unknowns:
+        for idx, (text, n) in enumerate(ranked_unknowns, start=1):
+            preview = text if len(text) <= 140 else text[:137] + "..."
+            lines.append(f"{idx}. **×{n}**  {preview}")
+    else:
+        lines.append("_(no unknowns recorded in failing runs)_")
+    lines.append("")
+
+    lines.append("## Operations with most friction")
+    lines.append("")
+    if ranked_ops:
+        for idx, (op, n) in enumerate(ranked_ops, start=1):
+            lines.append(f"{idx}. `{op}` — {n} failing run(s)")
+    else:
+        lines.append("_(no op labels recorded)_")
+    lines.append("")
+
+    lines.append("## Recent friction events")
+    lines.append("")
+    recent = sorted(
+        friction,
+        key=lambda triple: str(triple[2].get("ts") or ""),
+        reverse=True,
+    )[:5]
+    for cid, pred, out in recent:
+        cmd = str(pred.get("command_executed") or out.get("command_executed") or "")
+        cmd_short = cmd if len(cmd) <= 120 else cmd[:117] + "..."
+        ts = str(out.get("ts") or pred.get("ts") or "")
+        exit_code = out.get("exit_code")
+        env = pred.get("epistemic_prediction") or {}
+        disc = (env.get("disconfirmation") or "").strip()
+        lines.append(f"- `{ts}`  exit={exit_code}  cid=`{cid[:12]}`")
+        lines.append(f"  - cmd: `{cmd_short}`")
+        if disc:
+            disc_short = disc if len(disc) <= 200 else disc[:197] + "..."
+            lines.append(f"  - declared disconfirmation: _{disc_short}_")
+    lines.append("")
+
+    if no_disc_count:
+        lines.append(
+            f"> **{no_disc_count}** failing run(s) were declared with an empty "
+            "disconfirmation — the agent predicted success without naming what "
+            "would prove it wrong. Treat these as calibration debt."
+        )
+        lines.append("")
+
+    lines.append("## Next")
+    lines.append("")
+    lines.append(
+        "This report is the seed for automated `CONSTITUTION.md` refinement. "
+        "For now: read the top-N unknowns above and consider whether they "
+        "deserve to be promoted to mandatory Reasoning-Surface fields, or "
+        "whether the disconfirmation threshold should be raised. See "
+        "`docs/NEXT_STEPS.md` for the evolve-loop roadmap."
+    )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _evolve_friction(
+    *,
+    telemetry_dir: Path | None = None,
+    output_path: Path | None = None,
+    top_n: int = 5,
+) -> int:
+    """Scan telemetry and emit a Markdown Friction Report.
+
+    Deterministic, no ML. Pairs prediction↔outcome JSONL records by
+    `correlation_id`, flags exit_code ≠ 0 against positive predictions,
+    ranks violated unknowns and friction-prone ops.
+    """
+    src = telemetry_dir or _telemetry_dir()
+    predictions, outcomes = _load_telemetry_pairs(src)
+    report = _render_friction_report(predictions, outcomes, top_n=top_n)
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(report, encoding="utf-8")
+        print(f"Wrote friction report: {output_path}")
+    else:
+        print(report)
+    return 0
+
+
 def _evolve_rollback(episode_id: str, *, rollback_ref: str) -> int:
     try:
         ep = _load_episode(episode_id)
@@ -3847,6 +4060,27 @@ def build_parser() -> argparse.ArgumentParser:
     e_rollback.add_argument("episode_id")
     e_rollback.add_argument("--ref", required=True, help="Rollback reference/reason id")
 
+    e_friction = evolve_sub.add_parser(
+        "friction",
+        help="Heuristic analyzer: scan calibration telemetry for predictions that failed in practice",
+    )
+    e_friction.add_argument(
+        "--telemetry-dir",
+        default=None,
+        help="Override telemetry directory (default: ~/.episteme/telemetry)",
+    )
+    e_friction.add_argument(
+        "--output",
+        default=None,
+        help="Write the Markdown report to this path instead of stdout",
+    )
+    e_friction.add_argument(
+        "--top",
+        type=int,
+        default=5,
+        help="Number of top-ranked unknowns / ops to surface (default: 5)",
+    )
+
     return parser
 
 
@@ -4057,6 +4291,14 @@ def main(argv: Iterable[str] | None = None) -> int:
             return _evolve_promote(args.episode_id, force=getattr(args, "force", False))
         if args.evolve_action == "rollback":
             return _evolve_rollback(args.episode_id, rollback_ref=getattr(args, "ref"))
+        if args.evolve_action == "friction":
+            td_raw = getattr(args, "telemetry_dir", None)
+            out_raw = getattr(args, "output", None)
+            return _evolve_friction(
+                telemetry_dir=Path(td_raw).expanduser() if td_raw else None,
+                output_path=Path(out_raw).expanduser() if out_raw else None,
+                top_n=getattr(args, "top", 5),
+            )
         return 0
     if args.command == "bridge":
         if args.bridge_action == "anthropic-managed":

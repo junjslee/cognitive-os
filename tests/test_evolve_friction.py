@@ -1,0 +1,261 @@
+"""Tests for `episteme evolve friction` (v0.10.0-alpha heuristic analyzer).
+
+The analyzer pairs prediction ↔ outcome records by `correlation_id`,
+flags cases where exit_code ≠ 0 despite a positive prediction, and ranks
+the unknowns that appeared most often in failing runs.
+"""
+from __future__ import annotations
+
+import io
+import json
+import tempfile
+import unittest
+from contextlib import redirect_stdout
+from pathlib import Path
+
+from episteme import cli
+
+
+def _write_jsonl(path: Path, records: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for r in records:
+            f.write(json.dumps(r) + "\n")
+
+
+def _pred(cid: str, *, op: str, cmd: str, unknowns: list[str], disc: str, ts: str) -> dict:
+    return {
+        "ts": ts,
+        "event": "prediction",
+        "correlation_id": cid,
+        "tool": "Bash",
+        "op": op,
+        "cwd": "/tmp/proj",
+        "command_executed": cmd,
+        "epistemic_prediction": {
+            "core_question": "test",
+            "disconfirmation": disc,
+            "unknowns": unknowns,
+            "hypothesis": "should pass",
+        },
+        "exit_code": None,
+    }
+
+
+def _out(cid: str, *, exit_code: int, ts: str, cmd: str = "") -> dict:
+    return {
+        "ts": ts,
+        "event": "outcome",
+        "correlation_id": cid,
+        "tool": "Bash",
+        "cwd": "/tmp/proj",
+        "command_executed": cmd,
+        "exit_code": exit_code,
+        "status": "error" if exit_code != 0 else "success",
+    }
+
+
+class FrictionAnalyzerTests(unittest.TestCase):
+    def test_empty_telemetry_dir_emits_no_friction_message(self):
+        with tempfile.TemporaryDirectory() as td:
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=Path(td) / "empty")
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("Episteme Friction Report", out)
+            self.assertIn("No friction detected yet", out)
+
+    def test_ranks_most_violated_unknowns(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdir = Path(td)
+            _write_jsonl(
+                tdir / "2026-04-20-audit.jsonl",
+                [
+                    _pred(
+                        "c1",
+                        op="git push",
+                        cmd="git push origin main",
+                        unknowns=["remote diverged since last pull"],
+                        disc="push rejected by remote or CI fails on main",
+                        ts="2026-04-20T10:00:00+00:00",
+                    ),
+                    _out("c1", exit_code=1, ts="2026-04-20T10:00:05+00:00"),
+                    _pred(
+                        "c2",
+                        op="git push",
+                        cmd="git push origin feature",
+                        unknowns=["remote diverged since last pull"],
+                        disc="non-fast-forward rejection",
+                        ts="2026-04-20T11:00:00+00:00",
+                    ),
+                    _out("c2", exit_code=1, ts="2026-04-20T11:00:02+00:00"),
+                    _pred(
+                        "c3",
+                        op="npm publish",
+                        cmd="npm publish",
+                        unknowns=["authenticated session for registry"],
+                        disc="npm ERR! 401 unauthorized",
+                        ts="2026-04-20T12:00:00+00:00",
+                    ),
+                    _out("c3", exit_code=1, ts="2026-04-20T12:00:03+00:00"),
+                    _pred(
+                        "c4",
+                        op="terraform apply",
+                        cmd="terraform apply -auto-approve",
+                        unknowns=["state lock held by another run"],
+                        disc="terraform errors with state lock timeout",
+                        ts="2026-04-20T13:00:00+00:00",
+                    ),
+                    _out("c4", exit_code=0, ts="2026-04-20T13:00:10+00:00"),
+                ],
+            )
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=tdir)
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("Friction events (exit_code ≠ 0", out)
+            self.assertIn("Paired predictions / outcomes: **4**", out)
+            # 3 failures (c1,c2,c3) — c4 succeeded.
+            self.assertIn("Friction events (exit_code ≠ 0 despite positive prediction): **3**", out)
+            # `remote diverged since last pull` appeared twice — top of the list.
+            # `authenticated session for registry` once.
+            lines = out.splitlines()
+            top_section = "\n".join(lines)
+            self.assertIn("×2", top_section)
+            self.assertIn("remote diverged since last pull", top_section)
+            self.assertIn("authenticated session for registry", top_section)
+            # git push appears 2x in failing ops, npm publish 1x.
+            self.assertIn("`git push` — 2 failing run(s)", out)
+            self.assertIn("`npm publish` — 1 failing run(s)", out)
+
+    def test_empty_prediction_envelope_is_skipped(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdir = Path(td)
+            _write_jsonl(
+                tdir / "2026-04-20-audit.jsonl",
+                [
+                    {
+                        "ts": "2026-04-20T10:00:00+00:00",
+                        "event": "prediction",
+                        "correlation_id": "c-empty",
+                        "tool": "Bash",
+                        "op": "git push",
+                        "epistemic_prediction": {
+                            "core_question": "",
+                            "disconfirmation": "",
+                            "unknowns": [],
+                            "hypothesis": "",
+                        },
+                    },
+                    _out("c-empty", exit_code=1, ts="2026-04-20T10:00:05+00:00"),
+                ],
+            )
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=tdir)
+            self.assertEqual(rc, 0)
+            # No positive prediction → not a calibration signal.
+            self.assertIn("No friction detected yet", buf.getvalue())
+
+    def test_missing_outcome_is_ignored(self):
+        """Unpaired predictions (no outcome) are not friction; they may just be in-flight."""
+        with tempfile.TemporaryDirectory() as td:
+            tdir = Path(td)
+            _write_jsonl(
+                tdir / "2026-04-20-audit.jsonl",
+                [
+                    _pred(
+                        "c-orphan",
+                        op="git push",
+                        cmd="git push",
+                        unknowns=["x" * 20],
+                        disc="y" * 20,
+                        ts="2026-04-20T10:00:00+00:00",
+                    ),
+                ],
+            )
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=tdir)
+            self.assertEqual(rc, 0)
+            self.assertIn("No friction detected yet", buf.getvalue())
+
+    def test_malformed_line_does_not_crash(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdir = Path(td)
+            path = tdir / "2026-04-20-audit.jsonl"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("this is not json\n")
+                f.write(json.dumps(_pred(
+                    "c1", op="git push", cmd="git push",
+                    unknowns=["a real unknown about remote state"],
+                    disc="push rejected by remote protections",
+                    ts="2026-04-20T10:00:00+00:00",
+                )) + "\n")
+                f.write(json.dumps(_out("c1", exit_code=1, ts="2026-04-20T10:00:05+00:00")) + "\n")
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=tdir)
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("Friction events", out)
+            self.assertIn("a real unknown about remote state", out)
+
+    def test_output_flag_writes_file(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdir = Path(td)
+            _write_jsonl(
+                tdir / "2026-04-20-audit.jsonl",
+                [
+                    _pred(
+                        "c1", op="git push", cmd="git push",
+                        unknowns=["unknown about registry auth state"],
+                        disc="disc about auth failure mode",
+                        ts="2026-04-20T10:00:00+00:00",
+                    ),
+                    _out("c1", exit_code=1, ts="2026-04-20T10:00:05+00:00"),
+                ],
+            )
+            out_path = tdir / "out" / "friction.md"
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=tdir, output_path=out_path)
+            self.assertEqual(rc, 0)
+            self.assertTrue(out_path.exists())
+            body = out_path.read_text(encoding="utf-8")
+            self.assertIn("Episteme Friction Report", body)
+            self.assertIn("unknown about registry auth state", body)
+
+    def test_top_n_limits_ranking(self):
+        with tempfile.TemporaryDirectory() as td:
+            tdir = Path(td)
+            records: list[dict] = []
+            for i in range(8):
+                cid = f"c{i}"
+                records.append(
+                    _pred(
+                        cid, op=f"op-{i}", cmd=f"cmd-{i}",
+                        unknowns=[f"unknown number {i} with enough length"],
+                        disc=f"disconfirm number {i} with enough length",
+                        ts=f"2026-04-20T{10 + i:02d}:00:00+00:00",
+                    )
+                )
+                records.append(_out(cid, exit_code=1, ts=f"2026-04-20T{10 + i:02d}:00:05+00:00"))
+            _write_jsonl(tdir / "2026-04-20-audit.jsonl", records)
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                rc = cli._evolve_friction(telemetry_dir=tdir, top_n=3)
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            # Each unknown appears once; top_n=3 → only three numbered entries.
+            unknowns_section = out.split("## Operations with most friction")[0]
+            ranked_lines = [ln for ln in unknowns_section.splitlines() if ln.startswith(("1.", "2.", "3.", "4."))]
+            numbered = [ln for ln in ranked_lines if ln[0].isdigit()]
+            self.assertLessEqual(len(numbered), 3)
+
+
+if __name__ == "__main__":
+    unittest.main()
