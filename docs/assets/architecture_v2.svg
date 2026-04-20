@@ -1,216 +1,231 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780" preserveAspectRatio="xMidYMid meet" role="img" aria-label="episteme control plane architecture. Agent runtime issues tool calls; the episteme control plane mediates every one via the reasoning-surface guard, the stateful interceptor, and the calibration-telemetry feed before the hardware and operating system observe any effect.">
-  <title>episteme — cybernetic control plane</title>
-  <desc>Three-layer schematic. Top: agent runtime. Middle: episteme control plane with reasoning-surface guard, stateful interceptor, and calibration telemetry. Bottom: hardware and operating system. Block and pass arrows show the governance decision; the stateful interceptor loop persists file-write memory across calls; the telemetry feed pairs predictions with observed exit codes.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-label="episteme — Figure 2. Control-plane interposition at the tool-call boundary. Three bands: doxa (agent runtime), episteme (control plane, six components), praxis (hardware / OS / remote effects). PASS and BLOCK arrows originate from the Reasoning-Surface Guard node; the stateful-interceptor memory loop stays within the episteme band; the phase-12 profile-audit loop is drawn dashed and labelled pending.">
+  <title>Figure 2 — control-plane interposition</title>
+  <desc>Arxiv-style. Doxa band (top): LLM reasoning, Tool dispatcher, Tool-use envelope. Episteme band (middle, six components across two rows): row 1 — Reasoning-Surface Guard (core, accented), Stateful Interceptor, Calibration Telemetry; row 2 — Derived Knobs (phase 9), Episodic Writer (phase 10), Semantic Promoter (phase 11). Praxis band (bottom): Process, Persistent state, Remote effect. Arrows: tool call (doxa → guard); BLOCK exit 2 (guard → doxa, accent); PASS exit 0 (guard → praxis); cross-call memory loop (stateful interceptor → guard, within-band arc); derived-knobs modulates guard; PostToolUse record (praxis → episodic writer); episteme memory promote (episodic → semantic); profile-audit loop dashed, pending.</desc>
 
   <defs>
     <style type="text/css"><![CDATA[
-      .bg         { fill: #0B0F14; }
-      .rule       { stroke: #1F2A36; stroke-width: 1; fill: none; }
-      .rule-dim   { stroke: #1F2A36; stroke-width: 1; stroke-dasharray: 2 4; fill: none; }
-      .layer      { fill: none; stroke: #2A3A4C; stroke-width: 1; }
-      .layer-lbl  { font: 600 10px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #5C6F83; letter-spacing: 0.22em; }
-      .layer-sub  { font: 400 11px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A8B9F; letter-spacing: 0.02em; }
+      .header-title    { font: 600 18px ui-serif, Georgia, "Times New Roman", serif; fill: #1A1A1A; letter-spacing: -0.005em; }
+      .header-sub      { font: 400 italic 12px ui-serif, Georgia, "Times New Roman", serif; fill: #5C5C5C; }
 
-      .node       { fill: #121923; stroke: #2A3A4C; stroke-width: 1; }
-      .node-hi    { fill: #121923; stroke: #38BDF8; stroke-width: 1.25; }
-      .node-warn  { fill: #121923; stroke: #F59E0B; stroke-width: 1.25; }
-      .node-core  { fill: #0E1620; stroke: #38BDF8; stroke-width: 1.5; }
+      .band-label      { font: 600 10px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; letter-spacing: 0.22em; }
+      .band-sub        { font: 400 10.5px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A7A7A; letter-spacing: 0.02em; }
 
-      .title      { font: 700 28px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #E6EDF3; letter-spacing: -0.01em; }
-      .subtitle   { font: 400 12px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A8B9F; letter-spacing: 0.18em; }
+      .node-title      { font: 600 13.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #1A1A1A; }
+      .node-sub        { font: 400 11px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; }
+      .node-mono       { font: 400 10.5px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #5C5C5C; }
+      .node-mono-em    { font: 500 10.5px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #1A1A1A; }
+      .node-phase      { font: 600 10px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A2E2A; letter-spacing: 0.06em; }
 
-      .node-title { font: 600 14px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #E6EDF3; letter-spacing: 0; }
-      .node-sub   { font: 400 11px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #9AABBF; }
-      .node-mono  { font: 400 10.5px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A8B9F; letter-spacing: 0; }
+      .node-small      { font: 600 12.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #1A1A1A; }
+      .node-small-sub  { font: 400 10px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #5C5C5C; }
 
-      .arrow      { stroke: #5C6F83; stroke-width: 1.2; fill: none; }
-      .arrow-pass { stroke: #38BDF8; stroke-width: 1.4; fill: none; }
-      .arrow-block{ stroke: #EF4444; stroke-width: 1.4; fill: none; }
-      .arrow-loop { stroke: #F59E0B; stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; }
-      .arrow-tel  { stroke: #10B981; stroke-width: 1.3; fill: none; stroke-dasharray: 2 3; }
+      .edge-label      { font: 500 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; letter-spacing: 0.01em; }
+      .edge-label-em   { font: 600 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #7A2E2A; letter-spacing: 0.04em; }
+      .edge-mono       { font: 400 10px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A7A7A; }
+      .edge-pending    { font: 400 italic 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #9A9A9A; }
 
-      .edge-lbl   { font: 600 10px ui-monospace, "SF Mono", Menlo, Monaco, monospace; letter-spacing: 0.12em; }
-      .edge-pass  { fill: #38BDF8; }
-      .edge-block { fill: #EF4444; }
-      .edge-loop  { fill: #F59E0B; }
-      .edge-tel   { fill: #10B981; }
+      .fig-num         { font: 500 13px ui-serif, Georgia, "Times New Roman", serif; fill: #1A1A1A; }
+      .fig-title       { font: 400 italic 13px ui-serif, Georgia, "Times New Roman", serif; fill: #1A1A1A; }
+      .fig-caption     { font: 400 11.5px ui-serif, Georgia, "Times New Roman", serif; fill: #5C5C5C; }
+      .fig-caption em  { font-style: italic; fill: #1A1A1A; }
 
-      .tick       { stroke: #2A3A4C; stroke-width: 0.75; }
-      .tick-lbl   { font: 400 9px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #5C6F83; letter-spacing: 0.12em; }
+      .rule-main       { stroke: #1A1A1A; stroke-width: 0.75; fill: none; }
+      .rule-thin       { stroke: #1A1A1A; stroke-width: 0.5; stroke-opacity: 0.25; fill: none; }
 
-      .meta       { font: 400 10px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #5C6F83; letter-spacing: 0.02em; }
+      .node            { fill: #FDFDFC; stroke: #1A1A1A; stroke-width: 0.75; }
+      .node-core       { fill: #FDFDFC; stroke: #7A2E2A; stroke-width: 1.25; }
+
+      .arrow           { stroke: #1A1A1A; stroke-width: 1; fill: none; }
+      .arrow-thin      { stroke: #1A1A1A; stroke-width: 0.75; fill: none; }
+      .arrow-accent    { stroke: #7A2E2A; stroke-width: 1.25; fill: none; }
+      .arrow-dashed    { stroke: #1A1A1A; stroke-width: 0.75; stroke-dasharray: 4 3; fill: none; stroke-opacity: 0.65; }
+
+      .end             { text-anchor: end; }
+      .center          { text-anchor: middle; }
     ]]></style>
 
-    <marker id="arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#5C6F83"/>
+    <marker id="arr-ink" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#1A1A1A"/>
     </marker>
-    <marker id="arrow-head-pass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#38BDF8"/>
+    <marker id="arr-accent" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#7A2E2A"/>
     </marker>
-    <marker id="arrow-head-block" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444"/>
-    </marker>
-    <marker id="arrow-head-loop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#F59E0B"/>
-    </marker>
-    <marker id="arrow-head-tel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10B981"/>
+    <marker id="arr-dashed" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#1A1A1A" fill-opacity="0.65"/>
     </marker>
   </defs>
 
-  <rect class="bg" width="1200" height="780"/>
+  <rect width="1400" height="900" fill="#FDFDFC"/>
 
-  <!-- Header -->
-  <g transform="translate(60, 56)">
-    <text class="subtitle" x="0" y="0">EPISTEME · CONTROL PLANE · v0.10.0</text>
-    <text class="title" x="0" y="30">Sovereign Kernel — three-layer interposition</text>
-    <text class="meta" x="0" y="52">agent runtime ── [ reasoning-surface guard · stateful interceptor · calibration telemetry ] ── hardware / os</text>
-  </g>
+  <!-- ════════════════════ HEADER (y 60 – 150) ════════════════════ -->
+  <text x="60"   y="85"  class="header-title">episteme — control plane · three-layer interposition at the tool-call boundary</text>
+  <text x="1340" y="85"  class="header-sub end">v0.11.0 · phase 12 pending</text>
+  <text x="60"   y="108" class="header-sub">Figure 2 · runtime view of the doxa / episteme / praxis axis · see docs/NARRATIVE.md</text>
+  <line x1="60" y1="140" x2="1340" y2="140" class="rule-main"/>
 
-  <!-- Corner ticks for the instrumentation feel -->
-  <g class="tick">
-    <line x1="40"   y1="40"  x2="52"  y2="40"/>
-    <line x1="40"   y1="40"  x2="40"  y2="52"/>
-    <line x1="1160" y1="40"  x2="1148" y2="40"/>
-    <line x1="1160" y1="40"  x2="1160" y2="52"/>
-    <line x1="40"   y1="740" x2="52"  y2="740"/>
-    <line x1="40"   y1="740" x2="40"  y2="728"/>
-    <line x1="1160" y1="740" x2="1148" y2="740"/>
-    <line x1="1160" y1="740" x2="1160" y2="728"/>
-  </g>
+  <!-- ════════════════════ DOXA BAND (y 160 – 300) ════════════════════ -->
+  <text x="60"   y="178" class="band-label">DOXA · AGENT RUNTIME</text>
+  <text x="1340" y="178" class="band-sub end">any LLM surface · Claude Code · Cursor · LangChain · CrewAI · MCP</text>
+  <line x1="60" y1="196" x2="1340" y2="196" class="rule-main"/>
 
-  <!-- ═══════════════ LAYER 1: AGENT RUNTIME ═══════════════ -->
-  <g transform="translate(60, 150)">
-    <rect class="layer" x="0" y="0" width="1080" height="100"/>
-    <text class="layer-lbl" x="12" y="20">LAYER 1 · AGENT RUNTIME</text>
-    <text class="layer-sub" x="12" y="38">Claude Code · Cursor · LangChain · CrewAI · MCP · any LLM surface</text>
-
-    <!-- Nodes -->
-    <g transform="translate(140, 52)">
-      <rect class="node" x="0" y="0" width="200" height="36" rx="2"/>
-      <text class="node-title" x="100" y="16" text-anchor="middle">LLM reasoning</text>
-      <text class="node-mono"  x="100" y="29" text-anchor="middle">tokens → tool call intent</text>
-    </g>
-    <g transform="translate(440, 52)">
-      <rect class="node" x="0" y="0" width="200" height="36" rx="2"/>
-      <text class="node-title" x="100" y="16" text-anchor="middle">Tool dispatcher</text>
-      <text class="node-mono"  x="100" y="29" text-anchor="middle">Bash · Write · Edit · MultiEdit</text>
-    </g>
-    <g transform="translate(740, 52)">
-      <rect class="node" x="0" y="0" width="200" height="36" rx="2"/>
-      <text class="node-title" x="100" y="16" text-anchor="middle">Tool-use envelope</text>
-      <text class="node-mono"  x="100" y="29" text-anchor="middle">stdin JSON → PreToolUse hook</text>
-    </g>
-  </g>
-
-  <!-- Down arrow: runtime → control plane -->
+  <!-- Three doxa nodes -->
   <g>
-    <path class="arrow" d="M 600 250 L 600 296" marker-end="url(#arrow-head)"/>
-    <text class="edge-lbl" fill="#5C6F83" x="610" y="278">tool call</text>
+    <rect x="100" y="220" width="320" height="54" class="node"/>
+    <text x="260" y="244" class="node-small center">LLM reasoning</text>
+    <text x="260" y="262" class="node-small-sub center">tokens → tool-call intent</text>
   </g>
-
-  <!-- ═══════════════ LAYER 2: EPISTEME CONTROL PLANE ═══════════════ -->
-  <g transform="translate(60, 300)">
-    <rect class="layer" x="0" y="0" width="1080" height="260" stroke="#38BDF8" stroke-width="1.25"/>
-    <text class="layer-lbl" fill="#38BDF8" x="12" y="20">LAYER 2 · EPISTEME CONTROL PLANE</text>
-    <text class="layer-sub" x="12" y="38">deterministic · markdown-first · local-only · vendor-neutral</text>
-
-    <!-- Reasoning Surface Guard (core) -->
-    <g transform="translate(60, 70)">
-      <rect class="node-core" x="0" y="0" width="320" height="150" rx="3"/>
-      <text class="node-title" x="160" y="22" text-anchor="middle">Reasoning-Surface Guard</text>
-      <text class="node-sub"   x="160" y="40" text-anchor="middle" fill="#38BDF8">PreToolUse · STRICT default</text>
-
-      <line class="rule-dim" x1="16" y1="56" x2="304" y2="56"/>
-
-      <text class="node-mono" x="20" y="76">· Knowns / Unknowns</text>
-      <text class="node-mono" x="20" y="92">· Assumptions</text>
-      <text class="node-mono" x="20" y="108">· Disconfirmation (≥15 chars)</text>
-      <text class="node-mono" x="20" y="124">· TTL 30 min · lazy-token blocklist</text>
-      <text class="node-mono" x="20" y="140" fill="#38BDF8">→ PASS  |  → BLOCK (exit 2)</text>
-    </g>
-
-    <!-- Stateful Interceptor (new in v0.10) -->
-    <g transform="translate(420, 70)">
-      <rect class="node-warn" x="0" y="0" width="260" height="150" rx="3"/>
-      <text class="node-title" x="130" y="22" text-anchor="middle">Stateful Interceptor</text>
-      <text class="node-sub"   x="130" y="40" text-anchor="middle" fill="#F59E0B">PostToolUse + cross-call memory</text>
-
-      <line class="rule-dim" x1="16" y1="56" x2="244" y2="56"/>
-
-      <text class="node-mono" x="20" y="76">· Write/Edit → sha256 + ts</text>
-      <text class="node-mono" x="20" y="92">· Bash redirects (&gt;, &gt;&gt;, tee)</text>
-      <text class="node-mono" x="20" y="108">· TTL 24h · atomic replace</text>
-      <text class="node-mono" x="20" y="124">· session_context.json</text>
-      <text class="node-mono" x="20" y="140" fill="#F59E0B">→ deep-scan on execute</text>
-    </g>
-
-    <!-- Calibration Telemetry (new in v0.9) -->
-    <g transform="translate(720, 70)">
-      <rect class="node" x="0" y="0" width="300" height="150" rx="3" stroke="#10B981" stroke-width="1.25"/>
-      <text class="node-title" x="150" y="22" text-anchor="middle">Calibration Telemetry</text>
-      <text class="node-sub"   x="150" y="40" text-anchor="middle" fill="#10B981">prediction ⇄ outcome · JSONL</text>
-
-      <line class="rule-dim" x1="16" y1="56" x2="284" y2="56"/>
-
-      <text class="node-mono" x="20" y="76">· pre: disconfirmation + unknowns</text>
-      <text class="node-mono" x="20" y="92">· post: exit_code, status</text>
-      <text class="node-mono" x="20" y="108">· correlation_id = tool_use_id</text>
-      <text class="node-mono" x="20" y="124">· YYYY-MM-DD-audit.jsonl</text>
-      <text class="node-mono" x="20" y="140" fill="#10B981">→ `evolve friction` report</text>
-    </g>
-
-    <!-- Stateful interceptor loop arrow (amber, dashed) -->
-    <path class="arrow-loop" d="M 550 70 C 550 24, 260 24, 260 70"
-          marker-end="url(#arrow-head-loop)"/>
-    <text class="edge-lbl edge-loop" x="340" y="16">stateful loop · cross-call memory</text>
-
-    <!-- Telemetry feedback arrow to the guard (emerald, dashed) -->
-    <path class="arrow-tel" d="M 720 156 L 380 156"
-          marker-end="url(#arrow-head-tel)"/>
-    <text class="edge-lbl edge-tel" x="480" y="150">telemetry · tunes disconfirmation</text>
-  </g>
-
-  <!-- PASS / BLOCK branch labels -->
   <g>
-    <path class="arrow-pass" d="M 380 560 L 380 616" marker-end="url(#arrow-head-pass)"/>
-    <text class="edge-lbl edge-pass" x="320" y="592">PASS · exit 0</text>
-
-    <path class="arrow-block" d="M 820 560 L 820 616" marker-end="url(#arrow-head-block)"/>
-    <text class="edge-lbl edge-block" x="835" y="592">BLOCK · exit 2</text>
+    <rect x="540" y="220" width="320" height="54" class="node"/>
+    <text x="700" y="244" class="node-small center">Tool dispatcher</text>
+    <text x="700" y="262" class="node-small-sub center">Bash · Write · Edit · MultiEdit</text>
+  </g>
+  <g>
+    <rect x="980" y="220" width="320" height="54" class="node"/>
+    <text x="1140" y="244" class="node-small center">Tool-use envelope</text>
+    <text x="1140" y="262" class="node-small-sub center">stdin JSON → PreToolUse hook</text>
   </g>
 
-  <!-- ═══════════════ LAYER 3: HARDWARE / OS ═══════════════ -->
-  <g transform="translate(60, 620)">
-    <rect class="layer" x="0" y="0" width="1080" height="100"/>
-    <text class="layer-lbl" x="12" y="20">LAYER 3 · HARDWARE · OPERATING SYSTEM</text>
-    <text class="layer-sub" x="12" y="38">filesystem · process tree · network · git remote · cloud api</text>
+  <!-- Tool call arrow (doxa → guard), at x=260 -->
+  <path d="M 260 274 L 260 370" class="arrow" marker-end="url(#arr-ink)"/>
+  <text x="270" y="320" class="edge-label">tool call</text>
 
-    <!-- Nodes -->
-    <g transform="translate(140, 52)">
-      <rect class="node" x="0" y="0" width="200" height="36" rx="2"/>
-      <text class="node-title" x="100" y="16" text-anchor="middle">Process</text>
-      <text class="node-mono"  x="100" y="29" text-anchor="middle">fork · exec · fd</text>
-    </g>
-    <g transform="translate(440, 52)">
-      <rect class="node" x="0" y="0" width="200" height="36" rx="2"/>
-      <text class="node-title" x="100" y="16" text-anchor="middle">Persistent state</text>
-      <text class="node-mono"  x="100" y="29" text-anchor="middle">fs · git tree · lockfile</text>
-    </g>
-    <g transform="translate(740, 52)">
-      <rect class="node" x="0" y="0" width="200" height="36" rx="2"/>
-      <text class="node-title" x="100" y="16" text-anchor="middle">Remote effect</text>
-      <text class="node-mono"  x="100" y="29" text-anchor="middle">push · publish · deploy</text>
-    </g>
+  <!-- BLOCK arrow (guard → doxa, accent, at x=160) -->
+  <path d="M 160 370 L 160 274" class="arrow-accent" marker-end="url(#arr-accent)"/>
+  <text x="66" y="326" class="edge-label-em">BLOCK · exit 2</text>
+
+  <!-- ════════════════════ EPISTEME BAND (y 310 – 690) ════════════════════ -->
+  <text x="60"   y="328" class="band-label">EPISTEME · CONTROL PLANE</text>
+  <text x="1340" y="328" class="band-sub end">deterministic · markdown-first · local-only · vendor-neutral</text>
+  <line x1="60" y1="346" x2="1340" y2="346" class="rule-main"/>
+
+  <!-- ── ROW 1: core hooks (y 370 – 490) ── -->
+
+  <!-- Reasoning-Surface Guard (accent core) -->
+  <g>
+    <rect x="90" y="370" width="380" height="120" class="node-core"/>
+    <text x="108" y="394" class="node-title">Reasoning-Surface Guard</text>
+    <text x="108" y="412" class="node-sub" fill="#7A2E2A">PreToolUse · STRICT default</text>
+    <line x1="106" y1="422" x2="454" y2="422" class="rule-thin"/>
+    <text x="108" y="440" class="node-mono">· Knowns / Unknowns / Assumptions</text>
+    <text x="108" y="456" class="node-mono">· Disconfirmation (threshold via derived knobs)</text>
+    <text x="108" y="472" class="node-mono">· lazy-token blocklist · TTL 30 min · normalized matching</text>
+    <text x="108" y="485" class="node-mono-em">→ PASS (exit 0) &#160;|&#160; → BLOCK (exit 2)</text>
   </g>
 
-  <!-- Footer legend -->
-  <g transform="translate(60, 744)">
-    <text class="meta" x="0" y="0">
-      <tspan fill="#38BDF8">■</tspan> pass / guard  ·
-      <tspan fill="#F59E0B">■</tspan> stateful loop  ·
-      <tspan fill="#10B981">■</tspan> telemetry  ·
-      <tspan fill="#EF4444">■</tspan> block  ·  strict mode is default — advisory opt-in per-project.
-    </text>
+  <!-- Stateful Interceptor -->
+  <g>
+    <rect x="510" y="370" width="380" height="120" class="node"/>
+    <text x="528" y="394" class="node-title">Stateful Interceptor</text>
+    <text x="528" y="412" class="node-sub">PostToolUse · cross-call memory</text>
+    <line x1="526" y1="422" x2="874" y2="422" class="rule-thin"/>
+    <text x="528" y="440" class="node-mono">· Write / Edit → sha256 + ts</text>
+    <text x="528" y="456" class="node-mono">· Bash redirects (&gt;, &gt;&gt;, tee) tracked</text>
+    <text x="528" y="472" class="node-mono">· ~/.episteme/state/session_context.json (TTL 24h)</text>
+    <text x="528" y="485" class="node-mono-em">→ deep-scan on execute</text>
   </g>
+
+  <!-- Calibration Telemetry -->
+  <g>
+    <rect x="930" y="370" width="380" height="120" class="node"/>
+    <text x="948" y="394" class="node-title">Calibration Telemetry</text>
+    <text x="948" y="412" class="node-sub">pre · post · paired by correlation_id</text>
+    <line x1="946" y1="422" x2="1294" y2="422" class="rule-thin"/>
+    <text x="948" y="440" class="node-mono">· pre: disconfirmation + unknowns</text>
+    <text x="948" y="456" class="node-mono">· post: exit_code, status</text>
+    <text x="948" y="472" class="node-mono">· ~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl</text>
+    <text x="948" y="485" class="node-mono-em">→ `episteme evolve friction`</text>
+  </g>
+
+  <!-- ── ROW 2: v0.11 additions (y 520 – 640) ── -->
+
+  <!-- Derived Knobs (phase 9) -->
+  <g>
+    <rect x="90" y="520" width="380" height="120" class="node"/>
+    <text x="108" y="544" class="node-title">Derived Knobs</text>
+    <text x="108" y="562" class="node-sub">profile → runtime thresholds</text>
+    <text x="448" y="544" class="node-phase end">phase 9</text>
+    <line x1="106" y1="572" x2="454" y2="572" class="rule-thin"/>
+    <text x="108" y="590" class="node-mono">· reads ~/.episteme/derived_knobs.json</text>
+    <text x="108" y="606" class="node-mono">· disconfirmation_specificity_min</text>
+    <text x="108" y="622" class="node-mono">· unknown_specificity_min · six more declared</text>
+    <text x="108" y="635" class="node-mono-em">→ profile is control signal, not docs</text>
+  </g>
+
+  <!-- Episodic Writer (phase 10) -->
+  <g>
+    <rect x="510" y="520" width="380" height="120" class="node"/>
+    <text x="528" y="544" class="node-title">Episodic Writer</text>
+    <text x="528" y="562" class="node-sub">PostToolUse · per-action record</text>
+    <text x="868" y="544" class="node-phase end">phase 10</text>
+    <line x1="526" y1="572" x2="874" y2="572" class="rule-thin"/>
+    <text x="528" y="590" class="node-mono">· high-impact Bash pattern match</text>
+    <text x="528" y="606" class="node-mono">· memory-contract-v1 schema · secrets redacted</text>
+    <text x="528" y="622" class="node-mono">· ~/.episteme/memory/episodic/YYYY-MM-DD.jsonl</text>
+    <text x="528" y="635" class="node-mono-em">→ reasoning-surface snapshot attached</text>
+  </g>
+
+  <!-- Semantic Promoter (phase 11) -->
+  <g>
+    <rect x="930" y="520" width="380" height="120" class="node"/>
+    <text x="948" y="544" class="node-title">Semantic Promoter</text>
+    <text x="948" y="562" class="node-sub">episodic → reflective · CLI-invoked</text>
+    <text x="1288" y="544" class="node-phase end">phase 11</text>
+    <line x1="946" y1="572" x2="1294" y2="572" class="rule-thin"/>
+    <text x="948" y="590" class="node-mono">· cluster by (domain, primary pattern)</text>
+    <text x="948" y="606" class="node-mono">· success + disconfirmation-fire rates</text>
+    <text x="948" y="622" class="node-mono">· deterministic proposal ids · idempotent</text>
+    <text x="948" y="635" class="node-mono-em">→ reflective/semantic_proposals.jsonl</text>
+  </g>
+
+  <!-- Cross-call memory loop arc (Stateful Interceptor → Guard, within band) -->
+  <path d="M 700 490 L 700 505 L 280 505 L 280 490" class="arrow-thin" marker-end="url(#arr-ink)"/>
+  <text x="490" y="502" class="edge-mono center">cross-call memory · sha256 + deep-scan on execute</text>
+
+  <!-- Derived Knobs → Guard (vertical, within column) -->
+  <path d="M 200 520 L 200 490" class="arrow-thin" marker-end="url(#arr-ink)"/>
+  <text x="212" y="510" class="edge-mono">modulates thresholds</text>
+
+  <!-- Episodic Writer → Semantic Promoter (promotion) -->
+  <path d="M 890 580 L 930 580" class="arrow-thin" marker-end="url(#arr-ink)"/>
+  <text x="910" y="574" class="edge-mono center">promote</text>
+
+  <!-- Pending profile-audit loop (phase 12) -->
+  <path d="M 1120 640 L 1120 660 L 280 660 L 280 640" class="arrow-dashed" marker-end="url(#arr-dashed)"/>
+  <text x="700" y="680" class="edge-pending center">profile-audit loop · compares claimed axes ⇄ episodic praxis · v0.11.0 phase 12 · pending</text>
+
+  <!-- ════════════════════ PRAXIS BAND (y 700 – 820) ════════════════════ -->
+  <text x="60"   y="718" class="band-label">PRAXIS · HARDWARE · OPERATING SYSTEM</text>
+  <text x="1340" y="718" class="band-sub end">filesystem · process tree · network · git remote · cloud api</text>
+  <line x1="60" y1="736" x2="1340" y2="736" class="rule-main"/>
+
+  <!-- PASS arrow (Guard bottom → Praxis, right side routing through the band gap at x=490) -->
+  <path d="M 420 490 L 420 498 L 490 498 L 490 760" class="arrow" marker-end="url(#arr-ink)"/>
+  <text x="500" y="700" class="edge-label">PASS · exit 0</text>
+
+  <!-- Three praxis nodes -->
+  <g>
+    <rect x="100" y="760" width="320" height="54" class="node"/>
+    <text x="260" y="784" class="node-small center">Process</text>
+    <text x="260" y="802" class="node-small-sub center">fork · exec · fd</text>
+  </g>
+  <g>
+    <rect x="540" y="760" width="320" height="54" class="node"/>
+    <text x="700" y="784" class="node-small center">Persistent state</text>
+    <text x="700" y="802" class="node-small-sub center">fs · git tree · lockfile</text>
+  </g>
+  <g>
+    <rect x="980" y="760" width="320" height="54" class="node"/>
+    <text x="1140" y="784" class="node-small center">Remote effect</text>
+    <text x="1140" y="802" class="node-small-sub center">push · publish · deploy</text>
+  </g>
+
+  <!-- PostToolUse record (praxis → episodic writer, at x=900) -->
+  <path d="M 900 760 L 900 750 L 800 750 L 800 640" class="arrow-thin" marker-end="url(#arr-ink)"/>
+  <text x="808" y="745" class="edge-mono">PostToolUse record</text>
+
+  <!-- ════════════════════ FIGURE CAPTION (y 830 – 900) ════════════════════ -->
+  <line x1="60" y1="840" x2="1340" y2="840" class="rule-main"/>
+  <text x="60" y="862" class="fig-num">Figure 2.<tspan class="fig-title" dx="6">Control-plane interposition at the tool-call boundary.</tspan></text>
+  <text x="60" y="884" class="fig-caption">Tool-call intents cross the <tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">doxa → episteme</tspan> boundary at PreToolUse; the posture conditions their admission; on PASS, outcomes cross the <tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">episteme → praxis</tspan> boundary and are re-ingested by the memory tiers for calibration. Phase 12 (dashed) closes the loop from <tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">praxis → profile</tspan>.</text>
+
 </svg>
