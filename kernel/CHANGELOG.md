@@ -11,6 +11,18 @@ Format: `[version] — date — change`. Versions follow semantic intent:
 
 ---
 
+## [0.8.1] — 2026-04-20 — Strict-by-default enforcement + semantic validator + bypass-resistant matching
+
+- **Flipped** `core/hooks/reasoning_surface_guard.py` default from advisory to **strict (blocking)**. Missing / stale / incomplete / lazy surfaces now exit 2 and block the tool call. Opt-out per-project: `touch .episteme/advisory-surface` (legacy `.episteme/strict-surface` is now a no-op — strict is default).
+- **Added** semantic validator to `_surface_missing_fields`: `disconfirmation` and each `unknowns` entry must be ≥ 15 chars and must not match the lazy-token blocklist (`none`, `n/a`, `tbd`, `nothing`, `null`, `unknown`, `해당 없음`, `해당없음`, `없음`, `모름`, `-`, `--`, `...`, etc.). Closes the Lazy Agent Problem — an agent writing `"disconfirmation": "None"` or `"해당 없음"` no longer passes the gate.
+- **Added** command-text normalization before regex matching: quotes, commas, brackets, parens, and braces map to whitespace, so bypass shapes like `python -c "subprocess.run(['git','push'])"`, `os.system('git push')`, and `sh -c 'npm publish'` trip the same high-impact patterns as bare shell invocations. Closes a concrete bypass vector where the `\b...\s+...\b` patterns missed quoted/bracketed forms.
+- **Updated** `episteme inject`: strict mode is now the default no-op (nothing to create); `--no-strict` writes `.episteme/advisory-surface` explicitly. Removes the old `strict-surface` marker creation — redundant under the new default.
+- **Strengthened** block-mode stderr output: leads with `"Execution blocked by Episteme Strict Mode. Missing or invalid Reasoning Surface."` and includes a one-line advisory-mode opt-out pointer.
+- **Expanded** test coverage in `tests/test_reasoning_surface_guard.py` to 17 cases covering: strict-by-default on every failure mode (missing/stale/incomplete/lockfile), advisory-marker downgrade, legacy-marker no-op behavior, lazy-token rejection for disconfirmation and unknowns, short-string rejection, and three bypass-vector tests (subprocess list form, os.system, sh -c wrapping).
+- **Synchronized** `kernel/HOOKS_MAP.md` with the new default and validator contract.
+
+Rationale: 0.8.0's claim of a "deterministic control plane" was architecturally true (the PreToolUse hook does intercept every high-impact op) but operationally hedged — the default was advisory, and the validator only checked for non-empty strings. 0.8.1 closes both gaps. The system now delivers what the README has been claiming since 0.6.0: a strict cognitive contract that blocks execution until Knowns / Unknowns / Assumptions / Disconfirmation are filled with concrete, measurable, non-placeholder content.
+
 ## [0.8.0] — 2026-04-19 — Core migration: cognitive-os → episteme (name alignment + version reconciliation)
 
 - **Renamed** Python package `src/cognitive_os/` → `src/episteme/`; all imports and console script (`episteme = "episteme.cli:main"`) updated. `git mv` preserved history.

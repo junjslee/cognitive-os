@@ -4,7 +4,9 @@
 
 A *posture* is how a reasoner holds themselves before a decision: which questions get asked, which unknowns get named, which options are pre-rejected, and which conditions force a pivot. Tools and memory stores cycle every 18–36 months — the posture does not. `episteme` is the layer that installs the posture once and delivers it into every runtime and substrate you use.
 
-**Most AI frameworks focus on execution—giving agents memory and tools to act faster. Episteme focuses on governance.** It is a deterministic control plane that sits between the LLM and the runtime. By enforcing a strict cognitive contract (Design by Contract) and feedforward control, it forces agents to explicitly map knowns, validate assumptions, and declare disconfirmation conditions before a single line of code is written or a tool is called. It is the prefrontal cortex for your agentic stack—preventing fluent-wrong hallucinations and enabling zero-trust execution.
+**Most AI frameworks focus on execution—giving agents memory and tools to act faster. Episteme focuses on governance.** It is a deterministic control plane that sits between the LLM and the runtime. **By default, episteme *blocks* (exit 2) any high-impact op — `git push`, `npm publish`, `terraform apply`, DB migrations, lockfile edits, and more — until a valid Reasoning Surface is on disk.** A surface is only valid when Knowns, Unknowns, Assumptions, and Disconfirmation are all filled with concrete, measurable content (≥ 15 chars, no `none` / `n/a` / `tbd` / `해당 없음` placeholders). Command text is normalized before matching, so `subprocess.run(['git','push'])` and `os.system('git push')` bypass shapes are caught. It is the prefrontal cortex for your agentic stack—preventing fluent-wrong hallucinations and enabling zero-trust execution.
+
+Advisory mode (warn-don't-block) is opt-in per-project: `touch .episteme/advisory-surface`.
 
 **[What this installs →](./docs/POSTURE.md)** · **[Differential demo (off vs on) →](./demos/03_differential/)** · **[Install as plugin →](./.claude-plugin/README.md)** · **[Quick start ↓](#quick-start)**
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse guard: high-impact ops require a recent Reasoning Surface.
+"""PreToolUse guard: high-impact ops require a valid Reasoning Surface.
 
 Enforces the kernel rule `irreversible or high-blast-radius -> declare a
 Reasoning Surface first` (kernel/CONSTITUTION.md, kernel/REASONING_SURFACE.md).
@@ -7,12 +7,19 @@ Reasoning Surface first` (kernel/CONSTITUTION.md, kernel/REASONING_SURFACE.md).
 Behavior:
 - Matches a high-impact pattern in Bash commands (git push, publish,
   migrations, cloud deletes, DB destructive SQL) or Write|Edit to irreversible
-  files (lock files, secrets).
+  files (lock files, secrets). Command text is normalized (quotes, commas,
+  brackets, parens mapped to whitespace) before matching so bypass shapes like
+  `python -c "subprocess.run(['git','push'])"` or `os.system('git push')` trip
+  the same patterns as bare shell.
 - Reads `.episteme/reasoning-surface.json` in the project cwd.
-- A Surface is valid when: timestamp within SURFACE_TTL_SECONDS, has non-empty
-  core_question, at least one unknown, and a disconfirmation field.
-- Advisory by default (non-blocking). Block (exit 2) when the project contains
-  `.episteme/strict-surface`.
+- A Surface is valid when: timestamp within SURFACE_TTL_SECONDS, non-empty
+  core_question, at least one substantive unknown, and a disconfirmation
+  field that meets minimum length and is not a lazy placeholder
+  (none, n/a, tbd, 해당 없음, 없음, ...).
+- **Default mode: STRICT (blocking).** Missing, stale, incomplete, or lazy
+  surfaces exit 2 and block the op. Opt out per-project by creating
+  `.episteme/advisory-surface`; the hook then emits advisory context only.
+- Legacy marker `.episteme/strict-surface` is now a no-op (strict is default).
 """
 from __future__ import annotations
 
@@ -26,6 +33,24 @@ from pathlib import Path
 
 
 SURFACE_TTL_SECONDS = 30 * 60  # 30 minutes
+
+# Minimum character thresholds — lazy one-word answers are rejected.
+MIN_DISCONFIRMATION_LEN = 15
+MIN_UNKNOWN_LEN = 15
+
+# Lazy-token blocklist: strings that defeat the Reasoning Surface contract
+# by providing fluent-looking placeholders instead of measurable conditions.
+# Matched case-insensitively against whitespace-collapsed content.
+LAZY_TOKENS = frozenset({
+    "none", "null", "nil", "nothing", "undefined",
+    "n/a", "na", "n.a.", "n.a", "not applicable",
+    "tbd", "todo", "to be determined", "to be decided",
+    "unknown", "idk", "i don't know", "no idea",
+    "해당 없음", "해당없음", "없음", "모름", "모르겠음",
+    "해당 사항 없음", "해당사항없음",
+    "-", "--", "---", "—", "...", "...",
+    "pending", "later", "maybe", "?",
+})
 
 HIGH_IMPACT_BASH = [
     (re.compile(r"\bgit\s+push\b"), "git push"),
@@ -61,6 +86,17 @@ IRREVERSIBLE_WRITE_PATHS = (
     "go.sum",
 )
 
+# Characters that separate tokens in quoted / bracketed / parenthesized
+# invocations. Normalize these to a space so regex-word-boundary patterns
+# catch `subprocess.run(['git','push'])` and `os.system("git push")` the
+# same way they catch bare `git push`.
+_NORMALIZE_SEPARATORS = re.compile(r"[,'\"\[\]\(\)\{\}]")
+
+
+def _normalize_command(cmd: str) -> str:
+    """Map shell / language token separators to spaces for robust matching."""
+    return _NORMALIZE_SEPARATORS.sub(" ", cmd)
+
 
 def _tool_name(payload: dict) -> str:
     return str(payload.get("tool_name") or payload.get("toolName") or "").strip()
@@ -84,8 +120,9 @@ def _write_target(payload: dict) -> str:
 def _match_high_impact(tool_name: str, payload: dict) -> str | None:
     if tool_name == "Bash":
         cmd = _bash_command(payload)
+        normalized = _normalize_command(cmd)
         for pattern, label in HIGH_IMPACT_BASH:
-            if pattern.search(cmd):
+            if pattern.search(normalized):
                 return label
         return None
     if tool_name in {"Write", "Edit", "MultiEdit"}:
@@ -123,15 +160,48 @@ def _surface_age_seconds(surface: dict) -> int | None:
         return None
 
 
+def _is_lazy(text: str) -> bool:
+    """Return True when `text` is a placeholder rather than a real commitment."""
+    collapsed = re.sub(r"\s+", " ", text.strip().lower())
+    if not collapsed:
+        return True
+    if collapsed in LAZY_TOKENS:
+        return True
+    # Also catch "none." / "n/a!" etc. — trim trailing punctuation and retry.
+    stripped = collapsed.rstrip(".!?,;:")
+    return stripped in LAZY_TOKENS
+
+
 def _surface_missing_fields(surface: dict) -> list[str]:
+    """Return the list of fields that fail the kernel's validation contract.
+
+    A field is considered missing if it is absent, empty, lazy-placeholder,
+    or (for disconfirmation/unknowns) below the minimum-length threshold.
+    """
     missing: list[str] = []
-    if not str(surface.get("core_question") or "").strip():
+
+    core_q = str(surface.get("core_question") or "").strip()
+    if not core_q or _is_lazy(core_q):
         missing.append("core_question")
+
     unknowns = surface.get("unknowns")
-    if not isinstance(unknowns, list) or not any(str(u).strip() for u in unknowns):
+    if not isinstance(unknowns, list):
         missing.append("unknowns")
-    if not str(surface.get("disconfirmation") or "").strip():
+    else:
+        substantive = [
+            str(u).strip()
+            for u in unknowns
+            if str(u).strip()
+            and not _is_lazy(str(u))
+            and len(str(u).strip()) >= MIN_UNKNOWN_LEN
+        ]
+        if not substantive:
+            missing.append("unknowns")
+
+    disc = str(surface.get("disconfirmation") or "").strip()
+    if not disc or _is_lazy(disc) or len(disc) < MIN_DISCONFIRMATION_LEN:
         missing.append("disconfirmation")
+
     return missing
 
 
@@ -147,11 +217,17 @@ def _surface_status(cwd: Path) -> tuple[str, str]:
         return "stale", f"surface is {mins} minute(s) old (TTL {SURFACE_TTL_SECONDS // 60} min)"
     missing = _surface_missing_fields(surface)
     if missing:
-        return "incomplete", f"surface missing required fields: {', '.join(missing)}"
+        detail = (
+            f"surface fails validation on: {', '.join(missing)}. "
+            f"Disconfirmation must be a concrete observable condition "
+            f"(>= {MIN_DISCONFIRMATION_LEN} chars, not 'none'/'n/a'/'tbd'/'해당 없음'). "
+            f"At least one unknown must be sharp and specific (>= {MIN_UNKNOWN_LEN} chars)."
+        )
+        return "incomplete", detail
     return "ok", ""
 
 
-def _write_audit(tool: str, op: str, cwd: Path, status: str, action: str, strict: bool) -> None:
+def _write_audit(tool: str, op: str, cwd: Path, status: str, action: str, mode: str) -> None:
     audit_path = Path.home() / ".episteme" / "audit.jsonl"
     audit_path.parent.mkdir(parents=True, exist_ok=True)
     entry = {
@@ -161,7 +237,7 @@ def _write_audit(tool: str, op: str, cwd: Path, status: str, action: str, strict
         "cwd": str(cwd),
         "status": status,
         "action": action,
-        "strict": strict,
+        "mode": mode,
     }
     try:
         with open(audit_path, "a", encoding="utf-8") as f:
@@ -177,10 +253,11 @@ def _surface_template() -> str:
         '  "timestamp": "<ISO-8601 UTC>",\n'
         '  "core_question": "<one question this work answers>",\n'
         '  "knowns": ["..."],\n'
-        '  "unknowns": ["..."],\n'
+        '  "unknowns": ["<sharp, >= 15 chars, not a placeholder>"],\n'
         '  "assumptions": ["..."],\n'
-        '  "disconfirmation": "<what evidence would prove this wrong>"\n'
-        "}"
+        '  "disconfirmation": "<concrete observable outcome, >= 15 chars>"\n'
+        "}\n"
+        "Lazy values (none, n/a, tbd, 해당 없음, 없음, ...) are rejected."
     )
 
 
@@ -200,28 +277,34 @@ def main() -> int:
 
     cwd = Path(payload.get("cwd") or os.getcwd())
     status, detail = _surface_status(cwd)
-    strict = (cwd / ".episteme" / "strict-surface").exists()
+    advisory_only = (cwd / ".episteme" / "advisory-surface").exists()
+    mode = "advisory" if advisory_only else "strict"
 
     if status == "ok":
-        _write_audit(tool_name, label, cwd, status, "passed", strict)
+        _write_audit(tool_name, label, cwd, status, "passed", mode)
         return 0
 
     header = f"REASONING SURFACE {status.upper()}: high-impact op `{label}` with {detail}."
     instruction = _surface_template()
 
-    if strict:
-        _write_audit(tool_name, label, cwd, status, "blocked", strict)
+    if not advisory_only:
+        _write_audit(tool_name, label, cwd, status, "blocked", mode)
         sys.stderr.write(
-            f"{header}\nBlocked by strict-surface mode.\n{instruction}\n"
+            "Execution blocked by Episteme Strict Mode. "
+            "Missing or invalid Reasoning Surface.\n"
+            f"{header}\n{instruction}\n"
+            "Opt out per-project (not recommended): "
+            "`touch .episteme/advisory-surface`.\n"
         )
         return 2
 
-    _write_audit(tool_name, label, cwd, status, "advisory", strict)
+    _write_audit(tool_name, label, cwd, status, "advisory", mode)
     advisory = {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "additionalContext": (
-                f"{header} Declare a Reasoning Surface before proceeding. {instruction}"
+                f"{header} Advisory mode is active (.episteme/advisory-surface present). "
+                f"Declare a Reasoning Surface before proceeding. {instruction}"
             ),
         }
     }

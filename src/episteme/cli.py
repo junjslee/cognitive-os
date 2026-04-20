@@ -3351,9 +3351,18 @@ def _inject(target: Path = Path("."), strict: bool = True) -> int:
     cognitive_dir = cwd / ".episteme"
     cognitive_dir.mkdir(parents=True, exist_ok=True)
 
+    advisory_marker = cognitive_dir / "advisory-surface"
     if strict:
-        (cognitive_dir / "strict-surface").touch()
-        print(f"[inject] strict enforcement enabled  → {cognitive_dir / 'strict-surface'}")
+        if advisory_marker.exists():
+            advisory_marker.unlink()
+            print(f"[inject] removed advisory-surface marker   → strict mode restored")
+        print(f"[inject] strict enforcement active (default) → {cognitive_dir}")
+        print(f"         high-impact ops will BLOCK without a valid Reasoning Surface")
+    else:
+        advisory_marker.touch()
+        print(f"[inject] advisory mode enabled              → {advisory_marker}")
+        print(f"         high-impact ops will warn but NOT block.")
+        print(f"         Remove this marker (or re-run without --no-strict) to restore strict mode.")
 
     surface_path = cognitive_dir / "reasoning-surface.json"
     if not surface_path.exists():
@@ -3363,20 +3372,21 @@ def _inject(target: Path = Path("."), strict: bool = True) -> int:
             "timestamp": datetime.now(tz.utc).isoformat(),
             "core_question": "",
             "knowns": [],
-            "unknowns": ["[fill this in before any high-impact action]"],
+            "unknowns": ["[fill this in before any high-impact action — must be >= 15 chars, not 'none'/'n/a'/'tbd']"],
             "assumptions": [],
             "disconfirmation": "",
         }
         surface_path.write_text(json.dumps(template, indent=2), encoding="utf-8")
-        print(f"[inject] surface template written    → {surface_path}")
+        print(f"[inject] surface template written          → {surface_path}")
     else:
-        print(f"[inject] surface already present     → {surface_path}")
+        print(f"[inject] surface already present           → {surface_path}")
 
     print()
     print(f"episteme enforcement active in: {cwd}")
     print("Next: edit .episteme/reasoning-surface.json")
-    print("      Fill in core_question, unknowns, disconfirmation.")
-    print("      Any high-impact op (git push, publish, migrations) will block until the surface is valid.")
+    print("      Fill core_question, unknowns (>= 15 chars each), disconfirmation (>= 15 chars).")
+    print("      Lazy values (none, n/a, tbd, 해당 없음) are rejected by the validator.")
+    print("      Any high-impact op (git push, publish, migrations) blocks until the surface is valid.")
     return 0
 
 

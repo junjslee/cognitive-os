@@ -13,6 +13,15 @@ Current active plan for episteme development.
 
 ## Closed milestones
 
+### 0.8.1 — Strict-by-default enforcement — complete
+- Flipped `reasoning_surface_guard.py` default from advisory to strict (blocking).
+- Added semantic validator: lazy-token blocklist (`none`, `n/a`, `tbd`, `해당 없음`, `없음`, ...) + min-length thresholds (≥ 15 chars on disconfirmation and each unknown).
+- Added command-text normalization to catch bypass shapes (`subprocess.run(['git','push'])`, `os.system('git push')`, `sh -c 'npm publish'`).
+- `episteme inject` now writes `advisory-surface` marker only under `--no-strict`; strict is the default no-op.
+- Block-mode stderr leads with `"Execution blocked by Episteme Strict Mode. Missing or invalid Reasoning Surface."`
+- Test coverage expanded to 17 cases (strict defaults, lazy-token rejection, short-string rejection, 3 bypass vectors).
+- See `kernel/CHANGELOG.md` 0.8.1 entry and `docs/PROGRESS.md` 0.8.1 block.
+
 ### 0.8.0 — Identity migration (cognitive-os → episteme) — complete
 - Python package, runtime dir, env vars, GitHub repo, plugin/marketplace manifests, `pyproject.toml` all aligned to `episteme`.
 - Dynamic Python runtime (no hard Conda dependency).

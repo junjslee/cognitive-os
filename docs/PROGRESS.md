@@ -4,6 +4,50 @@ Running log of completed work. Most recent first.
 
 ---
 
+## 0.8.1 — 2026-04-20 — Strict-by-default enforcement + semantic validator + bypass-resistant matching
+
+### Hook behavior changes (`core/hooks/reasoning_surface_guard.py`)
+- **Default inverted**: missing / stale / incomplete / lazy Reasoning Surface now exits 2 and blocks the tool call. Previously advisory; hard-block required `.episteme/strict-surface`.
+- **Opt-out mechanism**: per-project advisory mode via `.episteme/advisory-surface` marker. Legacy `.episteme/strict-surface` is now a no-op (strict is default).
+- **Semantic validator added** to `_surface_missing_fields`:
+  - Min lengths: `MIN_DISCONFIRMATION_LEN = 15`, `MIN_UNKNOWN_LEN = 15`
+  - Lazy-token blocklist: `none`, `null`, `nil`, `nothing`, `undefined`, `n/a`, `na`, `not applicable`, `tbd`, `todo`, `unknown`, `idk`, `해당 없음`, `해당없음`, `없음`, `모름`, `해당 사항 없음`, `-`, `--`, `---`, `—`, `...`, `?`, `pending`, `later`, `maybe`
+  - Case-insensitive + whitespace-collapsed + trailing-punctuation-trimmed matching
+- **Bypass resistance** via `_normalize_command`: `[,'"\[\]\(\)\{\}]` → space before regex match. Caught in tests: `subprocess.run(['git','push'])`, `os.system('git push')`, `sh -c 'npm publish'`.
+- **Block message upgraded**: stderr leads with `"Execution blocked by Episteme Strict Mode. Missing or invalid Reasoning Surface."` + concrete validator reasons + advisory-mode opt-out pointer.
+- **Audit entry** `mode` field replaces the old `strict` bool.
+
+### CLI (`src/episteme/cli.py`)
+- `_inject` rewritten: strict (default) creates no marker and removes any pre-existing `advisory-surface`; `--no-strict` writes `.episteme/advisory-surface` explicitly.
+- Template unknowns placeholder updated to reflect the ≥ 15 char rule.
+- Post-inject hint text lists lazy-token rejection explicitly.
+
+### Tests (`tests/test_reasoning_surface_guard.py`)
+- Rewritten from 9 advisory-flavored cases → 17 cases covering:
+  - Strict-by-default on every failure mode (missing / stale / incomplete / lockfile)
+  - Advisory-marker downgrade path
+  - Legacy `strict-surface` marker no-op behavior
+  - Lazy-token rejection: 8 subtest values (`none`, `N/A`, `TBD`, `해당 없음`, `없음`, `null`, `-`, `nothing`)
+  - Short-string rejection (disconfirmation and unknowns)
+  - Bypass vectors: subprocess list form, `os.system`, `sh -c` wrapping
+
+### Docs
+- `kernel/CHANGELOG.md` — 0.8.1 entry added
+- `kernel/HOOKS_MAP.md` — enforcement row + state-file description rewritten to match new default
+- `README.md` — lede paragraph rewritten: no more "advisory by default" hedge; now explicitly states block-by-default, the validator contract, and the advisory opt-out pointer
+- `docs/PLAN.md`, `docs/NEXT_STEPS.md` — strict-by-default and validator items moved to Closed
+
+### Verification
+- `PYTHONPATH=. pytest tests/ -v` → **68 passed**, 8 subtests passed (17 in the guard suite, 51 pre-existing elsewhere — zero regressions)
+- Hook tested end-to-end via the suite: block exit code 2, advisory-mode exit 0, normalized bypass shapes caught, lazy tokens rejected
+
+### Architectural gaps surfaced (not fixed, logged to `NEXT_STEPS.md`)
+- **Shell script files calling high-impact ops** are not caught (e.g., `./deploy.sh` that internally runs `git push`). Intercepting requires script-content reading — out of scope for this patch.
+- **Write-then-execute patterns** (write a script to disk, then run it) are not caught without a stateful hook. Requires cross-call state, which is out of scope.
+- **Bash variable indirection** (`CMD="git push" && $CMD`) is not caught; normalization handles quote/bracket separators but not variable substitution.
+
+---
+
 ## 0.8.0 — 2026-04-19 — Core migration: cognitive-os → episteme
 
 ### Version alignment (0.8.0 follow-on)
