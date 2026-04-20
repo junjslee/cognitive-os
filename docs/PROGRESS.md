@@ -4,6 +4,75 @@ Running log of completed work. Most recent first.
 
 ---
 
+## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
+
+One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.
+
+### Commits (in order shipped)
+
+- **`d3cf98f` — `fix(1.0-rc): pytest config, telemetry redaction, Windows fcntl fallback`**. Three critical audit findings surfaced during a read-only audit of `evolve friction` + stateful interceptor:
+  - `pyproject.toml` had no `[tool.pytest.ini_options]`; bare `pytest` on a fresh clone produced 6 collection errors (`ModuleNotFoundError: episteme`). Added `pythonpath = ["src"]` + `testpaths = ["tests"]`. Full suite now green without any PYTHONPATH manipulation.
+  - `reasoning_surface_guard._write_prediction` and `calibration_telemetry` (outcome record) wrote `command_executed` verbatim to telemetry — inline secrets (`password=`, `token=`, `AKIA…`, `ghp_…`) landed on disk in plaintext. Both now pass through a `_redact` helper. **Bonus bug found during the lift:** the existing `_redact` in `episodic_writer.py` had a replacement-string evaluated at module load that produced `\\g<0>=<REDACTED>`, *appending* `=<REDACTED>` after the match instead of replacing the value — so `password=hunter2` was becoming `password=hunter2=<REDACTED>`. Fixed: capture `(key)(separator)`, replace the value with `<REDACTED>`. Verified against `password=`, `token=`, `api_key:`, `AKIA…`, `ghp_…`.
+  - `state_tracker.py` had `import fcntl` at module top-level — POSIX-only, crashed on Windows first PostToolUse. Now `try/except ImportError` with a graceful no-lock fallback that matches the "exotic filesystems" path the docstring already named.
+
+- **`b008b3e` — `docs(1.0-rc): reframe lede — thinking framework is the product, blocker is enforcement`**. Prior README lede pivoted from "installs a posture" straight to "episteme blocks (exit 2) any high-impact op", selling the project as a security tool. **Load-bearing framing correction.** Changes:
+  - `README.md` — new two-paragraph lede. §1 names the cognitive framework (five-field surface → nine countered failure modes → facts/inferences/preferences separation, hypothesis→test→update, profile-audit loop). §2 introduces the blocker as *"the uncompromising enforcer of the cognitive discipline above — not a security product pretending to be a thinking framework."* "Why this architecture" reordered so cognitive claims lead; OPA/OWASP/governance falls out as consequences. "AI safety" reframed as "by construction, not bolt-on."
+  - `docs/COGNITIVE_SYSTEM_PLAYBOOK.md` — added the *"What is product, what is mechanism"* paragraph to the Operating Thesis making the product/enforcer split explicit.
+  - `docs/NEXT_STEPS.md` — added **Cognitive-adoption RC gates (items 21–28)** alongside the engineering gates. These verify that reasoning-quality drift is surfaced (not just outcome drift): disconfirmation actually fires, facts/inferences/preferences stay separated, hypothesis→test→update is observable, profile-audit catches *reasoning* drift, failure-mode taxonomy is load-bearing, kernel doesn't bypass kernel while working on kernel (Gate 28). Ship criterion: engineering gates + ≥ 4 of 8 cognitive gates pass; remaining named as 1.0.1.
+  - `docs/NARRATIVE.md` deliberately **not touched** — already leads with *"What this kernel installs is an epistemic posture"* and situates the blocker as machine-enforceable discipline. Rewriting would have destroyed the 0.11 coherence pass's intentional work.
+
+- **`9a7cd1b` — `fix(1.0-rc): RC-cycle items 7, 8, 11 — episode id, top-n clamp, malformed-surface signal`**. Three bounded Class A fixes from the NEXT_STEPS RC-cycle list. **Authored against an explicit Reasoning Surface** (in-session `.episteme/reasoning-surface.json`; gitignored per operator-local convention). The surface's hypothesis predicted items 9 and 10 would promote to Class B (design calls) — and they did, exactly as predicted, after `grep` of `core/schemas/evolution/evolution_episode.json` revealed `additionalProperties: false` on both the top-level and provenance sub-object (item 9 is a schema-contract-version decision); and a design question about whether CLI-side audit writes share `~/.episteme/audit.jsonl` with hook-side audit or land in a separate stream (item 10 needs maintainer input). Shipped:
+  - Item 7 — `_evolve_run` episode-ID collision: appended `uuid.uuid4().hex[:4]` to `ep-YYYYMMDD-HHMMSS` for collision-free ids under rapid invocation; prefix still lexicographically sortable. No consumers of the exact old 17-char format (`grep -rn 'ep-[0-9]'` confirmed repo-wide).
+  - Item 8 — `_render_friction_report` negative `--top-n`: `top_n = max(0, top_n)` at entry; argparse accepts negatives, Python slice `[:-1]` previously sliced from the tail and leaked ranked entries into a report that should have had none.
+  - Item 11 — `reasoning_surface_guard._surface_status` no longer reads corrupt JSON as "missing": parse inline, distinguish `JSONDecodeError` + `OSError` + non-dict-JSON as status=`"invalid"` with detail naming the failure (including JSON line + column for parse errors). `_read_surface` left untouched for the `_write_prediction` call site.
+  - Tests: 176 → 180 (+4). Uniqueness under rapid calls (10 distinct ids); negative-top-n clamp (matches top_n=0 behavior, no leakage); malformed-surface (`INVALID` + `"not valid JSON"`) distinguishable from missing (`MISSING` + `"not found"`).
+
+- **`9c26201` — `docs(0.11-phase-12): approved design spec for profile-audit loop`**. `docs/DESIGN_V0_11_PHASE_12.md` — ~490 lines. The design for phase 12 (profile-audit loop closing the v0.11 circuit) with four countermeasures against the Goodhart threat named up front:
+  - **D1 · multi-signature convergence** — each axis has ≥ 2 signatures; drift flags require ≥ 2 misaligned.
+  - **D2 · retrospective-only** — signatures computed from already-written episodic records; never visible to the agent at decision-time.
+  - **D3 · re-elicitation, not correction** — the loop writes a prompt for the operator; never auto-mutates `operator_profile.md`.
+  - **D4 · named limit** — explicit §Known Gaming Vectors section; phase 12 is one defense-in-depth layer, not a sufficient safeguard alone.
+
+  Four axes operationalized in full (A `dominant_lens: failure-first`, B `noise_signature: status-pressure`, C `fence_discipline: 4`, D `asymmetry_posture: loss-averse`); 11 remaining axes pattern-sketched with template references. Spec includes 6 open questions — all accepted as proposed by the maintainer. Status flipped `draft → approved` with decisions recorded inline.
+
+- **`38374c0` — `feat(0.11-phase-12): checkpoint 1 — profile-audit scaffolding`**. End-to-end foundation. All 15 axes return `insufficient_evidence` with a reason pointing to the spec's sketch-table row — honest cold-start output until CP2+ land real signatures. Files:
+  - `kernel/PHASE_12_LEXICON.md` — five default lexicons (failure_frame, success_frame, buzzword, causal_connective, rollback_adjacent), operator override path at `core/memory/global/phase_12_lexicon.md`, explicit "Goodhart limit" section naming the threat model.
+  - `core/schemas/profile-audit/profile_audit_v1.json` — schema with `additionalProperties: false` throughout and `minItems`/`maxItems` = 15 on axes.
+  - `src/episteme/_profile_audit.py` — library: `run_audit`, `render_text_report`, `write_audit_record` (append-only to reflective tier), `read_latest_audit`, `surface_drift_line`. Custom YAML-ish parser for the operator profile's axis claims (no `pyyaml` dep — keeps `pyproject.toml`'s `dependencies = []` invariant). Dispatch table `_AXIS_HANDLERS` is empty at CP1; checkpoints 2-5 populate it one axis at a time.
+  - `src/episteme/cli.py` — `episteme profile audit [--since=30d] [--write] [--json]`. Human text provisional; `--json` is the stable machine-consumable contract.
+  - `core/hooks/session_context.py` — `_profile_audit_line()` reads latest unacknowledged record; emits one line between surface status and NEXT_STEPS. Inlined per the hooks-stay-self-contained convention.
+  - `tests/test_profile_audit.py` — 22 new tests (180 → 202). 7 classes cover: scaffolding empty-input path, episodic loader tolerance, profile claim parser on all shapes, lexicon loader + fingerprint determinism, append-only persistence, drift-surfacing contract, end-to-end session_context integration, text renderer.
+
+  Dogfood verified: `episteme profile audit` against the maintainer's real profile correctly parses `planning_strictness=4` (int), `noise_signature={primary:status-pressure, secondary:false-urgency}` (dict), `dominant_lens=[failure-first, causal-chain, first-principles, …]` (list). All 15 axes `insufficient_evidence`. Lexicon fingerprint stable `60963970fc2aa64b`.
+
+### Deep Audit Discoveries (logged from the opening read-only audit)
+
+Recorded after-the-fact per the session's initial audit directive. All either shipped or promoted to the RC checklist:
+
+- **`pytest` fails out of the box** — shipped fix in `d3cf98f`. Now 202/202 bare.
+- **Cleartext secrets in telemetry** — shipped fix in `d3cf98f`. Bonus latent bug in existing `_redact` helper also fixed.
+- **`state_tracker.py` POSIX-only `import fcntl`** — shipped fix in `d3cf98f`.
+- **`evolve run` episode-ID collision within same second** — shipped fix in `9a7cd1b`.
+- **`--top-n -1` silently slices from the tail** — shipped fix in `9a7cd1b`.
+- **Corrupt `reasoning-surface.json` indistinguishable from missing** — shipped fix in `9a7cd1b`.
+- **`evolve promote/rollback` overwrites `provenance.captured_at`** — promoted to Class B; schema-contract decision (evolution-contract-v1's `additionalProperties: false`) blocks silent fix.
+- **`evolve promote --force` writes no audit trail** — promoted to Class B; design decision needed on CLI-event audit stream (shared with hook audit? separate file?).
+- **`_default_evaluation_report` is a stub** — by-design per spec; flagged as 1.0 roadmap item 19.
+- **Unbounded telemetry loader + extension-less file tracker noise + persistent lockfile** — discretionary polish items 16, 17, 18 in NEXT_STEPS.
+
+### Metrics
+
+- Tests: **176 → 202** (+26; 0 regressions).
+- Commits: **5** shipped + 1 in-flight auto-checkpoint (`98e2933`).
+- RC checklist: **items 2, 3, 4, 7, 8, 11** closed. Items 9, 10 promoted to Class B alongside phase 12.
+- Phase 12: **CP1 of 5** shipped. Dispatch table `_AXIS_HANDLERS = {}` awaiting CP2 (axis C · fence_discipline).
+
+### Pause point
+
+Session ends cleanly after CP1. Next session resumes at Phase 12 Checkpoint 2 — Axis C (`fence_discipline`) — per the approved spec's depth-first sequencing (C first because single-signature flagging is allowed, then A, D, B). No blockers; foundation is tested; real signatures land one commit at a time.
+
+---
+
 ## 0.12.0-mermaid-architecture — 2026-04-20 — Mermaid architecture diagram replaces arxiv PNG figures
 
 `docs/ARCHITECTURE.md` created — arXiv-quality Mermaid flowchart (`graph TD`) mapping philosophical concepts to exact technical implementations. Four subgraphs: ① Agentic Mind (Intention) — Agent → Reasoning Surface → Doxa / Episteme; ② Sovereign Kernel (Interception) — `core/hooks/reasoning_surface_guard.py` stateful interceptor → Hard Block exit 2 / PASS exit 0; ③ Praxis & Reality (Execution) — tool execution → observed outcome via `core/hooks/calibration_telemetry.py`; ④ 결 · Gyeol (Cognitive Evolution) — prediction ↔ outcome joined by `correlation_id` in `~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl` → `episteme evolve friction` (`src/episteme/cli.py · _evolve_friction`) → Operator Profile + `kernel/CONSTITUTION.md` → posture loop closed. ClassDefs: red (Doxa / Hard Block), green (Episteme / Praxis), blue (Gyeol), purple (Kernel), dark-grey (neutral). `README.md` Figures 1 and 2 (PNG image tags) replaced with the embedded Mermaid diagram + link to `docs/ARCHITECTURE.md`. Architecture entry added to the "Read next" table.

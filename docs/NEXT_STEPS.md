@@ -4,6 +4,37 @@ Exact next actions, in priority order. Update this file at every handoff.
 
 ---
 
+## Resume here — Phase 12 Checkpoint 2 (2026-04-20 session end)
+
+**Next action (fresh session):** implement Phase 12 Checkpoint 2 — Axis C · `fence_discipline: 4` — per the approved spec at `docs/DESIGN_V0_11_PHASE_12.md` § Axis C.
+
+**Everything you need is already in place:**
+
+- Approved spec: `docs/DESIGN_V0_11_PHASE_12.md` (commit `9c26201`).
+- Foundation scaffolding shipped at commit `38374c0`:
+  - `src/episteme/_profile_audit.py` — library with empty `_AXIS_HANDLERS = {}` dispatch; CP2 populates `"fence_discipline": _axis_fence_discipline`.
+  - `kernel/PHASE_12_LEXICON.md` — includes `rollback_adjacent` (used by Axis D, not C — C is structural, not lexical).
+  - `core/schemas/profile-audit/profile_audit_v1.json` — schema any new handler must satisfy.
+  - `tests/test_profile_audit.py` — baseline 22 tests; CP2 extends with axis-C-specific tests.
+- Dogfood path: `PYTHONPATH=src python -m episteme.cli profile audit --since 30d` against the maintainer's real tier.
+
+**Axis C (fence_discipline) summary — from the spec:**
+- Signature S1 — constraint-removal records carry reconstruction ("this constraint exists because X" in `knowns`).
+- Signature S2 — constraint-removals paired with review-trace (counterfactual assumption about what breaks on removal).
+- Catastrophic exception to D1: this axis allows **single-signature flagging** because constraint removal is high-consequence and the false-negative cost of waiting for convergence exceeds the false-positive cost of one premature flag.
+- Evidence minimum: 5 constraint-removal records (low because constraint-removals are rare).
+- Drift threshold: S1 < 70% OR S2 < 50%, across ≥ 5 removals in 90d.
+
+**Sequencing after CP2:** CP3 Axis A (dominant_lens), CP4 Axis D (asymmetry_posture), CP5 Axis B (noise_signature) + final dogfood + CHANGELOG 0.11.0 entry + version reconcile. See the approved spec for the full plan and the Reasoning-Surface-documented 5-commit sequence.
+
+**Engineering session state at pause:**
+- Tests: 202/202 passing. Bare `pytest` works from fresh clone.
+- HEAD: `38374c0` (or the auto-checkpoint that follows it).
+- RC checklist closed during this session: items 2, 3, 4, 7, 8, 11.
+- Promoted to Class B alongside Phase 12: items 9, 10 (both need maintainer design calls, not code).
+
+---
+
 ## Road to v1.0.0 RC — concrete checklist (drafted 2026-04-20)
 
 Derived from a read-only audit of the CLI + stateful interceptor (see *Deep Audit Discoveries* in `docs/PROGRESS.md`). Ordered by blocking-weight: items above a line block RC tag; items below are RC → GA polish.
