@@ -10,6 +10,14 @@ The same engineering decision, presented twice. Once with a fluent agent that an
 
 This demo is the one that convinces skeptics. The kernel's value is not a fix after the fact — it is a different answer at the first turn.
 
+## See it in motion (75 seconds)
+
+The artifacts below are the static form of this demo. A cinematic version walks through them in four narrated beats — the prompt, doxa vs episteme field-by-field, the specificity ladder (validated live against the real Reasoning-Surface Guard), and the memory loop that phase 11 ships and phase 12 will close:
+
+- **Script:** [`scripts/demo_posture.sh`](../../scripts/demo_posture.sh) — hermetic; sets `HOME` to a tempdir; runs end-to-end in ~75 s.
+- **Recording:** `asciinema rec -c ./scripts/demo_posture.sh docs/assets/posture_demo.cast`, then `agg docs/assets/posture_demo.cast docs/assets/posture_demo.gif --cols 100 --rows 36 --font-size 15 --theme monokai`.
+- **Pair with:** [`scripts/demo_strict_mode.sh`](../../scripts/demo_strict_mode.sh) — the blocking-story demo (same kernel, different audience question: *how does it refuse?* vs. *how does it think?*).
+
 ## How to read
 
 1. **Read the prompt first.** [`prompt.md`](./prompt.md). It is intentionally open-ended and slightly flattering, as real product asks tend to be.
