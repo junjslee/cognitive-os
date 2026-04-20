@@ -14,7 +14,7 @@ Everything below is the "how-to" for recurring maintainer tasks that aren't cove
 
 ## Recording the Strict Mode demo
 
-The README embeds `docs/assets/strict_mode_demo.gif` as a 30-second "show, don't tell" proof that Strict Mode blocks lazy surfaces. To refresh it after a hook change:
+The README embeds `docs/assets/strict_mode_demo.gif` as a three-act "show, don't tell" proof: (1) the posture (lazy vs. valid Reasoning Surface), (2) the kernel remembers (v0.10 stateful interceptor catches an agent-written script bypass), (3) the kernel learns (calibration telemetry + `episteme evolve friction` ranked unknowns). To refresh after a hook change:
 
 ### 1. Install the recording toolchain
 
@@ -36,7 +36,8 @@ The demo script is hermetic — it runs in a tempdir and never touches a real re
 
 ```bash
 cd ~/episteme
-asciinema rec -c ./scripts/demo_strict_mode.sh docs/assets/strict_mode_demo.cast
+asciinema rec --overwrite --cols 100 --rows 34 \
+  -c ./scripts/demo_strict_mode.sh docs/assets/strict_mode_demo.cast
 ```
 
 The script auto-paces with `sleep` calls (tunable via `DEMO_PAUSE=<seconds>`). Do not override the pauses during recording — the default cadence is tuned for readability.
@@ -47,7 +48,7 @@ The script auto-paces with `sleep` calls (tunable via `DEMO_PAUSE=<seconds>`). D
 
 ```bash
 agg docs/assets/strict_mode_demo.cast docs/assets/strict_mode_demo.gif \
-  --cols 92 --rows 28 --font-size 16 --theme monokai
+  --cols 100 --rows 34 --font-size 15 --theme monokai
 ```
 
 Keep it a quick demo — readable at 1x on GitHub without zoom, small enough to load instantly in the README. If the GIF is too heavy, drop `--font-size` or re-record with a shorter `DEMO_PAUSE`.

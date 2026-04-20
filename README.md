@@ -12,7 +12,12 @@ Advisory mode (warn-don't-block) is opt-in per-project: `touch .episteme/advisor
 
 ![Episteme Strict Mode Block](docs/assets/strict_mode_demo.gif)
 
-> **Quick demo above:** a lazy agent writes `disconfirmation: "None"`, attempts `git push`, and gets blocked with exit 2. Then it rewrites a valid surface — execution passes. Reproduce it yourself with [`scripts/demo_strict_mode.sh`](./scripts/demo_strict_mode.sh). Recording instructions: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md#recording-the-strict-mode-demo).
+> **Quick demo above, three acts:**
+> **① The posture.** A lazy agent writes `disconfirmation: "None"` and attempts `git push` → **blocked, exit 2**. It rewrites a valid surface with a concrete disconfirmation → **passes**.
+> **② The kernel remembers.** The agent tries to hide `git push` inside a `stealth.py` it just wrote — `os.system("git push...")`, never named in the Bash call. The v0.10 stateful interceptor remembers the write, deep-scans on execute → **blocked** with `git push via agent-written stealth.py`.
+> **③ The kernel learns.** `episteme evolve friction` pairs predictions with outcomes, ranks the unknowns the operator keeps under-naming, and names the ops with recurring calibration debt.
+>
+> Reproduce it yourself: [`scripts/demo_strict_mode.sh`](./scripts/demo_strict_mode.sh). Recording instructions: [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md#recording-the-strict-mode-demo).
 
 ---
 

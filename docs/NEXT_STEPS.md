@@ -6,7 +6,7 @@ Exact next actions, in priority order. Update this file at every handoff.
 
 ## Immediate (0.10.0 remainder → 0.10.0 GA)
 
-1. **Record the Strict Mode demo GIF** — first maintainer to run it produces `docs/assets/strict_mode_demo.gif` and `.cast`. Instructions in [`docs/CONTRIBUTING.md`](./CONTRIBUTING.md#recording-the-strict-mode-demo). Keep it a quick demo — a few beats of block → fix → pass, readable on GitHub without zoom.
+1. ~~**Record the Strict Mode demo GIF**~~ — **DONE**. Three-act GIF (posture → kernel remembers → kernel learns) at `docs/assets/strict_mode_demo.gif`, 904 KB. Re-record after any hook change via `docs/CONTRIBUTING.md`.
 2. **First friction-report pass** — after ~1 week of real v0.10.0 use, run `episteme evolve friction` against accumulated telemetry. Answer: do the ranked unknowns point at real calibration debt? Are the friction-prone ops the same ones humans are already suspicious of? Tune the heuristic (currently: skip empty envelopes; rank by raw frequency) if the top-N doesn't track intuition.
 3. **Stateful-interception FP audit** — scan `~/.episteme/audit.jsonl` for blocks carrying the new `via agent-written <path>` label. Any false positive here is a regression-budget hit; surface them fast.
 4. **Tag and push `v0.10.0`** after one-week soak if no FP spike and no telemetry anomalies.
