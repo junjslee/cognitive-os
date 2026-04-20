@@ -37,6 +37,12 @@ Paste outputs or summarize failures/fixes.
 
 Include test output, screenshots, or sample command output where helpful.
 
+## Kernel impact
+
+- [ ] This change does not modify any kernel invariant (CONSTITUTION.md principles 1–4)
+- [ ] If it does: the change was proposed in CHANGELOG.md first and follows the Evolution Contract
+- Layer affected: kernel / operator profile / adapter / CLI / docs (circle one)
+
 ## Final checklist
 
 - [ ] I tested this change locally

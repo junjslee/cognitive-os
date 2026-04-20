@@ -47,6 +47,17 @@ body:
     validations:
       required: true
   - type: textarea
+    id: failure_mode
+    attributes:
+      label: Kernel alignment
+      description: |
+        Optional but valuable — answer any that apply:
+        - Which of the six failure modes does this bug expose (if any)? See kernel/FAILURE_MODES.md.
+        - Which counter artifact failed or was absent — Unknowns, Core Question, Disconfirmation, facts/inferences split, failure-first check, or Assumptions?
+        - Is this a bug in the kernel, an adapter, a CLI command, or the operator profile schema? The layer matters for scoping the fix.
+    validations:
+      required: false
+  - type: textarea
     id: evidence
     attributes:
       label: Evidence

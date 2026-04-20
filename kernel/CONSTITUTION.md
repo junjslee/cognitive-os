@@ -4,6 +4,8 @@
 - Root claim: the danger is *confident wrongness*, not incompetence.
 - Four principles: I. Explicit > implicit · II. Orientation precedes observation · III. No model is sufficient alone · IV. The loop is the unit of progress.
 - Six failure modes named in this file; counters enumerated in [FAILURE_MODES.md](./FAILURE_MODES.md).
+- Control model: **feedforward**, not feedback — failure modes are countered *before* execution begins, not corrected after.
+- Contract model: **Design by Contract** — Preconditions (Knowns + validated Assumptions), Postconditions (Verification), Invariants (this kernel; cannot be suspended per-cycle).
 - Authority: project docs > operator profile > kernel defaults > runtime defaults.
 - Boundary: [KERNEL_LIMITS.md](./KERNEL_LIMITS.md). Attribution: [REFERENCES.md](./REFERENCES.md).
 
@@ -67,6 +69,15 @@ Making things explicit is not documentation overhead. It is the primary
 cognitive act. The [Reasoning Surface](./REASONING_SURFACE.md) — knowns,
 unknowns, assumptions, disconfirmation — is the minimum viable explicitness
 required before any consequential decision.
+
+Expressed as a cognitive contract (Design by Contract, Meyer 1988): the
+Reasoning Surface enforces **Preconditions** (Knowns + validated Assumptions
+that must hold before any action is taken), the Verify and Handoff stages
+enforce **Postconditions** (what must be demonstrably true at completion),
+and the kernel itself is the **Invariant** — the layer of principle that no
+single cycle can suspend. A cycle that bypasses a Precondition does not save
+time; it defers the cost of the violated condition to the execution stage,
+where it compounds.
 
 The same principle applies to one's own model of the world. Expose the model,
 including the parts that are wrong, or the parts that are wrong stay wrong.
@@ -134,6 +145,14 @@ defers the cost of the error to a later stage, where it compounds.
 Speed of iteration beats size of any individual step. The smallest reversible
 action that produces new information is usually the correct next move.
 
+The control architecture is **feedforward**, not feedback. Feedback control
+corrects after an error is observed. Feedforward control names the failure
+conditions before execution begins and structures the work so those conditions
+cannot be silently violated. The Reasoning Surface is the feedforward gate:
+Knowns, Unknowns, Assumptions, and Disconfirmation must be declared before
+the Execute stage opens. An agent that skips the gate is operating on feedback
+control — it will correct eventually, but only after the cost is incurred.
+
 ---
 
 ## What this generates
@@ -153,6 +172,14 @@ The four principles produce every design decision in this repository:
 - The **cross-runtime sync** exists because Principle II demands orientation
   stay consistent across whatever tool the agent runs in. A context reset
   must not reset the worldview.
+- The **feedforward control architecture** exists because Principle IV demands
+  failure modes be countered before execution, not corrected after. The
+  Reasoning Surface is a pre-execution gate, not a retrospective audit form.
+- The **cognitive contract structure** (Design by Contract) exists because
+  Principle I demands the implicit be made explicit: Preconditions (Knowns +
+  Assumptions before action), Postconditions (Verification at handoff),
+  Invariants (kernel principles that no cycle can bypass). Breach a
+  Precondition and the agent should not proceed.
 
 ---
 

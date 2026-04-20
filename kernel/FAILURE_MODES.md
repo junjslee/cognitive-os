@@ -24,6 +24,12 @@ a named failure mode. If a proposed change removes or bypasses one of these
 artifacts, name which failure mode is now unprotected against. If the answer
 is "none" — the artifact was not earning its place.
 
+**These counters are feedforward, not feedback.** They are enforced before
+execution begins, not applied as corrections after a failure is observed.
+Each field of the Reasoning Surface is a pre-execution gate. An agent that
+fills the Surface after acting is doing retrospective documentation, not
+cognitive governance.
+
 ---
 
 ## The six modes
@@ -138,22 +144,26 @@ Uncertainty is dispreferred even when uncertainty is the correct signal.
 
 ---
 
-## Using this as a review checklist
+## Using this as a pre-execution checklist
 
-When auditing a decision or a change, walk the list:
+These are feedforward gates — run them before the Execute stage opens,
+not after a problem surfaces. The cost of skipping is deferred, not avoided.
 
-1. What did "reasoning only from what is present" miss? Did the Unknowns
-   section catch it?
-2. What Core Question did this cycle claim to answer? Did it actually
-   answer that one?
-3. What was the anchor framing? What disconfirmation was named against it?
+1. What did "reasoning only from what is present" miss? Is the Unknowns
+   section non-empty and honest?
+2. What Core Question does this cycle claim to answer? Is it the actual
+   question, or a nearby easier substitute?
+3. What is the anchor framing? What disconfirmation condition is named
+   against it?
 4. Which claims are facts, which are inferences, which are preferences?
-5. What is the failure mode for this plan, and what is the margin if
-   estimates slip?
-6. Where is the expressed confidence higher than the evidence supports?
+   Can each survive being labeled?
+5. What would definitely cause this plan to fail? What is the margin if
+   estimates slip by 30–50%?
+6. Where is expressed confidence higher than the evidence supports? Name it.
 
-Six questions, six failure modes. If any goes uncovered, the corresponding
-kernel artifact is the place to reach for.
+Six gates, six failure modes. If any gate is skipped, execution proceeds
+with that failure mode unprotected. Name the trade-off explicitly rather
+than leaving it implicit.
 
 ---
 

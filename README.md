@@ -102,7 +102,34 @@ Authority hierarchy: **project docs > operator profile > kernel defaults > runti
 
 Structural stack: kernel (philosophy) → operator profile (personalization) → adapters (delivery) → runtime (execution).
 
-<!-- TODO: insert control-plane architecture diagram — LLM intent → cognitive-os policy gate (Reasoning Surface) → runtime execution. Illustrates the feedforward control layer and DbC contract enforcement point. -->
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        user intent / prompt                         │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   cognitive-os      │  ← epistemic policy engine
+                    │   policy gate       │
+                    │                     │
+                    │  Preconditions      │  Knowns + Assumptions declared?
+                    │  (DbC)          ────┼─ Core Question named?
+                    │                     │  Unknowns non-empty?
+                    │  Feedforward    ────┼─ Disconfirmation condition set?
+                    │  control            │  Constraint regime declared?
+                    │                     │
+                    │  PASS / BLOCK       │
+                    └──────────┬──────────┘
+                               │ PASS
+                    ┌──────────▼──────────┐
+                    │   LLM runtime       │  Claude Code / Cursor / MCP / …
+                    │   (execution)       │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   Verify + Handoff  │  Postconditions checked (DbC)
+                    │   (loop closes)     │  docs/PROGRESS.md updated
+                    └─────────────────────┘
+```
 
 **Works with any stack.** cognitive-os is an agnostic layer that operates independently of the LLM runtime—whether you use LangChain, CrewAI, Claude Code, Cursor, or MCP. The kernel is pure markdown; the operator profile is plain JSON; the workflow loop is vendor-neutral. The adapter layer (currently: Claude Code, Hermes) is pluggable. The kernel outlives the tooling.
 
