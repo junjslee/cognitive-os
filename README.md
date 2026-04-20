@@ -108,34 +108,13 @@ Authority hierarchy: **project docs > operator profile > kernel defaults > runti
 
 Structural stack: kernel (philosophy) → operator profile (personalization) → adapters (delivery) → runtime (execution).
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        user intent / prompt                         │
-└──────────────────────────────┬──────────────────────────────────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │   episteme          │  ← epistemic policy engine
-                    │   policy gate       │
-                    │                     │
-                    │  Preconditions      │  Knowns + Assumptions declared?
-                    │  (DbC)          ────┼─ Core Question named?
-                    │                     │  Unknowns non-empty?
-                    │  Feedforward    ────┼─ Disconfirmation condition set?
-                    │  control            │  Constraint regime declared?
-                    │                     │
-                    │  PASS / BLOCK       │
-                    └──────────┬──────────┘
-                               │ PASS
-                    ┌──────────▼──────────┐
-                    │   LLM runtime       │  Claude Code / Cursor / MCP / …
-                    │   (execution)       │
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │   Verify + Handoff  │  Postconditions checked (DbC)
-                    │   (loop closes)     │  docs/PROGRESS.md updated
-                    └─────────────────────┘
-```
+### Control plane (v0.10.0-α · The Sovereign Kernel)
+
+<p align="center">
+  <img src="docs/assets/architecture_v2.svg" alt="episteme control plane — three-layer interposition: agent runtime, control plane, hardware/OS, with stateful interceptor loop and calibration telemetry feed" width="100%" />
+</p>
+
+Three layers. **Agent runtime** issues tool calls (Bash / Write / Edit / MultiEdit). The **episteme control plane** mediates every one of them via a **Reasoning-Surface Guard** (strict by default — blocks high-impact ops without a declared surface), a **Stateful Interceptor** (persists sha256+ts of agent-written files to `~/.episteme/state/session_context.json`, closing the write-then-execute bypass across calls), and a **Calibration Telemetry** feed (pairs pre-call predictions with post-call exit codes, JSONL, local-only). Only after PASS does **hardware / OS** observe any effect. On BLOCK (exit 2) the tool dispatcher returns the guard's reason and the effect never reaches the filesystem, the git remote, or the cloud.
 
 **Works with any stack.** Episteme is an agnostic layer that operates independently of the LLM runtime—whether you use LangChain, CrewAI, Claude Code, Cursor, or MCP. The kernel is pure markdown; the operator profile is plain JSON; the workflow loop is vendor-neutral. The adapter layer (currently: Claude Code, Hermes) is pluggable. The kernel outlives the tooling.
 
