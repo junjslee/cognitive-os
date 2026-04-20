@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/schemas/marketplace.json",
-  "name": "cognitive-os",
+  "name": "episteme",
   "description": "The epistemic-posture layer for AI coding agents. Reasoning Surface protocol, named failure-mode counters, operator profile schema, and workflow loop — shipped as skills, agents, and hooks.",
   "owner": {
     "name": "Jun Lee",
@@ -8,12 +8,12 @@
   },
   "plugins": [
     {
-      "name": "cognitive-os",
+      "name": "episteme",
       "source": {
         "source": "url",
         "url": "https://github.com/junjslee/cognitive-os.git"
       },
-      "description": "Install the cognitive-os kernel, skills, agent personas, and safety hooks into Claude Code. Posture-first: structures Core Question + Knowns / Unknowns / Assumptions / Disconfirmation before high-impact actions.",
+      "description": "Install the episteme kernel, skills, agent personas, and safety hooks into Claude Code. Posture-first: structures Core Question + Knowns / Unknowns / Assumptions / Disconfirmation before high-impact actions.",
       "version": "0.6.0",
       "category": "productivity",
       "tags": [

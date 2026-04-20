@@ -18,8 +18,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 HOME = Path.home()
 CONDA_ROOT = Path(
     os.environ.get(
-        "COGNITIVE_OS_CONDA_ROOT",
-        os.environ.get("COGNITIVE_OS_CONDA_ROOT_LEGACY", str(HOME / "miniconda3")),
+        "EPISTEME_CONDA_ROOT",
+        os.environ.get("EPISTEME_CONDA_ROOT_LEGACY", str(HOME / "miniconda3")),
     )
 )
 EXPECTED_BASE_PREFIX = str(CONDA_ROOT)

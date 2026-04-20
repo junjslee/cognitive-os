@@ -13,7 +13,7 @@
 - Git: `{{GIT_VERSION}}`
 
 ## ⛓️ Execution Constraints (Python Runtime)
-- `cognitive-os` local Python work must run in Conda `base`.
+- `episteme` local Python work must run in Conda `base`.
 - Expected Conda root: `{{CONDA_ROOT}}`
 - Homebrew Python is not a supported runtime.
 

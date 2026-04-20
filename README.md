@@ -1,10 +1,10 @@
-# cognitive-os
+# episteme
 
-> **cognitive-os installs an epistemic posture.** The artifacts are how the posture becomes enforceable. Markdown. Vendor-neutral. The kernel outlives the tooling.
+> **episteme installs an epistemic posture.** The artifacts are how the posture becomes enforceable. Markdown. Vendor-neutral. The kernel outlives the tooling.
 
-A *posture* is how a reasoner holds themselves before a decision: which questions get asked, which unknowns get named, which options are pre-rejected, and which conditions force a pivot. Tools and memory stores cycle every 18–36 months — the posture does not. `cognitive-os` is the layer that installs the posture once and delivers it into every runtime and substrate you use.
+A *posture* is how a reasoner holds themselves before a decision: which questions get asked, which unknowns get named, which options are pre-rejected, and which conditions force a pivot. Tools and memory stores cycle every 18–36 months — the posture does not. `episteme` is the layer that installs the posture once and delivers it into every runtime and substrate you use.
 
-**Most AI frameworks focus on execution—giving agents memory and tools to act faster. cognitive-os focuses on governance.** It is a deterministic control plane that sits between the LLM and the runtime. By enforcing a strict cognitive contract (Design by Contract) and feedforward control, it forces agents to explicitly map knowns, validate assumptions, and declare disconfirmation conditions before a single line of code is written or a tool is called. It is the prefrontal cortex for your agentic stack—preventing fluent-wrong hallucinations and enabling zero-trust execution.
+**Most AI frameworks focus on execution—giving agents memory and tools to act faster. Episteme focuses on governance.** It is a deterministic control plane that sits between the LLM and the runtime. By enforcing a strict cognitive contract (Design by Contract) and feedforward control, it forces agents to explicitly map knowns, validate assumptions, and declare disconfirmation conditions before a single line of code is written or a tool is called. It is the prefrontal cortex for your agentic stack—preventing fluent-wrong hallucinations and enabling zero-trust execution.
 
 **[What this installs →](./docs/POSTURE.md)** · **[Differential demo (off vs on) →](./demos/03_differential/)** · **[Install as plugin →](./.claude-plugin/README.md)** · **[Quick start ↓](#quick-start)**
 

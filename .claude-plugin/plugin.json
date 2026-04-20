@@ -1,5 +1,5 @@
 {
-  "name": "cognitive-os",
+  "name": "episteme",
   "description": "The epistemic-posture layer for AI coding agents. Ships the Reasoning Surface protocol, named failure-mode counters, operator profile schema, and workflow loop as Claude Code skills, agents, and hooks. Posture first. Kernel outlives the tooling.",
   "version": "0.6.0",
   "author": {
@@ -10,7 +10,7 @@
   "repository": "https://github.com/junjslee/cognitive-os",
   "license": "MIT",
   "keywords": [
-    "cognitive-os",
+    "episteme",
     "epistemic-posture",
     "reasoning",
     "memory-contract",

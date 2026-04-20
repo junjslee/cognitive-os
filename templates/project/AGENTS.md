@@ -73,7 +73,7 @@ failure modes that LLMs are most prone to (Kahneman). Every field blocks a named
 Additional principles applied per decision:
 - **Radical Transparency (Dalio)**: Surface uncertainty -- never hide it to appear more capable.
   Weight competing inputs by demonstrated track record, not authority or fluency.
-- **OODA orientation (Boyd)**: cognitive-os is the Orientation layer. It shapes what you see and how
+- **OODA orientation (Boyd)**: episteme is the Orientation layer. It shapes what you see and how
   you frame it before you act. Prefer small reversible actions that let you loop fast over large
   irreversible bets.
 - **Mental Model Lattice (Munger)**: Before any high-impact irreversible decision, apply at least 2
@@ -111,6 +111,6 @@ Keep local only:
 - `.claude/settings.local.json`, user auth, trust settings, `.env*`, `secrets/`, private keys, large local datasets.
 
 ## Runtime Policy
-- `cognitive-os` is the source of truth for the project scaffold.
-- Local Python-backed `cognitive-os` work runs in Conda `base` at `{{CONDA_ROOT}}`.
-- Homebrew Python is not the supported runtime for `cognitive-os`.
+- `episteme` is the source of truth for the project scaffold.
+- Local Python-backed `episteme` work runs in Conda `base` at `{{CONDA_ROOT}}`.
+- Homebrew Python is not the supported runtime for `episteme`.
