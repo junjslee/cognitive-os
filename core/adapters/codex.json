@@ -10,5 +10,5 @@
     "skills_dir": "~/.codex/skills"
   },
   "project_contract": "AGENTS.md",
-  "notes": "AGENTS.md is Codex's primary behavioral contract. cognitive-os does not overwrite ~/.codex/skills/.system. Skills sync only adds managed skills."
+  "notes": "AGENTS.md is Codex's primary behavioral contract. episteme does not overwrite ~/.codex/skills/.system. Skills sync only adds managed skills."
 }

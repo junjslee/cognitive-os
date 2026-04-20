@@ -16,7 +16,7 @@ Closes #
 ### Commands run
 
 ```bash
-python3 -m py_compile src/cognitive_os/cli.py
+python3 -m py_compile src/episteme/cli.py
 python -m pytest -q
 ```
 
@@ -26,7 +26,7 @@ Paste outputs or summarize failures/fixes.
 
 - [ ] CLI help/usage still valid for changed commands
 - [ ] README/docs examples match current behavior
-- [ ] `cognitive-os` naming is consistent (no legacy command drift)
+- [ ] `episteme` naming is consistent (no legacy command drift)
 
 ## Risk and rollback
 

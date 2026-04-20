@@ -1,5 +1,5 @@
 name: Bug report
-description: Report broken behavior in cognitive-os
+description: Report broken behavior in episteme
 labels: [bug]
 body:
   - type: checkboxes
@@ -12,7 +12,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: cognitive-os version
+      label: episteme version
       placeholder: e.g. 0.2.0
     validations:
       required: true

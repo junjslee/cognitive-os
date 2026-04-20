@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a new capability for cognitive-os
+description: Propose a new capability for episteme
 labels: [enhancement]
 body:
   - type: checkboxes

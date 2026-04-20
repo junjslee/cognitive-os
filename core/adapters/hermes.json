@@ -12,5 +12,5 @@
     "skills_dir": "~/.hermes/skills"
   },
   "project_contract": "AGENTS.md",
-  "notes": "OPERATOR.md is a composite of all global memory sources, prepended with a governance declaration. SOUL.md is a session-start loader created once and then user-owned. Skills use agentskills.io SKILL.md format, compatible with cognitive-os skill layout."
+  "notes": "OPERATOR.md is a composite of all global memory sources, prepended with a governance declaration. SOUL.md is a session-start loader created once and then user-owned. Skills use agentskills.io SKILL.md format, compatible with episteme skill layout."
 }
