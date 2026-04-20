@@ -4,6 +4,21 @@ Running log of completed work. Most recent first.
 
 ---
 
+## 0.11.0-coherence — 2026-04-20 — visual + narrative coherence pass (docs-only)
+
+Interstitial between phase 11 (shipped) and phase 12 (pending). Six artifacts land so that phase 12 has a narrative home and the repo's visual story catches up to the code that phases 9–11 already shipped.
+
+- **`docs/DESIGN_V0_11_COHERENCE_PASS.md`** — spec. Eight decisions, five sequenced steps, audit punch list as Appendix A enumerating three concrete layout bugs in the prior `architecture_v2.svg` (stateful-loop arrow curving outside its layer; PASS/BLOCK arrows floating with no source node; telemetry arrow crossing node bodies) and the content drift in `system-overview.svg` (no doxa content; no v0.11 components surfaced; MEMORY_ARCHITECTURE invisible).
+- **`docs/NARRATIVE.md`** — load-bearing prose spine. Seven parts. Declares the doxa / episteme / praxis triad (ontology, three strata) traversed by the grain 결 · gyeol (motion, how the posture flows). Phase 12 named throughout as in-flight, mirroring `kernel/CHANGELOG.md`'s deferred-until-shipped discipline. Kernel-limit stated honestly: *structural discipline in the hot path; semantic quality over time*.
+- **`docs/assets/system-overview.svg`** (Figure 1). Rewrite in arxiv publication-figure style. Three bands (DOXA · EPISTEME · PRAXIS). Biggest omission closed: doxa band populated with all nine named failure modes and their counters. Episteme band adds MEMORY_ARCHITECTURE + components-by-role section naming phases 9/10/11/12. Praxis band holds the four canonical artifacts + four delivery adapters. 1600×1400, single accent (sync pill), off-white ground, near-black ink.
+- **`docs/assets/architecture_v2.svg`** (Figure 2). Rewrite in arxiv style. Three layout bugs resolved per Appendix A. Episteme band expanded to six components across two rows (row 1: Reasoning-Surface Guard / Stateful Interceptor / Calibration Telemetry; row 2 new: Derived Knobs / Episodic Writer / Semantic Promoter). Phase 12 profile-audit loop drawn dashed with *pending* marker — when it ships, the stroke solidifies with zero structural rework. Single accent on the BLOCK arrow (the kernel's signature behavior).
+- **`scripts/demo_posture.sh`** — cinematic 75 s differential. Four beats (prompt · doxa vs episteme · specificity ladder · memory loop closes). Live-validated against the real Reasoning-Surface Guard; three disconfirmations verified BLOCK / PASS / PASS. Narration per beat answers (a) what is shown, (b) why load-bearing, (c) what failure mode it counters. The PASS on the 43-char fluent-vacuous string is the demo's pedagogical climax — honest about the kernel limit instead of hiding it.
+- **`README.md`** — stitched. Hero callout rewritten as *two demos, two halves of the posture*: posture-as-thinking (demo_posture.sh, cinematic) and posture-as-blocking (strict-mode gif, now supporting). `System overview` and `Control plane` section headings become `Figure 1 · Structural stratification` and `Figure 2 · Control-plane interposition`. Kernel table updated (failure-mode counts 6→9; MEMORY_ARCHITECTURE.md added). NARRATIVE.md promoted in the pointer bar.
+
+Code unchanged. Test suite unchanged (176 passing). Zero risk to phase 11's delivery; phase 12 now has an aligned narrative home.
+
+---
+
 ## 0.11.0 — 2026-04-20 — Kernel depth + profile v2 runtime + episodic + semantic promotion
 
 Docs + code. Phases 1–11 complete; phases 12–14 remain (profile-audit loop, CHANGELOG, MANIFEST regen).
