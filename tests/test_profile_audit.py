@@ -1343,5 +1343,358 @@ class DominantLensEndToEndTests(unittest.TestCase):
         self.assertEqual(dl["evidence_count"], 22)
 
 
+# ---------------------------------------------------------------------------
+# Axis D · asymmetry_posture (checkpoint 4)
+# ---------------------------------------------------------------------------
+
+def _lexicon_for_axis_d() -> dict[str, frozenset[str]]:
+    """Mirror the rollback_adjacent section of kernel/PHASE_12_LEXICON.md
+    so Axis D tests don't depend on the on-disk lexicon."""
+    return {
+        "rollback_adjacent": frozenset({
+            "rollback", "revert", "undo", "abort", "back out",
+            "restore from", "recovery", "kill switch",
+            "circuit breaker", "feature flag",
+        }),
+    }
+
+
+def _make_axis_d_record(
+    *,
+    correlation_id: str,
+    is_irreversible: bool = True,
+    knowns: list[str] | None = None,
+    assumptions: list[str] | None = None,
+    disconfirmation: str | None = None,
+    pattern_label: str = "git push",
+) -> dict:
+    surface: dict = {}
+    if knowns is not None:
+        surface["knowns"] = knowns
+    if assumptions is not None:
+        surface["assumptions"] = assumptions
+    if disconfirmation is not None:
+        surface["disconfirmation"] = disconfirmation
+    details = {
+        "tool": "Bash",
+        "command": "git push origin main" if is_irreversible else "ls -la",
+        "cwd": "/tmp/fixture",
+        "exit_code": 0,
+        "status": "success",
+        "high_impact_patterns_matched": [pattern_label] if is_irreversible else [],
+    }
+    if surface:
+        details["reasoning_surface"] = surface
+    tags = ["high-impact", "bash", pattern_label] if is_irreversible else ["bash"]
+    return {
+        "id": f"fixture-{correlation_id}",
+        "memory_class": "episodic",
+        "summary": f"fixture-{correlation_id}",
+        "details": details,
+        "provenance": {
+            "source_type": "agent",
+            "source_ref": "tests/test_profile_audit.py",
+            "captured_at": "2026-04-21T00:00:00+00:00",
+            "captured_by": "fixture",
+            "confidence": "high",
+            "evidence_refs": [f"correlation_id:{correlation_id}"],
+        },
+        "status": "active",
+        "version": "memory-contract-v1",
+        "tags": tags,
+        "session_id": "fixture-session",
+        "event_type": "action",
+    }
+
+
+class StopConditionClassifierTests(unittest.TestCase):
+    def test_short_or_empty_is_unknown(self):
+        self.assertEqual(pa._classify_stop_condition(""), "unknown")
+        self.assertEqual(pa._classify_stop_condition(None), "unknown")
+        self.assertEqual(pa._classify_stop_condition("too short"), "unknown")
+
+    def test_stop_phrase_classified_as_stop(self):
+        text = "if canary p95 latency exceeds 400ms within 10 minutes, rollback the deploy"
+        self.assertEqual(pa._classify_stop_condition(text), "stop")
+
+    def test_do_not_proceed_classified_as_stop(self):
+        text = "if any test in the regression suite fails, do not promote the build"
+        self.assertEqual(pa._classify_stop_condition(text), "stop")
+
+    def test_pure_success_classified_as_success(self):
+        text = "if everything stays green for 30 minutes after deploy, promote to prod"
+        self.assertEqual(pa._classify_stop_condition(text), "success")
+
+    def test_both_when_each_side_named(self):
+        text = (
+            "if smoke tests pass and metrics stay green, ship; "
+            "if error rate exceeds 1%, rollback"
+        )
+        self.assertEqual(pa._classify_stop_condition(text), "both")
+
+    def test_neither_pattern_is_unknown(self):
+        # Trigger present but no stop or success vocabulary at all.
+        text = "if the wind blows northward we shall consider tomorrow"
+        self.assertEqual(pa._classify_stop_condition(text), "unknown")
+
+
+class IrreversibleOpFilterTests(unittest.TestCase):
+    def test_record_with_high_impact_pattern_qualifies(self):
+        rec = _make_axis_d_record(correlation_id="r1", is_irreversible=True)
+        self.assertTrue(pa._is_irreversible_op(rec))
+
+    def test_record_without_high_impact_pattern_does_not_qualify(self):
+        rec = _make_axis_d_record(correlation_id="r2", is_irreversible=False)
+        self.assertFalse(pa._is_irreversible_op(rec))
+
+    def test_tag_only_fallback_qualifies(self):
+        # Some legacy records may not have high_impact_patterns_matched
+        # but do carry the high-impact tag.
+        rec = {"details": {}, "tags": ["high-impact", "bash"]}
+        self.assertTrue(pa._is_irreversible_op(rec))
+
+    def test_malformed_record_does_not_crash(self):
+        self.assertFalse(pa._is_irreversible_op({}))
+        self.assertFalse(pa._is_irreversible_op({"details": "bad", "tags": "bad"}))
+
+
+class RollbackMentionTests(unittest.TestCase):
+    def test_single_word_term_in_assumptions(self):
+        lex = pa._load_lexicon  # not used; we hand the terms directly
+        del lex
+        terms = _lexicon_for_axis_d()["rollback_adjacent"]
+        rec = _make_axis_d_record(
+            correlation_id="rm1",
+            assumptions=["worker can be killed; we have a rollback path"],
+        )
+        self.assertTrue(pa._has_rollback_mention(rec, terms))
+
+    def test_multi_word_term_in_knowns(self):
+        terms = _lexicon_for_axis_d()["rollback_adjacent"]
+        rec = _make_axis_d_record(
+            correlation_id="rm2",
+            knowns=["restore from snapshot is documented in runbook"],
+        )
+        self.assertTrue(pa._has_rollback_mention(rec, terms))
+
+    def test_no_match_returns_false(self):
+        terms = _lexicon_for_axis_d()["rollback_adjacent"]
+        rec = _make_axis_d_record(
+            correlation_id="rm3",
+            knowns=["staging looks healthy"],
+            assumptions=["the reviewers caught it"],
+        )
+        self.assertFalse(pa._has_rollback_mention(rec, terms))
+
+    def test_empty_lexicon_returns_false(self):
+        rec = _make_axis_d_record(
+            correlation_id="rm4",
+            assumptions=["full rollback plan documented"],
+        )
+        self.assertFalse(pa._has_rollback_mention(rec, frozenset()))
+
+
+class AsymmetryPostureHandlerTests(unittest.TestCase):
+    """End-to-end on _axis_asymmetry_posture with D1 convergence."""
+
+    @staticmethod
+    def _loss_averse_record(correlation_id: str) -> dict:
+        # Stop-condition disconfirmation + rollback mention in assumptions.
+        return _make_axis_d_record(
+            correlation_id=correlation_id,
+            knowns=[
+                f"feature flag exists for {correlation_id}; can disable via dashboard"
+            ],
+            assumptions=[
+                "rollback path is documented in runbook"
+            ],
+            disconfirmation=(
+                f"if error rate exceeds 1% within 10 minutes of "
+                f"{correlation_id} deploy, rollback the release"
+            ),
+        )
+
+    @staticmethod
+    def _gain_seeking_record(correlation_id: str) -> dict:
+        # Pure success-criterion + no rollback vocabulary.
+        return _make_axis_d_record(
+            correlation_id=correlation_id,
+            knowns=[
+                f"smoke test for {correlation_id} passed; reviewer signed off"
+            ],
+            assumptions=["the release window is open"],
+            disconfirmation=(
+                f"if everything stays green for 30 minutes after "
+                f"{correlation_id} deploy, promote to prod"
+            ),
+        )
+
+    @staticmethod
+    def _s1_only_miss_record(correlation_id: str) -> dict:
+        # Pure success-criterion (S1 misses) but rollback IS in
+        # assumptions (S2 passes). Single-miss → D1 prevents drift.
+        return _make_axis_d_record(
+            correlation_id=correlation_id,
+            knowns=["staging green"],
+            assumptions=[
+                f"rollback path documented for {correlation_id}; "
+                "circuit breaker armed"
+            ],
+            disconfirmation=(
+                f"if everything passes the {correlation_id} smoke run, ship"
+            ),
+        )
+
+    @staticmethod
+    def _s2_only_miss_record(correlation_id: str) -> dict:
+        # Stop-condition present (S1 passes) but no rollback vocabulary
+        # in knowns / assumptions (S2 misses). Single-miss path.
+        return _make_axis_d_record(
+            correlation_id=correlation_id,
+            knowns=["the reviewer signed off; staging looks calm"],
+            assumptions=["the release window is open"],
+            disconfirmation=(
+                f"if exit code is non-zero on {correlation_id}, abort"
+            ),
+        )
+
+    def test_no_claim_returns_insufficient_evidence(self):
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", None, [], _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "insufficient_evidence")
+        self.assertIn("No asymmetry_posture claim", out["reason"])
+
+    def test_non_loss_averse_claim_is_insufficient_evidence(self):
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "balanced", [], _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "insufficient_evidence")
+        self.assertIn("balanced", out["reason"])
+        self.assertIn("Template D", out["reason"])
+
+    def test_insufficient_evidence_below_fifteen_irreversible(self):
+        records = [self._loss_averse_record(f"r{i}") for i in range(10)]
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "insufficient_evidence")
+        self.assertEqual(out["evidence_count"], 10)
+        self.assertIn("≥ 15", out["reason"])
+
+    def test_only_irreversible_records_count_toward_minimum(self):
+        # 16 records, but 14 are NOT irreversible (no high-impact match).
+        records = (
+            [self._loss_averse_record(f"r{i}") for i in range(2)]
+            + [
+                _make_axis_d_record(
+                    correlation_id=f"reversible-{i}",
+                    is_irreversible=False,
+                    knowns=["full rollback plan documented"],
+                    assumptions=["circuit breaker armed"],
+                    disconfirmation="if error rate exceeds 1%, rollback",
+                )
+                for i in range(14)
+            ]
+        )
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "insufficient_evidence")
+        self.assertEqual(out["evidence_count"], 2)
+
+    def test_aligned_when_claim_holds_at_scale(self):
+        records = [self._loss_averse_record(f"r{i:03d}") for i in range(20)]
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "aligned")
+        self.assertEqual(out["evidence_count"], 20)
+        self.assertGreaterEqual(out["signatures"]["S1_stop_condition_rate"], 0.55)
+        self.assertGreaterEqual(out["signatures"]["S2_rollback_mention_rate"], 0.30)
+
+    def test_confidence_rises_at_thirty_records(self):
+        records = [self._loss_averse_record(f"r{i:03d}") for i in range(30)]
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["confidence"], "high")
+
+    def test_drift_requires_both_signatures_to_miss(self):
+        records = [self._gain_seeking_record(f"r{i:03d}") for i in range(18)]
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "drift")
+        self.assertLess(out["signatures"]["S1_stop_condition_rate"], 0.55)
+        self.assertLess(out["signatures"]["S2_rollback_mention_rate"], 0.30)
+        self.assertIn("D1 convergence confirmed", out["reason"])
+        self.assertIsNotNone(out["suggested_reelicitation"])
+
+    def test_d1_single_s1_miss_does_not_flag_drift(self):
+        records = [self._s1_only_miss_record(f"r{i:03d}") for i in range(18)]
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "aligned")
+        self.assertLess(out["signatures"]["S1_stop_condition_rate"], 0.55)
+        self.assertGreaterEqual(out["signatures"]["S2_rollback_mention_rate"], 0.30)
+        self.assertIn("S1 single-signature miss noted", out["reason"])
+
+    def test_d1_single_s2_miss_does_not_flag_drift(self):
+        records = [self._s2_only_miss_record(f"r{i:03d}") for i in range(18)]
+        out = pa._axis_asymmetry_posture(
+            "asymmetry_posture", "loss-averse", records, _lexicon_for_axis_d()
+        )
+        self.assertEqual(out["verdict"], "aligned")
+        self.assertGreaterEqual(out["signatures"]["S1_stop_condition_rate"], 0.55)
+        self.assertLess(out["signatures"]["S2_rollback_mention_rate"], 0.30)
+        self.assertIn("S2 single-signature miss noted", out["reason"])
+
+
+class AsymmetryPostureEndToEndTests(unittest.TestCase):
+    def test_run_audit_routes_asymmetry_posture_to_real_handler(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            lex_path = root / "lexicon.md"
+            lex_path.write_text(
+                "## rollback_adjacent\n"
+                "- rollback\n- revert\n- undo\n- abort\n- back out\n"
+                "- restore from\n- recovery\n- circuit breaker\n",
+                encoding="utf-8",
+            )
+            epi = root / "episodic"
+            epi.mkdir()
+            records = [
+                AsymmetryPostureHandlerTests._loss_averse_record(f"r{i:03d}")
+                for i in range(18)
+            ]
+            (epi / "2026-04-21.jsonl").write_text(
+                "\n".join(json.dumps(r) for r in records) + "\n",
+                encoding="utf-8",
+            )
+            prof = root / "profile.md"
+            prof.write_text(
+                "```\n"
+                "asymmetry_posture:\n"
+                "  value: loss-averse\n"
+                "  confidence: elicited\n"
+                "```\n",
+                encoding="utf-8",
+            )
+            result = pa.run_audit(
+                episodic_dir=epi,
+                reflective_dir=root / "reflective",
+                profile_path=prof,
+                lexicon_path=lex_path,
+                since_days=3650,
+            )
+        by_name = {a["axis_name"]: a for a in result["axes"]}
+        ap = by_name["asymmetry_posture"]
+        self.assertEqual(ap["verdict"], "aligned")
+        self.assertEqual(ap["claim"], "loss-averse")
+        self.assertEqual(ap["evidence_count"], 18)
+
+
 if __name__ == "__main__":
     unittest.main()

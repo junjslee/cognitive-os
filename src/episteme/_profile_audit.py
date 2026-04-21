@@ -912,13 +912,300 @@ def _axis_dominant_lens(
     )
 
 
+# ---------------------------------------------------------------------------
+# Axis D · asymmetry_posture (checkpoint 4)
+# ---------------------------------------------------------------------------
+#
+# Spec: docs/DESIGN_V0_11_PHASE_12.md § Axis D.
+#
+# `asymmetry_posture` is a single-value enum: loss-averse / balanced /
+# gain-seeking, applied to irreversible-action behavior (the
+# HIGH_IMPACT_BASH set defined in core/hooks/episodic_writer.py).
+# CP4 operationalizes `loss-averse` only — other values return
+# insufficient_evidence with a Template-D sketch-table pointer, mirroring
+# the CP3 discipline.
+#
+# Two signatures:
+#
+#   S1 · stop-condition rate. Per-record syntactic classifier sorts each
+#        irreversible-op disconfirmation into stop-condition (names a
+#        trigger that aborts/rolls back), success-criterion (names what
+#        should hold at completion), both, or unknown. Claim `loss-averse`
+#        predicts (stop OR both) ≥ 0.70; drift floor 0.55.
+#
+#   S2 · rollback-path mention rate. Tokenizes knowns + assumptions
+#        against the rollback_adjacent lexicon (kernel/PHASE_12_LEXICON.md).
+#        Records mentioning ≥ 1 token count toward the rate. Claim
+#        predicts ≥ 0.50 mention rate; drift floor 0.30.
+#
+# D1 convergence STRICT for Axis D: both S1 AND S2 must miss to flag
+# drift — same default as Axis A, NOT the catastrophic-exception path
+# Axis C uses. Loss-averse is a posture, not a high-consequence single-
+# action invariant.
+
+# Stop-condition vocabulary — verbs that name an abort/rollback move.
+_STOP_VERB_PATTERNS: tuple[re.Pattern, ...] = (
+    re.compile(r"\b(?:abort|rollback|roll\s+back|revert|halt|kill|back\s+out|undo|stop|restore\s+(?:from|to)|recover|recovery|pause|disable)\b", re.I),
+    re.compile(r"\bdo\s+not\s+(?:proceed|merge|deploy|ship|push|promote)\b", re.I),
+    re.compile(r"\bblock\s+the\s+(?:rollout|deploy|merge|push|promotion)\b", re.I),
+)
+
+# Success-criterion vocabulary — verbs that name a happy-path outcome.
+# Deliberately TIGHT: words like `deploy`, `promote`, `ship`, `merge`,
+# `publish`, `land`, `deliver` are excluded because they're routinely
+# used as nouns/objects of stop-verbs ("rollback the deploy", "do not
+# promote", "abort the merge") and would mis-classify a clean stop
+# clause as `both`. Only intrinsically positive-valenced markers stay.
+_SUCCESS_VERB_PATTERNS: tuple[re.Pattern, ...] = (
+    re.compile(r"\b(?:succeed|succeeds|succeeded|work|works|worked|pass|passes|passed|complete|completes|completed|validate|validates|validated|render|renders|rendered|finish|finishes|finished)\b", re.I),
+    re.compile(r"\b(?:green|healthy|clean)\s+(?:build|run|status|outcome|result|deploy|release)\b", re.I),
+    re.compile(r"\bif\s+(?:everything|all)\s+(?:stays\s+green|is\s+green|is\s+ok|is\s+fine|works|passes)\b", re.I),
+)
+
+
+StopConditionClass = Literal["stop", "success", "both", "unknown"]
+
+
+def _classify_stop_condition(text: Any) -> StopConditionClass:
+    """Sort a disconfirmation into stop / success / both / unknown.
+
+    Stop = conditional trigger + an abort verb (or a do-not directive).
+    Success = conditional trigger + a happy-path verb.
+    Both = signatures from each side present.
+    Unknown = empty / very-short / neither pattern matched.
+
+    Reuses _CONDITIONAL_TRIGGER_PATTERNS from Axis A so the trigger
+    vocabulary stays consistent across the audit. Both signatures use
+    word-boundary matching and case-insensitive flags.
+    """
+    if not isinstance(text, str):
+        return "unknown"
+    stripped = text.strip()
+    if len(stripped) < 10:
+        return "unknown"
+    low = stripped.lower()
+
+    has_stop = any(pat.search(low) for pat in _STOP_VERB_PATTERNS)
+    has_success = any(pat.search(low) for pat in _SUCCESS_VERB_PATTERNS)
+    # Trigger word presence is informational; stop/success markers are
+    # imperative-mood enough on their own that requiring an explicit
+    # if/when would over-filter ("rollback the deploy" is unambiguous).
+    has_trigger = any(pat.search(low) for pat in _CONDITIONAL_TRIGGER_PATTERNS)
+    del has_trigger  # reserved for a later refinement; not load-bearing today
+
+    if has_stop and has_success:
+        return "both"
+    if has_stop:
+        return "stop"
+    if has_success:
+        return "success"
+    return "unknown"
+
+
+def _is_irreversible_op(record: dict) -> bool:
+    """True if the record fired the high-impact pattern set (the same
+    pattern set used by reasoning_surface_guard.py and episodic_writer.py).
+    Reads details.high_impact_patterns_matched, falling back to the
+    record's tags array which carries the same labels."""
+    details = record.get("details")
+    if isinstance(details, dict):
+        hits = details.get("high_impact_patterns_matched")
+        if isinstance(hits, list) and hits:
+            return True
+    tags = record.get("tags")
+    if isinstance(tags, list) and "high-impact" in tags:
+        return True
+    return False
+
+
+def _has_rollback_mention(record: dict, lexicon_terms: frozenset[str]) -> bool:
+    """True iff the record's knowns + assumptions mention any term from
+    the rollback_adjacent lexicon. Uses the same word-boundary counter
+    as Axis A so multi-word phrases like 'back out' / 'restore from
+    backup' match cleanly."""
+    if not lexicon_terms:
+        return False
+    blob = " ".join(
+        _surface_text(record, f) for f in ("knowns", "assumptions")
+    )
+    if not blob:
+        return False
+    return _count_lexicon_hits(blob, lexicon_terms) > 0
+
+
+_AXIS_D_EVIDENCE_MINIMUM = 15
+
+# Claim-anchored band for `loss-averse`. Floor = drift threshold.
+# Per spec §Axis D: S1 (stop OR both) predicted ≥ 0.70 with drift floor
+# 0.55; S2 mention rate predicted ≥ 0.50 with drift floor 0.30.
+_LOSS_AVERSE_PREDICTIONS: dict[str, list[float]] = {
+    "S1_stop_condition_rate": [0.55, 1.00],
+    "S2_rollback_mention_rate": [0.30, 1.00],
+}
+
+
+def _axis_asymmetry_posture(
+    axis_name: str,
+    claim: Any,
+    records: list[dict],
+    lexicon: dict[str, frozenset[str]],
+) -> AxisAuditResult:
+    # Claim shape: a string enum value. Anything else is unparseable.
+    claim_str = claim.strip() if isinstance(claim, str) and claim.strip() else None
+
+    if claim_str is None:
+        return AxisAuditResult(
+            axis_name=axis_name,
+            claim=claim,
+            verdict="insufficient_evidence",
+            evidence_count=0,
+            signatures={},
+            signature_predictions={},
+            confidence="low",
+            evidence_refs=[],
+            reason=(
+                "No asymmetry_posture claim declared per docs/"
+                "DESIGN_V0_11_PHASE_12.md § Axis D. CP4 audits the "
+                "declared posture against irreversible-op records; "
+                "without a named posture there is no hypothesis to test."
+            ),
+            suggested_reelicitation=None,
+        )
+
+    if claim_str != "loss-averse":
+        return AxisAuditResult(
+            axis_name=axis_name,
+            claim=claim,
+            verdict="insufficient_evidence",
+            evidence_count=0,
+            signatures={},
+            signature_predictions={},
+            confidence="low",
+            evidence_refs=[],
+            reason=(
+                f"Claim is {claim_str!r}. CP4 operationalizes only "
+                f"'loss-averse'; 'balanced' and 'gain-seeking' follow "
+                f"Template D per docs/DESIGN_V0_11_PHASE_12.md § sketch "
+                f"table and ship in 0.11.1."
+            ),
+            suggested_reelicitation=None,
+        )
+
+    rollback_terms = lexicon.get("rollback_adjacent", frozenset())
+    irreversible = [r for r in records if _is_irreversible_op(r)]
+    n = len(irreversible)
+    evidence_refs = _collect_evidence_refs(irreversible)
+    predictions = _LOSS_AVERSE_PREDICTIONS
+
+    if n < _AXIS_D_EVIDENCE_MINIMUM:
+        return AxisAuditResult(
+            axis_name=axis_name,
+            claim=claim,
+            verdict="insufficient_evidence",
+            evidence_count=n,
+            signatures={},
+            signature_predictions=predictions,
+            confidence="low",
+            evidence_refs=evidence_refs,
+            reason=(
+                f"Only {n} irreversible-op record(s) in window (need ≥ "
+                f"{_AXIS_D_EVIDENCE_MINIMUM} per docs/"
+                f"DESIGN_V0_11_PHASE_12.md § Axis D · Evidence minimum). "
+                f"Keep accumulating; Axis D requires D1 convergence on "
+                f"two signatures across the irreversible-op subset."
+            ),
+            suggested_reelicitation=None,
+        )
+
+    stop_count = 0
+    rollback_count = 0
+    for rec in irreversible:
+        disconf = _surface_text(rec, "disconfirmation")
+        cls = _classify_stop_condition(disconf)
+        if cls in ("stop", "both"):
+            stop_count += 1
+        if _has_rollback_mention(rec, rollback_terms):
+            rollback_count += 1
+
+    s1_rate = stop_count / n
+    s2_rate = rollback_count / n
+    signatures = {
+        "S1_stop_condition_rate": round(s1_rate, 3),
+        "S2_rollback_mention_rate": round(s2_rate, 3),
+    }
+    s1_floor = predictions["S1_stop_condition_rate"][0]
+    s2_floor = predictions["S2_rollback_mention_rate"][0]
+    s1_drift = s1_rate < s1_floor
+    s2_drift = s2_rate < s2_floor
+    confidence: Confidence = "high" if n >= 30 else "medium"
+
+    if s1_drift and s2_drift:
+        return AxisAuditResult(
+            axis_name=axis_name,
+            claim=claim,
+            verdict="drift",
+            evidence_count=n,
+            signatures=signatures,
+            signature_predictions=predictions,
+            confidence=confidence,
+            evidence_refs=evidence_refs,
+            reason=(
+                f"Across {n} irreversible-op record(s): stop-condition "
+                f"rate {s1_rate:.0%} < {s1_floor:.0%} floor AND "
+                f"rollback-mention rate {s2_rate:.0%} < {s2_floor:.0%} "
+                f"floor. Claim 'loss-averse' not borne out by the lived "
+                f"record. D1 convergence confirmed — both signatures "
+                f"missed."
+            ),
+            suggested_reelicitation=(
+                "Re-elicit asymmetry_posture: are irreversible ops "
+                "actually paired with stop-conditions and rollback "
+                "paths, or has practice drifted toward 'balanced' / "
+                "'gain-seeking'? Inspect the irreversible-op records "
+                "and either tighten practice or revise the claim."
+            ),
+        )
+
+    single_miss_note = ""
+    if s1_drift:
+        single_miss_note = (
+            f" S1 single-signature miss noted "
+            f"({s1_rate:.0%} < {s1_floor:.0%}); D1 convergence "
+            f"requires BOTH to flag, so no drift."
+        )
+    elif s2_drift:
+        single_miss_note = (
+            f" S2 single-signature miss noted "
+            f"({s2_rate:.0%} < {s2_floor:.0%}); D1 convergence "
+            f"requires BOTH to flag, so no drift."
+        )
+
+    return AxisAuditResult(
+        axis_name=axis_name,
+        claim=claim,
+        verdict="aligned",
+        evidence_count=n,
+        signatures=signatures,
+        signature_predictions=predictions,
+        confidence=confidence,
+        evidence_refs=evidence_refs,
+        reason=(
+            f"Across {n} irreversible-op record(s): stop-condition rate "
+            f"{s1_rate:.0%}, rollback-mention rate {s2_rate:.0%}. "
+            f"Claim 'loss-averse' holds against the lived record." +
+            single_miss_note
+        ),
+        suggested_reelicitation=None,
+    )
+
+
 # Per-axis dispatch table. Populated by checkpoints 2-5 as each axis's
 # real handler lands. Every insertion into this dict is a commitment that
 # the corresponding axis is fully operationalized per its spec entry.
 _AXIS_HANDLERS: dict[str, Any] = {
-    "fence_discipline": _axis_fence_discipline,  # checkpoint 2
-    "dominant_lens": _axis_dominant_lens,        # checkpoint 3
-    # Checkpoint 4 will insert: "asymmetry_posture": _axis_asymmetry_posture
+    "fence_discipline": _axis_fence_discipline,    # checkpoint 2
+    "dominant_lens": _axis_dominant_lens,          # checkpoint 3
+    "asymmetry_posture": _axis_asymmetry_posture,  # checkpoint 4
     # Checkpoint 5 will insert: "noise_signature": _axis_noise_signature
 }
 
