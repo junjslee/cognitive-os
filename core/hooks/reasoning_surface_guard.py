@@ -67,6 +67,9 @@ from _scenario_detector import (  # noqa: E402  # pyright: ignore[reportMissingI
 from _specificity import (  # noqa: E402  # pyright: ignore[reportMissingImports]
     _classify_disconfirmation as _classify_for_layer2,
 )
+from _grounding import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    ground_blueprint_fields as _layer3_ground_blueprint_fields,
+)
 
 
 SURFACE_TTL_SECONDS = 30 * 60  # 30 minutes
@@ -743,6 +746,14 @@ def main() -> int:
     # rejection downgrades status from "ok" to "incomplete" so the
     # existing block path handles it; an absence-advisory emits a
     # stderr warning and leaves status at "ok".
+    #
+    # Layer 3 · v1.0 RC CP4 — runs only after Layer 2 leaves status at
+    # "ok" (including the Layer-2-advisory case). Blueprint-aware entity
+    # grounding: extracts snake_case / SCREAMING_CASE / path+ext / hex-SHA
+    # tokens from the blueprint's declared grounded fields and verifies
+    # they exist in the project working tree. FP-averse gate per spec
+    # § Layer 3. Graceful degrade: any exception yields "pass" with a
+    # one-line stderr fallback — Layers 1 & 2 stay enforced.
     if status == "ok":
         layer2_surface = _read_surface(cwd)
         if layer2_surface is not None:
@@ -754,6 +765,26 @@ def main() -> int:
                 detail = l2_detail
             elif l2_verdict == "advisory":
                 sys.stderr.write(f"[episteme advisory] {l2_detail}\n")
+
+            if status == "ok":
+                try:
+                    blueprint_name = _detect_scenario(
+                        payload, surface_text=None, project_context={}
+                    ) or "generic"
+                    l3_verdict, l3_detail = _layer3_ground_blueprint_fields(
+                        layer2_surface, blueprint_name, cwd
+                    )
+                except Exception as exc:  # graceful degrade
+                    sys.stderr.write(
+                        f"[episteme] Layer 3 fallback: "
+                        f"{exc.__class__.__name__}; Layers 1 & 2 still enforced.\n"
+                    )
+                    l3_verdict, l3_detail = ("pass", "")
+                if l3_verdict == "reject":
+                    status = "incomplete"
+                    detail = l3_detail
+                elif l3_verdict == "advisory":
+                    sys.stderr.write(f"[episteme advisory] {l3_detail}\n")
 
     if status == "ok":
         _write_audit(tool_name, label, cwd, status, "passed", mode)
