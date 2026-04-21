@@ -2,22 +2,23 @@
 
 Current active plan for episteme development.
 
-**Core Question (this cycle):** Now that v0.11.0 has shipped the retrospective profile-audit loop, what structural protocol — enforced at the point of state mutation — forces an LLM to (a) generate an auditable causal-consequence model, (b) synthesize context-dependent protocols from conflicting sources into a tamper-evident framework, and (c) proactively surface those protocols as operator guidance at the point of future decisions? The v1.0 RC answer is the three-pillar architecture specified in `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`.
+**Core Question (this cycle):** Now that v0.11.0 has shipped the retrospective profile-audit loop, what structural protocol — enforced at the point of state mutation — forces an LLM to (a) generate an auditable causal-consequence model, (b) synthesize context-dependent protocols from conflicting sources into a tamper-evident framework, (c) proactively surface those protocols as operator guidance at the point of future decisions, and (d) keep the system's own self-model coherent as the agent edits it (patch-vs-refactor, symmetric cascade sync, continuous digging & logging)? The v1.0 RC answer is the three-pillar / four-named-blueprint architecture specified in `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`.
 
 **Constraint regime:**
-- Allowed: augmenting kernel docs, README, issue templates, ops docs, schema additions that extend (not reframe) existing invariants; implementing the approved 9-CP v1.0 RC plan with paused-review-before-commit discipline
-- Forbidden: modifying `templates/` or `labs/` scaffolds; breaking kernel invariants without Evolution Contract; relaxing load-bearing spec countermeasures (three pillars, three orthogonal pairs, <100 ms hot-path ceiling, sample-rate schedule, hash-chain scope, BYOS stance) outside a governance event
+- Allowed: augmenting kernel docs, README, issue templates, ops docs, schema additions that extend (not reframe) existing invariants; implementing the approved 10-CP v1.0 RC plan with paused-review-before-commit discipline
+- Forbidden: modifying `templates/` or `labs/` scaffolds; breaking kernel invariants without Evolution Contract; relaxing load-bearing spec countermeasures (three pillars, four named blueprints + generic max-rigor fallback, three+one orthogonal pairs, <100 ms hot-path ceiling, sample-rate schedule, hash-chain scope, BYOS stance, advisory-only Pillar 3 guidance) outside a governance event
 - Kernel changes require `kernel/CHANGELOG.md` entry first
+- Blueprint D dogfood: the kernel must satisfy Blueprint D on its own architectural edits. Editing episteme-while-editing-episteme without firing Blueprint D is an RC failure regardless of test count.
 
 ---
 
-## Active milestone: v1.0.0 RC — Causal-Consequence Scaffolding & Protocol Synthesis
+## Active milestone: v1.0.0 RC — Causal-Consequence Scaffolding, Protocol Synthesis & Continuous Self-Maintenance
 
 ### Goal
 
-Upgrade the Reasoning Surface from syntactic enforcement to a three-pillar architecture that grafts onto the LLM substrate what it cannot perform natively: (1) **causal-consequence modeling** per action (Pillar 1 · Cognitive Blueprints, Pillar 2 · Append-Only Hash Chain), (2) **context-indexed protocol synthesis** from conflicting sources (Pillar 3 extraction arm), and (3) **active operator guidance** using accumulated protocols (Pillar 3 guidance arm). The kernel is skill-agnostic (BYOS): it intercepts state mutation regardless of which tool / MCP server / agent framework generated the command. See `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` — *Design — Causal-Consequence Scaffolding & Protocol Synthesis — v1.0 RC* (status `approved (reframed, second pass)` 2026-04-21) for the full spec, threat model, and verification criteria.
+Upgrade the Reasoning Surface from syntactic enforcement to a three-pillar / four-named-blueprint architecture that grafts onto the LLM substrate what it cannot perform natively: (1) **causal-consequence modeling** per action (Pillar 1 · Cognitive Blueprints, Pillar 2 · Append-Only Hash Chain), (2) **context-indexed protocol synthesis** from conflicting sources (Pillar 3 extraction arm — Axiomatic Judgment + Fence Reconstruction), (3) **active operator guidance** using accumulated protocols (Pillar 3 guidance arm), and (4) **continuous architectural self-maintenance** — patch-vs-refactor evaluation, symmetric cascade synchronization across the full blast radius, continuous digging & logging of adjacent discoveries (Blueprint D · Architectural Cascade & Escalation, synthesizing at system-architecture scope). The kernel is skill-agnostic (BYOS): it intercepts state mutation regardless of which tool / MCP server / agent framework generated the command. See `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` — *Design — Causal-Consequence Scaffolding & Protocol Synthesis — v1.0 RC* (status `approved (reframed, third pass)` 2026-04-21) for the full spec, threat model, and verification criteria.
 
-### Phases (9 CPs)
+### Phases (10 CPs)
 
 | CP | Scope | Status |
 |---|---|---|
@@ -26,31 +27,35 @@ Upgrade the Reasoning Surface from syntactic enforcement to a three-pillar archi
 | 3 | Layer 2 in hot path, blueprint-aware. `reasoning_surface_guard.py` classifies against selected blueprint's fields. | not started |
 | 4 | Layer 3 contextual grounding, blueprint-aware. New `core/hooks/_grounding.py`. FP-averse gating. | not started |
 | 5 | Blueprint B (Fence Reconstruction), realized end-to-end + **first Pillar 3 synthesis output** — constraint-safety protocol emitted on successful removal. | not started |
-| 6 | Layer 4 `verification_trace` schema. Blueprint-shaped variants; advisory-only for Axiomatic Judgment (both arms) + Consequence Chain in RC. | not started |
-| 7 | Pillar 2 hash chain + Pillar 3 substrate. `_chain.py` (shared) + `_pending_contracts.py` + `_framework.py` + `_context_signature.py`. Phase 12 audit gains chain-verification precondition. | not started |
-| 8 | Layer 8 spot-check sampling. 10% → 5% schedule; blueprint + protocol-quality verdicts; hash-chained queue; `episteme review` CLI. | not started |
-| 9 | Pillar 3 active guidance surface. PreToolUse framework query (one advisory per op); SessionStart digest; minimal `episteme guide` CLI. | not started |
+| 6 | Layer 4 `verification_trace` schema. Blueprint-shaped variants; advisory-only for Axiomatic Judgment (both arms), Consequence Chain, and Blueprint D (cascade fields) in RC. | not started |
+| 7 | Pillar 2 hash chain + Pillar 3 substrate. `_chain.py` (shared) + `_pending_contracts.py` + `_framework.py` (protocols AND deferred-discovery records) + `_context_signature.py`. Phase 12 audit gains chain-verification precondition. | not started |
+| 8 | Layer 8 spot-check sampling. 10% → 5% schedule; blueprint + protocol-quality verdicts; Blueprint D resolutions carry a "cascade-theater vs real sync" verdict; hash-chained queue; `episteme review` CLI. | not started |
+| 9 | Pillar 3 active guidance surface. PreToolUse framework query (one advisory per op); SessionStart digest including deferred-discovery count; `episteme guide [--context] [--since] [--deferred]` CLI (minimal). | not started |
+| 10 | Blueprint D (Architectural Cascade & Escalation) scaffolding. `core/blueprints/architectural_cascade.yaml`; new `core/hooks/_cascade_detector.py` (four selector triggers); structural validation of `patch_vs_refactor_evaluation` + `blast_radius_map[]` + `sync_plan[]`; every `deferred_discoveries[]` entry hash-chained into the framework at PreToolUse. Retrospective sync-plan verification lands in v1.0.1. | not started |
 
 ### Load-bearing spec constraints
 
 Any reduction in these is a governance event, not an implementation tweak:
 
 - Three pillars: Cognitive Blueprints, Append-Only Hash Chain, Framework Synthesis & Active Guidance.
-- Four blueprints: Axiomatic Judgment, Fence Reconstruction, Consequence Chain, Unclassified High-Impact catchall.
+- Four named blueprints + generic maximum-rigor fallback: Axiomatic Judgment, Fence Reconstruction, Consequence Chain, Architectural Cascade & Escalation (named) + Consequence-Chain-shaped fallback for unclassified high-impact ops.
 - Four orthogonal pairs: L2+L3, L4+L6, L5+L7, blueprint-selector × L8 selection sample.
-- Hot-path ceiling: < 100 ms p95 (Layers 2-4 + scenario detector + framework query combined).
+- Hot-path ceiling: < 100 ms p95 (Layers 2-4 + scenario detector including cascade detector + framework query combined).
 - Sample-rate schedule: 10% for first 30 days (calendar-from-install) → 5%.
-- Hash-chain scope in RC: episodic tier + pending contracts + framework protocols only.
+- Hash-chain scope in RC: episodic tier + pending contracts + framework protocols (including `deferred_discovery` records) only.
 - BYOS: no tool-specific validation paths; no prescriptive tool-usage in blueprints.
 - Pillar 3 guidance is advisory-only (never blocking).
+- Blueprint D on the kernel itself: editing episteme-while-editing-episteme without firing Blueprint D fails the RC.
 
 ### Verification gates
 
-- All 9 CPs land with paused-review-before-commit; test suite green at every commit (baseline 202; each CP adds ~15-25 tests).
+- All 10 CPs land with paused-review-before-commit; test suite green at every commit (baseline 202; each CP adds ~15-25 tests).
 - Hot-path p95 < 100 ms for full hot-path stack.
 - Five fluent-vacuous evasion examples from the spec § "Why this exists" blocked at write time.
 - End-to-end dogfood on a real constraint-removal op: Fence Reconstruction fires, blueprint-populated surface produced, hash-chained Layer 6 record written, framework protocol emitted, protocol subsequently surfaces as guidance on a matching future op.
-- After 30-day RC soak: `disconfirmation_unverified` rate < 10% on maintainer's tier; framework holds ≥ 3 non-trivial protocols with ≥ 1 fired-as-guidance; chain verification succeeds across all three streams; Layer 8 delivers ≥ 1 actionable verdict per week.
+- **Blueprint D dogfood on the kernel itself:** at least one real architectural-cascade op on the episteme repo fires Blueprint D, produces a non-trivial `blast_radius_map[]` grounded to real surfaces, a `sync_plan[]` with concrete actions per surface, ≥ 1 hash-chained `deferred_discoveries[]` entry, AND the resulting diff touches every surface named in the map without orphan-reference regression.
+- **Deferred-discovery flow-through:** ≥ 3 deferred-discovery entries logged during the soak; ≥ 1 either promoted to a named phase/CP in NEXT_STEPS.md or triaged to "won't fix" with rationale. A log that only grows is architectural-debt accumulation, not self-maintenance.
+- After 30-day RC soak: `disconfirmation_unverified` rate < 10% on maintainer's tier; framework holds ≥ 3 non-trivial protocols with ≥ 1 fired-as-guidance; chain verification succeeds across all three streams (episodic, pending contracts, framework protocols including deferred-discovery records); Layer 8 delivers ≥ 1 actionable verdict per week.
 
 ### Open assumptions
 
@@ -58,6 +63,8 @@ Any reduction in these is a governance event, not an implementation tweak:
 - Pillar 3's context-signature algorithm (regex + entity hashing) is FP-averse enough for a useful framework query rate in the first 30 days. Unverified until real synthesis traffic accumulates.
 - Advisory-only guidance is the right posture — collapsing into blocking would feedback-loop the kernel's own synthesis against the operator. If operator spot-check verdicts over the soak consistently flag "missed the obvious guidance," revisit at v1.0.1.
 - Axiomatic Judgment's synthesis-arm fields (structure only in RC) accumulate enough operator-visible value during soak to justify full realization in v1.0.1. If synthesis-arm fields are empty or useless across 30 days, the design needs revision before v1.0.1.
+- Blueprint D's four selector triggers (cross-surface-ref diff check, refactor/rename/deprecate lexicon, self-escalation `flaw_classification`, generated-artifact symbol-reference check) cover the cascade classes that actually occur in real episteme edits. Unverified until soak produces real firings; missed classes join a governance-gated selector-expansion request before v1.0.1.
+- The Blueprint D risk of cascade-theater (filling `blast_radius_map[]` with `not-applicable` entries to pass the gate) is sufficiently countered by Layer 3 entity grounding + Layer 8 "cascade-theater vs real sync" verdict dimension. If soak shows high theater rate, the selector raises rigor or the blueprint adds a minimum-entries threshold per flaw class.
 
 ---
 

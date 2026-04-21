@@ -4,41 +4,47 @@ Exact next actions, in priority order. Update this file at every handoff.
 
 ---
 
-## Resume here — v1.0.0 RC · Causal-Consequence Scaffolding & Protocol Synthesis (2026-04-21)
+## Resume here — v1.0.0 RC · Causal-Consequence Scaffolding, Protocol Synthesis & Continuous Self-Maintenance (2026-04-21)
 
-**State.** v0.11.0 has been tagged and shipped. The v1.0 RC cycle is open. The approved spec is `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` — titled *Design — Causal-Consequence Scaffolding & Protocol Synthesis — v1.0 RC*, status `approved (reframed, second pass)`. Two successive reframes on 2026-04-21 re-anchored the spec from "semantic governance / anti-vapor defense" to "structural forcing function for causal-consequence modeling, protocol synthesis, and active guidance — grafted onto an engine that cannot perform any of the three natively." The spec absorbed the BYOS / skill-agnostic stance into the preamble.
+**State.** v0.11.0 has been tagged and shipped. The v1.0 RC cycle is open. The approved spec is `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` — titled *Design — Causal-Consequence Scaffolding & Protocol Synthesis — v1.0 RC*, status `approved (reframed, third pass)`. Three successive reframes on 2026-04-21 re-anchored the spec:
 
-**Next action (fresh session):** implement **CP1 — extract `_specificity.py`** per the 9-CP plan in `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` § Implementation sequencing.
+- **First pass** — from "semantic governance / anti-vapor defense" to "structural forcing function for causal-consequence modeling." Added Pillar 1 (Cognitive Blueprints) + Pillar 2 (Append-Only Hash Chain); absorbed BYOS.
+- **Second pass** — added Pillar 3 (Framework Synthesis & Active Guidance); renamed subtitle to *Causal-Consequence Scaffolding & Protocol Synthesis*; CP plan 8 → 9.
+- **Third pass** — enshrined the **ultimate why** in the preamble (information overload → context-fit protocol extraction → living thinking framework → active guidance → continuous self-maintenance). Promoted the prior "Blueprint D · Unclassified High-Impact (catchall)" to a load-bearing **Blueprint D · Architectural Cascade & Escalation** (patch-vs-refactor evaluation, symmetric cascade synchronization, continuous digging & logging). Goodhart closer for blueprint-absence preserved as a **generic maximum-rigor fallback** (Consequence-Chain-shaped), not a blueprint. CP plan 9 → 10 (CP10 = Blueprint D scaffolding + cascade detector + deferred-discovery hash-chained write).
 
-**The nine v1.0 RC checkpoints:**
+**Next action (fresh session):** implement **CP1 — extract `_specificity.py`** per the 10-CP plan in `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` § Implementation sequencing.
+
+**The ten v1.0 RC checkpoints:**
 
 1. **CP1 — extract `_specificity.py`.** Move `_classify_disconfirmation` from `src/episteme/_profile_audit.py` to `core/hooks/_specificity.py`. Phase 12 imports from the new module; behavior unchanged. Tests stay green.
 2. **CP2 — scenario detector + blueprint registry.** New `core/hooks/_scenario_detector.py`; new `core/blueprints/` directory with generic-fallback blueprint + registry loader. No behavior change until CP5 wires Fence Reconstruction.
 3. **CP3 — Layer 2 in the hot path, blueprint-aware.** `reasoning_surface_guard.py` calls `_classify_disconfirmation` against the selected blueprint's fields (generic for now). Rejects on `tautological`/`unknown`; advisory on `absence`.
 4. **CP4 — Layer 3 contextual grounding, blueprint-aware.** New `core/hooks/_grounding.py`. Blueprint-aware entity extraction + project grep. FP-averse gating.
 5. **CP5 — Blueprint B (Fence Reconstruction), realized end-to-end + first synthesis output.** `core/blueprints/fence_reconstruction.yaml` populated; scenario detector wired to fire on constraint-removal patterns; Layer 2/3 validation against blueprint fields. On successful removal (rollback-path not triggered within window), emits a constraint-safety protocol entry to the framework — the first real Pillar 3 synthesis producer.
-6. **CP6 — Layer 4 `verification_trace` schema.** Schema update with blueprint-shaped variants for Fence Reconstruction. Advisory for highest-impact ops in RC; required in v1.0.1. Axiomatic Judgment (decision + synthesis arms) and Consequence Chain ship as structure with advisory-only validation.
-7. **CP7 — Pillar 2 hash chain + Pillar 3 substrate.** New `core/hooks/_chain.py` (shared SHA-256 chain), `core/hooks/_pending_contracts.py` (Layer 6 write), `core/hooks/_framework.py` (Pillar 3 framework read/write), `core/hooks/_context_signature.py` (canonicalization for framework query). Phase 12 audit gains chain-verification precondition.
-8. **CP8 — Layer 8 spot-check sampling.** 10%→5% schedule (30-day decay from install); blueprint-fired surfaces at 2× base; synthesized protocols at 2× base with a "protocol quality" verdict dimension; queue hash-chained; new `episteme review` CLI.
-9. **CP9 — Pillar 3 active guidance surface.** Framework query after scenario detection, before blueprint enforcement. One stderr advisory per op (highest-believability match). SessionStart digest ("N protocols synthesized since last session"). New `episteme guide [--context <keyword>] [--since <date>]` CLI — minimal version; rich interactive mode in v1.0.1.
+6. **CP6 — Layer 4 `verification_trace` schema.** Schema update with blueprint-shaped variants for Fence Reconstruction. Advisory for highest-impact ops in RC; required in v1.0.1. Axiomatic Judgment (decision + synthesis arms), Consequence Chain, and Blueprint D (cascade fields as stubs) ship as structure with advisory-only validation.
+7. **CP7 — Pillar 2 hash chain + Pillar 3 substrate.** New `core/hooks/_chain.py` (shared SHA-256 chain), `core/hooks/_pending_contracts.py` (Layer 6 write), `core/hooks/_framework.py` (Pillar 3 framework read/write, hash-chained across protocol entries AND `deferred_discovery` entries), `core/hooks/_context_signature.py` (canonicalization for framework query). Phase 12 audit gains chain-verification precondition.
+8. **CP8 — Layer 8 spot-check sampling.** 10%→5% schedule (30-day decay from install); blueprint-fired surfaces at 2× base; synthesized protocols at 2× base with a "protocol quality" verdict dimension; Blueprint D resolutions at 2× base with a "cascade-theater vs real sync" verdict dimension; queue hash-chained; new `episteme review` CLI.
+9. **CP9 — Pillar 3 active guidance surface.** Framework query after scenario detection, before blueprint enforcement. One stderr advisory per op (highest-believability match). SessionStart digest ("N protocols synthesized since last session. M deferred discoveries pending triage."). New `episteme guide [--context <keyword>] [--since <date>] [--deferred]` CLI — minimal version; rich interactive mode in v1.0.1.
+10. **CP10 — Blueprint D (Architectural Cascade & Escalation) scaffolding.** `core/blueprints/architectural_cascade.yaml` populated. New `core/hooks/_cascade_detector.py` implementing the four selector triggers (cross-surface-ref diff check, refactor/rename/deprecate lexicon, self-escalation `flaw_classification`, generated-artifact symbol-reference check). Structural validation of `patch_vs_refactor_evaluation` + `blast_radius_map[]` + `sync_plan[]`. Every `deferred_discoveries[]` entry is hash-chained into the framework as a `deferred_discovery` record at PreToolUse — operator-visible payoff even before retrospective sync-plan verification (that lands in v1.0.1). Phase 12 audit gains deferred-discovery frequency-by-class and aging queries.
 
 **Engineering session state at v0.11.0 tag:**
 
 - Tests: 202/202 passing (baseline for RC work; each CP adds ~15–25 tests).
 - Release: `v0.11.0` tagged and pushed, CHANGELOG entry landed, `MANIFEST.sha256` regenerated (commit `a78c73e`).
 - RC engineering checklist closed during the 0.11.0 cycle: items 2, 3, 4, 7, 8, 11 (see § "Road to v1.0.0 RC" below). Items 9, 10 remain as Class B (maintainer design calls). Items 12–15 remain as RC-cycle fixes.
-- Cognitive-adoption RC gates (21–28) remain as soak-window criteria; their measurement begins once CP1–CP9 land and the RC soak opens.
+- Cognitive-adoption RC gates (21–28) remain as soak-window criteria; their measurement begins once CP1–CP10 land and the RC soak opens.
 
 **Load-bearing spec constraints (any change is a governance event, not an implementation tweak):**
 
 - The three pillars — Cognitive Blueprints, Append-Only Hash Chain, Framework Synthesis & Active Guidance.
-- The four blueprints — Axiomatic Judgment, Fence Reconstruction, Consequence Chain, Unclassified High-Impact catchall.
+- The four named blueprints — **Axiomatic Judgment** (per-decision source-conflict synthesis), **Fence Reconstruction** (constraint-removal safety synthesis), **Consequence Chain** (irreversible-op decomposition), **Architectural Cascade & Escalation** (emergent-flaw patch-vs-refactor + cascade sync + deferred-discovery logging) — plus the **generic maximum-rigor fallback** (Consequence-Chain-shaped) for unclassified high-impact ops.
 - The three orthogonal pairs — L2+L3, L4+L6, L5+L7 — plus the new pair introduced by Pillar 1 (blueprint-selector × L8 selection sample).
-- Hot-path ceiling: Layers 2–4 + scenario detector + framework query combined < 100 ms p95.
+- Hot-path ceiling: Layers 2–4 + scenario detector (including cascade detector) + framework query combined < 100 ms p95.
 - Spot-check schedule: 10% for first 30 days (calendar-from-install), then 5%.
-- Hash-chain scope in RC: episodic tier + pending contracts + framework protocols only (NOT `derived_knobs.json`, NOT profile-axis changes).
+- Hash-chain scope in RC: episodic tier + pending contracts + framework protocols (including `deferred_discovery` records) only (NOT `derived_knobs.json`, NOT profile-axis changes).
 - BYOS stance: kernel intercepts state mutation regardless of tool/MCP/agent source; no tool-specific validation paths; no prescriptive tool-usage in blueprints.
 - Pillar 3 guidance is advisory-only, never blocking.
+- Blueprint D dogfood — the kernel must satisfy Blueprint D on its own architectural edits (editing episteme while editing episteme). Bypassing is an RC failure regardless of test count.
 
 ---
 
