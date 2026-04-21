@@ -26,7 +26,7 @@ governance + cognition product whose own artifacts are its thesis.
 ```
 kernel/          philosophy; markdown; vendor-neutral; the contract
   SUMMARY.md     load first (30-line distillation)
-  CONSTITUTION.md    root claim, four principles, six failure modes
+  CONSTITUTION.md    root claim, four principles, nine failure modes (+2 planned for v1.0 RC: framework-as-Doxa, cascade-theater)
   REASONING_SURFACE.md   Knowns/Unknowns/Assumptions/Disconfirmation
   FAILURE_MODES.md       named modes ↔ counter artifacts
   OPERATOR_PROFILE_SCHEMA.md  how operators encode their worldview

@@ -11,6 +11,23 @@ Format: `[version] — date — change`. Versions follow semantic intent:
 
 ---
 
+## [Unreleased] — v1.0.0 RC cycle open (2026-04-21)
+
+v0.11.0 has been tagged and shipped. The v1.0 RC cycle is open. The approved spec is `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` — *Design — Causal-Consequence Scaffolding & Protocol Synthesis — v1.0 RC*, status `approved (reframed, third pass)`. Three reframes on 2026-04-21 took the spec from v0.11.0's retrospective audit loop to a forward-looking architecture grafting four jobs onto the LLM substrate: per-action causal-consequence decomposition, per-case context-fit protocol synthesis, active operator guidance at future decisions, and continuous architectural self-maintenance.
+
+- **Pillar 1 · Cognitive Blueprints** — scenario-polymorphic Reasoning Surface schemas. Four named blueprints (Axiomatic Judgment, Fence Reconstruction, Consequence Chain, Architectural Cascade & Escalation) + generic maximum-rigor fallback for unclassified high-impact ops. Blueprint D is the self-maintenance engine — fires when the agent discovers a flaw, vulnerability, stale artifact, config gap, or core-logic drift; forces patch-vs-refactor evaluation, symmetric cascade synchronization across the full blast radius (CLI / config / schemas / visualizations / docs / tests / generated artifacts / external surfaces), and continuous digging & logging of adjacent discoveries.
+- **Pillar 2 · Append-Only Hash Chain** — tamper-evident SHA-256 chain across episodic, pending-contracts, and framework (protocols + deferred-discoveries) streams. Closes the memory-poisoning doxa class.
+- **Pillar 3 · Framework Synthesis & Active Guidance** — context-indexed protocols synthesized by Pillar-3-capable blueprints, hash-chained, surfaced as advisory operator guidance at future matching decisions. Advisory, never blocking — collapsing into enforcement would produce a feedback loop where the kernel enforces its own synthesis against the operator.
+- **BYOS** — bring-your-own-skill stance enshrined. No tool-specific validation paths; no prescriptive tool-usage in blueprints. The ecosystem provides the skills; the kernel provides the episteme.
+- **Two new failure modes** registered: #10 framework-as-Doxa (synthesized protocols re-introducing the averaging the scaffold was built to resist); #11 cascade-theater (Blueprint D's `blast_radius_map[]` padded with `not-applicable` entries). Countermeasures landed in `KERNEL_LIMITS.md` (limits 9–11) and `FAILURE_MODES.md` (modes 10–11).
+- **10 CPs** to land: CP1 extracts `_specificity.py`; CP2–CP4 add the scenario detector, blueprint registry, and Layers 2+3 hot-path integration; CP5 ships Blueprint B (Fence Reconstruction) end-to-end including first framework synthesis output; CP6 adds Layer 4 `verification_trace` schema; CP7 lands Pillar 2 hash chain + Pillar 3 substrate; CP8 adds spot-check sampling; CP9 wires the active-guidance query; CP10 scaffolds Blueprint D (cascade detector + structural validation + hash-chained deferred-discovery writes).
+- **CP1 — in progress (this session).** `_classify_disconfirmation` + three pattern tuples + `DisconfirmationClass` type alias moved from `src/episteme/_profile_audit.py` to new `core/hooks/_specificity.py`. Phase 12 re-imports via `sys.path` injection (behavior unchanged). Test suite 304/304 green.
+- **Blueprint-D self-dogfood** — this session is the kernel satisfying Blueprint D on itself. CP1 + a symmetric cascade sync across eight named documentation surfaces (NARRATIVE, POSTURE, REASONING_SURFACE, MEMORY_ARCHITECTURE, kernel/README, KERNEL_LIMITS, ARCHITECTURE, COGNITIVE_OS_ARCHITECTURE → EPISTEME_ARCHITECTURE rename) plus adjacent drift (FAILURE_MODES, this changelog, top-level README, AGENTS, llms.txt). The Gate-28-equivalent dogfood criterion: editing episteme-while-editing-episteme must satisfy Blueprint D.
+
+No version bump yet — v1.0.0-rc1 tag follows CP1-CP10 completion + RC soak.
+
+---
+
 ## [0.11.0] — 2026-04-21 — The Calibration Loop: profile becomes control signal, episodic tier writes, semantic promotion, profile-audit closes the circuit
 
 This release closes the loop the kernel has been building toward since

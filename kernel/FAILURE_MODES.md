@@ -1,6 +1,6 @@
 # Failure Modes and Their Counters
 
-**Operational summary — six reasoner modes ↔ counters, plus three governance-layer modes:**
+**Operational summary — six reasoner modes + three governance-layer modes (v0.11.0) + two v1.0 RC additions:**
 
 | # | Failure mode                          | Counter artifact                                      |
 |---|---------------------------------------|-------------------------------------------------------|
@@ -10,9 +10,11 @@
 | 4 | Story-fit over evidence               | Facts / inferences / preferences split                |
 | 5 | Systematic underestimation of risk    | Failure-first + 30–50% buffer (high-impact)           |
 | 6 | Confidence exceeding accuracy         | Assumptions field + weight-by-track-record            |
-| 7 | Constraint removal without understanding | Fence-Check before any constraint is removed      |
-| 8 | Measure-as-target drift (scorecard)   | Periodic audit vs outcome evidence; drift is allowed |
-| 9 | Controller-variety mismatch (hooks)   | Escalate-by-default for out-of-coverage action shapes|
+| 7 | Constraint removal without understanding | Fence-Check before any constraint is removed (full realization in Blueprint B / Fence Reconstruction, v1.0 RC CP5) |
+| 8 | Measure-as-target drift (scorecard)   | Periodic audit vs outcome evidence; drift is allowed (Phase 12 profile-audit loop, shipped at v0.11.0) |
+| 9 | Controller-variety mismatch (hooks)   | Escalate-by-default for out-of-coverage action shapes |
+| 10 | Framework-as-Doxa (v1.0 RC+)         | Layer 3 grounding + Layer 8 protocol-quality verdicts + Phase 12 synthesis-distribution audit          |
+| 11 | Cascade-theater (v1.0 RC+)           | Layer 3 entity grounding on `blast_radius_map[]` + Layer 8 "cascade-theater vs real sync" verdict + retrospective orphan-reference detection (v1.0.1)         |
 
 Removing or bypassing a counter means naming which mode is now unprotected. If the answer is "none," the counter was not earning its place.
 
@@ -221,6 +223,68 @@ everything unrecognized" (which is the failure mode). The controller's
 coverage itself is a living document; what was out-of-coverage yesterday
 may be in-coverage tomorrow once the rule is written, but never by the
 rule silently expanding to fit an action it had no basis to evaluate.
+
+### 10. Framework-as-Doxa (v1.0 RC+)
+
+**The mode.** The v1.0 RC framework (Pillar 3) accumulates context-indexed
+protocols synthesized from resolved Axiomatic Judgment, Fence
+Reconstruction, and Architectural Cascade & Escalation firings. When the
+synthesized protocols are too vague or too eager to generalize, the
+framework becomes the very Doxa the scaffold was built to resist —
+except now it is the operator's OWN Doxa, served back with hash-chained
+tamper-evident authority. A subsequent decision cites a framework
+protocol that was synthesized from a single barely-relevant prior case
+and treats it as grounded know-how; the averaging the kernel exists to
+prevent happens inside the kernel's own outputs.
+
+**Why a synthesizing kernel is especially vulnerable.** The framework is
+designed to *accumulate* know-how. That is also the failure shape: the
+more it accumulates without quality discipline, the more confidently
+its outputs sound, and the more operator-reflexive acceptance becomes.
+
+**The counter.** Three composed checks: (a) Layer 3 (contextual
+grounding) rejects framework entries whose `context_signature` doesn't
+ground to real project entities; (b) Layer 8 spot-checks synthesized
+protocols at 2× base rate with an explicit "useful / vague / overfit"
+verdict dimension; (c) Phase 12 audits the synthesis distribution
+quarterly for drift toward generic-advice shape. If synthesis-rate is
+high but guidance-bind-rate is low — protocols accumulate but never
+match future ops usefully — the operator tightens the
+`context_signature` contract or pauses synthesis for the offending
+blueprint class. See
+[`kernel/KERNEL_LIMITS.md`](./KERNEL_LIMITS.md) limit 9 for operator
+response guidance.
+
+### 11. Cascade-theater (v1.0 RC+)
+
+**The mode.** Blueprint D (Architectural Cascade & Escalation) requires
+the agent to enumerate a `blast_radius_map[]` of surfaces that must
+update symmetrically, declare a concrete `sync_plan[]` per entry, and
+log `deferred_discoveries[]` for adjacent gaps. Two failure shapes:
+(a) *padded-not-applicable* — the agent produces a map full of
+`not-applicable` entries with superficial rationales so the blueprint's
+structural check passes while the actual cascade is ignored, producing
+orphan-reference regressions under hash-chained claims of coherence;
+(b) *unbounded honesty* — the agent produces an exhaustively honest map
+that turns every small rename into an hour of form-filling,
+discouraging use of Blueprint D entirely and pushing the agent toward
+bypass.
+
+**Why the emergent-flaw workflow is especially vulnerable.** The
+blueprint forces a cognitive check at exactly the moment the agent
+wants to make the cheapest local patch. The cheapest cheat is to make
+the check look satisfied while the cascade is actually unaddressed.
+
+**The counter.** Layer 3 entity grounding on every non-`not-applicable`
+`blast_radius_map[]` entry (must resolve to a real file path); Layer 8
+samples Blueprint D resolutions at 2× base rate with an explicit
+"cascade-theater vs real sync" verdict dimension; retrospective
+sync-plan completeness verification (v1.0.1) scans for orphan
+references after the declared window to catch padded-not-applicable
+failures retroactively. When unbounded-honesty failure dominates, the
+selector narrows — not every cross-surface edit is Blueprint D
+territory; scope the trigger classes to real architectural-cascade
+signals.
 
 ---
 

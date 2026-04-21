@@ -1,6 +1,8 @@
-# Architecture — The Sovereign Kernel (v0.12.0)
+# Architecture — The Sovereign Kernel (v0.11.0 shipped · v1.0 RC in flight)
 
 > Mermaid flowchart. Renders natively on GitHub, Obsidian, and any CommonMark viewer with Mermaid support. Four subgraphs trace the full lifecycle from agent intention to calibrated cognitive evolution.
+>
+> **Scope note.** The diagram below depicts the **v0.11.0 shipped state** — stateful interceptor, calibration telemetry, episodic/semantic memory, profile-audit loop. The **v1.0 RC** cycle (spec: [`./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md), status *approved (reframed, third pass)* 2026-04-21) layers four additions onto this surface: Pillar 1 (blueprint selector + four named blueprints + generic fallback), Pillar 2 (append-only SHA-256 hash chain across episodic / pending-contracts / framework streams), Pillar 3 (framework synthesis + active guidance query + deferred-discovery log), and Blueprint D (Architectural Cascade & Escalation — the self-maintenance engine). Implementation proceeds across CP1–CP10; the diagram will be regenerated once the new nodes are live. Until then, the shipped v0.11 surface stands and the v1.0 RC additions are described in prose.
 
 ---
 

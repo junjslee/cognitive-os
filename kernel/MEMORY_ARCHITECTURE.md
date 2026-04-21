@@ -1,11 +1,13 @@
 # Memory Architecture
 
 **Operational summary:**
-- Five tiers: **working** (session scratchpad, compresses) · **episodic** (per-decision record + outcome) · **semantic** (cross-session patterns derived from episodic) · **procedural** (operator-specific reusable action templates) · **reflective** (memory about memory — staleness, drift, promotion proposals).
-- Retrieval is query-by-situation, not query-by-key. Past decisions are surfaced by Reasoning-Surface-shape match, ranked by `recency × similarity × outcome_validation`.
-- Promotion is staged: episodic → semantic (pattern + outcome validation threshold) → profile-drift proposal (gated by human review; never auto-merged).
-- Forgetting is declared per tier with TTL + compaction rules. Working: session-scoped. Episodic: 90-day raw + compacted summary. Semantic: persistent, prunable on contradicting evidence. Procedural: persistent, operator-revised. Reflective: fully derivable.
-- Write and read discipline is specified per workflow stage (Frame reads profile + semantic + recent episodic; Handoff writes episodic). Bypassing the contract is the failure; adding tiers outside the contract is the other failure.
+- **Six tiers** (five behavioral + one governance): **working** (session scratchpad, compresses) · **episodic** (per-decision record + outcome) · **semantic** (cross-session patterns derived from episodic) · **procedural** (operator-specific reusable action templates) · **reflective** (memory about memory — staleness, drift, promotion proposals) · **framework** (v1.0 RC+: context-indexed protocols synthesized from Axiomatic Judgment / Fence Reconstruction / Blueprint D, plus the deferred-discovery log written by Blueprint D — all hash-chained).
+- Retrieval is query-by-situation, not query-by-key. Past decisions are surfaced by Reasoning-Surface-shape match, ranked by `recency × similarity × outcome_validation`. Framework retrieval adds a context-signature match at PreToolUse and surfaces matching protocols as *stderr advisory* (advisory, never blocking).
+- Promotion is staged: episodic → semantic (pattern + outcome validation threshold) → profile-drift proposal (gated by human review; never auto-merged). Framework entries are write-by-synthesis, not promotion — the blueprint that resolved is the author.
+- **Tamper-evidence (v1.0 RC+).** Episodic, pending-contracts, and framework streams are append-only **hash chains** (SHA-256 `prev_hash` + `entry_hash` + chain-head file). Phase 12 audit refuses to proceed across a broken chain range. Closes the retroactive-state-mutation doxa class.
+- Forgetting is declared per tier with TTL + compaction rules. Working: session-scoped. Episodic: 90-day raw + compacted summary (compaction produces supersedes/superseded_by records, chain preserved). Semantic: persistent, prunable on contradicting evidence. Procedural: persistent, operator-revised. Reflective: fully derivable. Framework: persistent; stale-protocol caveat surfaced with every query; retirement is a Phase 12 recommendation, never automatic.
+- Write and read discipline is specified per workflow stage (Frame reads profile + semantic + recent episodic + framework protocols matching current context; Handoff writes episodic; synthesis-capable blueprints write framework at PreToolUse). Bypassing the contract is the failure; adding tiers outside the contract is the other failure.
+- Full v1.0 RC specification: [`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](../docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md) § Pillar 2 (Hash Chain) and § Pillar 3 (Framework Synthesis & Active Guidance).
 
 ---
 
@@ -147,6 +149,68 @@ episodic + profile on a cadence (daily or per-session-start).
 
 **Reader.** The adapter, at SessionStart — to surface staleness
 warnings, drift flags, and pending elicitation prompts.
+
+### 6. Framework (v1.0 RC+)
+
+**Purpose.** Context-indexed protocols synthesized by Pillar-3-capable
+blueprints. Each entry carries a distilled *"in context X, do Y because
+Z"* rule extracted from a resolved blueprint firing plus its
+provenance, its context signature (for future query), and its
+guidance-trigger predicate. The framework is the durable artifact of
+synthesis across the operator's working history — the *living thinking
+framework* the ultimate-why preamble names.
+
+Also holds the **deferred-discovery log**: every `deferred_discoveries[]`
+entry written by Blueprint D at PreToolUse. Adjacent gaps uncovered
+mid-work but not fixed in this pass are recorded immediately (never
+silently forgotten), carrying description + observable +
+log-only-rationale. Phase 12 audits the accumulated log for frequency
+(recurring classes suggest a structural issue) and aging (how long
+discoveries sit before triage).
+
+**Lifetime.** Persistent. Entries carry their synthesis age and last
+spot-check verdict; stale-unverified protocols surface with a caveat.
+Retirement is a Phase 12 audit recommendation, never automatic — the
+kernel never silently forgets a synthesized protocol, because
+silent-forgetting would be the framework's version of measure-as-target
+drift.
+
+**Writer.** Synthesis-capable blueprints, at PreToolUse. Three in v1.0
+RC: Axiomatic Judgment (source-conflict → context-fit decision
+protocol), Fence Reconstruction (constraint-removal → constraint-safety
+protocol; first real RC producer per CP5), Architectural Cascade &
+Escalation (cascade resolution → system-architecture-level cascade
+protocol plus immediate deferred-discovery entries).
+
+**Reader.** The hot path, after scenario detection and before blueprint
+enforcement — canonicalizes the incoming op's context signature and
+queries the framework. Matching protocols surface as stderr advisory
+(≤ 1 per op, highest-believability match). SessionStart presents a
+digest of protocols synthesized since last session plus count of pending
+deferred-discoveries. `episteme guide [--context] [--since] [--deferred]`
+is the operator-facing query CLI.
+
+**Storage.** `~/.episteme/framework/protocols.jsonl` (hash-chained per
+Pillar 2; same SHA-256 `prev_hash`/`entry_hash` mechanism as episodic
+and pending-contracts streams). Chain verification is a Phase 12 audit
+precondition — a tampered range refuses audit until the operator signs
+a `chain_reset` event.
+
+**Why this tier exists.** Without it, resolved conflicts and repaired
+cascades disappear from the kernel's active memory. The agent redoes
+the causal work every time Sources A/B conflict, rebuilds the blast
+radius every time it edits the schema, forgets every deferred discovery
+once the session ends. The framework tier preserves the synthesized
+know-how so the kernel's self-model sharpens with every pass rather
+than resetting.
+
+**Guidance posture — advisory, never blocking.** The framework informs
+future decisions; blueprints (Pillar 1) enforce them. Collapsing
+framework guidance into enforcement would produce a feedback loop where
+the kernel enforces its own synthesis against the operator. Preserving
+the advisory boundary is load-bearing; see
+[`kernel/KERNEL_LIMITS.md`](./KERNEL_LIMITS.md) limit 11
+(guidance-loop collapse).
 
 ---
 
@@ -326,6 +390,24 @@ to update this document, not to silently broaden reads.
 - **Forgetting is logged.** Compaction and pruning events are
   themselves recorded in the reflective tier, so "why does this
   record no longer exist in the form I expect?" has an answer.
+- **Hash-chained tamper evidence (v1.0 RC+).** Episodic, pending-contracts,
+  and framework (protocols + deferred-discoveries) streams carry a
+  SHA-256 chain: each entry stores `prev_hash` (hash of the previous
+  entry's full serialized content) and `entry_hash` (hash of the
+  current entry including `prev_hash`), with the chain head at
+  `~/.episteme/state/chain_head.json`. A retroactive edit breaks the
+  chain downstream — detectable by Phase 12 audit, which refuses to
+  proceed across a broken range. In git-tracked projects, chain-head
+  rotation commits provide a second tamper-evidence layer. Legitimate
+  chain loss (disk failure, workstation rebuild) is distinguished
+  from tampering: a missing chain-head is genesis; a mid-range hash
+  mismatch is a governance event requiring an operator-signed
+  `chain_reset` entry before audit resumes. Closes the previously
+  unaddressed doxa class where an agent with filesystem access could
+  silently rewrite its own predictions to look like it got right what
+  it actually got wrong. Full spec:
+  [`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](../docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md)
+  § Pillar 2.
 
 ---
 

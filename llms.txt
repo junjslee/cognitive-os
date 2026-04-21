@@ -7,9 +7,10 @@ episteme is the posture layer installed beneath whichever memory substrate and w
 ## Kernel (load first, in priority order)
 
 - [SUMMARY](./kernel/SUMMARY.md): 30-line distillation of the entire kernel
-- [CONSTITUTION](./kernel/CONSTITUTION.md): root claim, four principles, six failure modes
-- [REASONING_SURFACE](./kernel/REASONING_SURFACE.md): Knowns/Unknowns/Assumptions/Disconfirmation protocol
-- [FAILURE_MODES](./kernel/FAILURE_MODES.md): six failure modes mapped 1:1 to counter artifacts
+- [CONSTITUTION](./kernel/CONSTITUTION.md): root claim, four principles, nine failure modes (+2 v1.0 RC)
+- [REASONING_SURFACE](./kernel/REASONING_SURFACE.md): Knowns/Unknowns/Assumptions/Disconfirmation protocol (scenario-polymorphic blueprints at v1.0 RC)
+- [FAILURE_MODES](./kernel/FAILURE_MODES.md): nine failure modes mapped 1:1 to counter artifacts; v1.0 RC adds modes 10 (framework-as-Doxa) and 11 (cascade-theater)
+- [DESIGN_V1_0_SEMANTIC_GOVERNANCE](./docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md): v1.0 RC spec — three pillars, four named blueprints, ten CPs
 - [KERNEL_LIMITS](./kernel/KERNEL_LIMITS.md): when this kernel is the wrong tool; declared structural gaps
 - [OPERATOR_PROFILE_SCHEMA](./kernel/OPERATOR_PROFILE_SCHEMA.md): schema for encoding operator preferences
 - [REFERENCES](./kernel/REFERENCES.md): attribution for every load-bearing borrowed concept

@@ -46,6 +46,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -53,6 +54,27 @@ from typing import Any, Literal, TypedDict
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# v1.0 RC CP1 — `_classify_disconfirmation` and its three pattern tuples moved
+# to `core/hooks/_specificity.py` so the hot-path validator
+# (`core/hooks/reasoning_surface_guard.py`, wired at CP3) can call them
+# without importing from the `src/` tree. `core/hooks/` is not on the
+# default pytest pythonpath (`pythonpath = ["src"]`), so we extend sys.path
+# here to load the sibling module. Names are re-exported at module scope so
+# `pa._classify_disconfirmation` and related test accesses keep working.
+_CORE_HOOKS_DIR = REPO_ROOT / "core" / "hooks"
+if str(_CORE_HOOKS_DIR) not in sys.path:
+    sys.path.insert(0, str(_CORE_HOOKS_DIR))
+
+# Explicit `as X` re-export pattern so Pyright treats these as intentional
+# module attributes (and `pa.<name>` test access keeps working).
+from _specificity import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    DisconfirmationClass as DisconfirmationClass,
+    _ABSENCE_PATTERNS as _ABSENCE_PATTERNS,
+    _CONDITIONAL_TRIGGER_PATTERNS as _CONDITIONAL_TRIGGER_PATTERNS,
+    _OBSERVABLE_PATTERNS as _OBSERVABLE_PATTERNS,
+    _classify_disconfirmation as _classify_disconfirmation,
+)
 
 # Profile axis inventory — order matches kernel/OPERATOR_PROFILE_SCHEMA.md
 # sections 4a (process) and 4b (cognitive-style). Exactly 15 axes, per the
@@ -564,77 +586,11 @@ def _axis_fence_discipline(
 # not trigger re-elicitation. This is the named default (Axis C's single-
 # signature exception is the anomaly).
 
-# Classifier rule sets. Compiled once at module load. Absence checked
-# FIRST so "if nothing unexpected happens" routes away from fire — the
-# whole point of the axis is that absence-conditions are the wrong shape
-# for a failure-first operator.
-_ABSENCE_PATTERNS: tuple[re.Pattern, ...] = (
-    re.compile(r"\bif\s+no(?:body|\s+one|\s+\w+)\s+(?:complain|object|notice|report|flag|raise|push\s+back)", re.I),
-    re.compile(r"\bnothing\s+(?:unexpected|fails?|breaks?|changes|goes\s+wrong|surfaces?)", re.I),
-    re.compile(r"\bno\s+(?:issues?|errors?|failures?|complaints?|problems?|regressions?)\s+(?:appear|arise|emerge|occur|surface|show\s+up)", re.I),
-    re.compile(r"\b(?:everything|all)\s+(?:is|stays|remains|looks)\s+(?:fine|ok|okay|green|normal|healthy)", re.I),
-    re.compile(r"\babsence\s+of\b", re.I),
-    re.compile(r"\bno\s+one\s+(?:notices|complains|reports|pushes\s+back)", re.I),
-    re.compile(r"\bif\s+no\s+alarm", re.I),
-)
-
-# Conditional triggers — the "if / when / should / once / after / unless"
-# that opens a predicted-outcome clause.
-_CONDITIONAL_TRIGGER_PATTERNS: tuple[re.Pattern, ...] = (
-    re.compile(r"\bif\b", re.I),
-    re.compile(r"\bwhen\b", re.I),
-    re.compile(r"\bshould\b", re.I),
-    re.compile(r"\bonce\b", re.I),
-    re.compile(r"\bafter\b", re.I),
-    re.compile(r"\bunless\b", re.I),
-)
-
-# Specific observables — numeric thresholds, metric references, failure
-# verbs naming something that can be watched for.
-_OBSERVABLE_PATTERNS: tuple[re.Pattern, ...] = (
-    re.compile(r"\d+\s*%"),
-    re.compile(r"\d+\s*(?:ms|sec|seconds?|min|minutes?|h|hours?|MB|GB|KB|rps|qps|errors?)\b", re.I),
-    re.compile(r"\b(?:exceeds?|drops?|rises?|passes?|crosses?|hits?|reaches?|exceeds?)\s+\d"),
-    re.compile(r"\b(?:fails?|errors?|times?\s*out|crashes?|exits?|panics?|throws?|rejects?|returns?\s+non-?zero|non-?zero\s+exit)\b", re.I),
-    re.compile(r"\b(?:log\s+shows?|query[- ]log|telemetry|ci|pipeline|build|test\s+suite|audit\s+log)\b", re.I),
-    re.compile(r"\bexit\s*code\b", re.I),
-    re.compile(r"\bwithin\s+\d", re.I),
-    re.compile(r"\b(?:p50|p90|p95|p99|latency|throughput|error\s+rate|regression)\b", re.I),
-    re.compile(r"\b(?:returns?|responds?\s+with|produces?)\s+\S"),
-)
-
-
-DisconfirmationClass = Literal["fire", "absence", "tautological", "unknown"]
-
-
-def _classify_disconfirmation(text: Any) -> DisconfirmationClass:
-    """Syntactic classifier for a Reasoning Surface's `disconfirmation`
-    field. Priority: absence > fire > tautological > unknown.
-
-    - `unknown` reserved for empty / very-short content (< 10 chars) —
-      we decline to classify rather than guess.
-    - `absence` fires first so clauses like "if nothing breaks" do not
-      get mis-classified as fire just because they contain 'breaks'.
-    - `fire` requires a conditional trigger AND a specific observable —
-      either alone is tautological.
-    - everything else → `tautological` (pattern-matches the 'restates
-      the knowns' case without a false-positive risk).
-    """
-    if not isinstance(text, str):
-        return "unknown"
-    stripped = text.strip()
-    if len(stripped) < 10:
-        return "unknown"
-
-    low = stripped.lower()
-    if any(pat.search(low) for pat in _ABSENCE_PATTERNS):
-        return "absence"
-
-    has_trigger = any(pat.search(low) for pat in _CONDITIONAL_TRIGGER_PATTERNS)
-    has_observable = any(pat.search(low) for pat in _OBSERVABLE_PATTERNS)
-    if has_trigger and has_observable:
-        return "fire"
-    return "tautological"
+# Classifier moved to `core/hooks/_specificity.py` at v1.0 RC CP1.
+# The four names (`_ABSENCE_PATTERNS`, `_CONDITIONAL_TRIGGER_PATTERNS`,
+# `_OBSERVABLE_PATTERNS`, `DisconfirmationClass`, `_classify_disconfirmation`)
+# are re-imported at module load (top of file) so every existing call site
+# — internal ones here, and `pa.<name>` test accesses — keeps working.
 
 
 def _count_lexicon_hits(text: str, terms: frozenset[str]) -> int:

@@ -71,7 +71,13 @@ as nine named modes — each a specific way doxa mistakes itself for episteme:
 Each named mode is the specific doxa-pattern one kernel artifact counters.
 WYSIATI is countered by the Unknowns field of the Reasoning Surface. Question
 substitution is countered by the Core Question requirement. Measure-as-target
-is countered by the profile-audit loop (phase 12, pending — see §4, §7).
+is countered by the profile-audit loop (phase 12, shipped at v0.11.0 — see
+§4, §7). v1.0 RC adds two more governance-layer doxa-patterns — *framework-
+as-Doxa* (synthesized protocols collapsing back into averaged wisdom) and
+*cascade-theater* (Blueprint D's `blast_radius_map[]` padded with
+`not-applicable` entries) — with countermeasures named in
+[`kernel/KERNEL_LIMITS.md`](../kernel/KERNEL_LIMITS.md) and
+[`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md).
 
 A kernel that lists *what it provides* without listing *what it opposes*
 cannot be evaluated. The doxa stratum is the ledger of what is opposed.
@@ -112,10 +118,10 @@ checks applied between doxa and praxis. Four roles.
 - `src/episteme/_memory_promote.py` (phase 11) — clusters episodic records by
   `(domain_marker, primary_pattern)`, emits deterministic proposals to the
   reflective tier.
-- **Profile-audit loop (phase 12, pending).** Compares claimed profile axes
-  against episodic praxis and semantic proposals. Flags drift as
-  re-elicitation at SessionStart. Not yet shipped; its slot is reserved in
-  the control-plane diagram with a dashed stroke.
+- **Profile-audit loop (phase 12, shipped at v0.11.0).** Compares claimed
+  profile axes against episodic praxis and semantic proposals. Flags drift
+  as re-elicitation at SessionStart. Its slot in the control-plane diagram
+  is solid, not dashed — the circuit is closed at the v0.11.0 level.
 
 Each component is the operational form of one principle from
 [`kernel/CONSTITUTION.md`](../kernel/CONSTITUTION.md), applied to one failure
@@ -156,27 +162,71 @@ That gap is closed **over time**, not at write:
 - The episodic tier logs every high-impact action paired with its surface.
 - The semantic promoter clusters by outcome; a disconfirmation pattern that
   never fires across N uses is detectable as drift.
-- The profile-audit loop (phase 12, pending) completes the circuit — claimed
-  specificity vs. actual specificity, per axis.
+- The profile-audit loop (phase 12, shipped at v0.11.0) completes the
+  v0.11 circuit — claimed specificity vs. actual specificity, per axis.
 
-*Structural discipline in the hot path; semantic quality over time.*
-This is the honest tagline. See
-[`kernel/KERNEL_LIMITS.md`](../kernel/KERNEL_LIMITS.md) for the full declared
-set.
+*Structural discipline in the hot path; semantic quality over time* — true
+at v0.11.0. **v1.0 RC tightens "structural discipline in the hot path"
+further** by making the surface scenario-polymorphic: the four-field shape
+becomes a fallback, and four named blueprints (Axiomatic Judgment / Fence
+Reconstruction / Consequence Chain / Architectural Cascade & Escalation)
+shape the required fields in the hot path when their scenarios fire. The
+semantic-quality-over-time axis gains a peer — context-fit protocol
+synthesis + active operator guidance + continuous architectural self-
+maintenance, all hash-chained, all surveyed in §7.5. See
+[`kernel/KERNEL_LIMITS.md`](../kernel/KERNEL_LIMITS.md) for the full
+declared set of limits.
 
-## 7 · What v0.11.0 completes
+## 7 · What v0.11.0 closed
 
-The profile-audit loop (phase 12, in-flight) is the kernel's act of
+The profile-audit loop shipped at v0.11.0 — the kernel's act of
 **episteme auditing praxis to detect when a claimed axis has drifted into
 doxa**. The operator profile's axes are beliefs-about-self; the episodic
 tier is the record of actual action; drift between them means the belief is
 no longer warranted by evidence. The loop surfaces drift as a re-elicitation
-prompt at SessionStart — not a silent trust in prior claims.
+prompt at SessionStart — not a silent trust in prior claims. The v0.11
+circuit is closed.
 
-v0.11.0 closes with this loop shipped. The control-plane diagram reserves
-its slot (dashed stroke, pending marker) so the narrative does not lie
-before the code lands. When phase 12 ships, the stroke solidifies, and
-`kernel/CHANGELOG.md` gets its 0.11.0 entry.
+## 7.5 · What v1.0 RC opens — protocol synthesis, active guidance, continuous self-maintenance
+
+The v1.0 RC cycle (spec: [`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md),
+status *approved (reframed, third pass)* 2026-04-21) grafts three jobs the
+auto-regressive substrate cannot perform natively onto the kernel, beyond
+the per-action causal-consequence decomposition v0.11.0 already enforces.
+Each job anchored to a named structural pillar:
+
+- **Pillar 1 · Cognitive Blueprints** — scenario-polymorphic surface
+  schemas. Four named blueprints (A Axiomatic Judgment, B Fence
+  Reconstruction, C Consequence Chain, D Architectural Cascade &
+  Escalation) plus a generic maximum-rigor fallback for high-impact ops
+  that match no named scenario. The four-field surface is the fallback
+  only; blueprints shape the required fields when their scenarios fire.
+- **Pillar 2 · Append-Only Hash Chain** — tamper-evident episodic and
+  framework records. Closes a previously unaddressed doxa class: an agent
+  with filesystem access cannot silently rewrite its own predictions to
+  pretend it got right what it actually got wrong.
+- **Pillar 3 · Framework Synthesis & Active Guidance** — context-indexed
+  protocols extracted from conflicting sources (Axiomatic Judgment),
+  constraint removals (Fence Reconstruction), and architectural cascades
+  (Blueprint D), written to a hash-chained framework, and surfaced
+  proactively as operator guidance at future matching decisions. The
+  framework is the living thinking framework the operator's *ultimate
+  why* asked for; guidance is advisory, never blocking.
+
+**Blueprint D** earns its own line: it fires whenever the agent discovers a
+flaw, vulnerability, stale artifact, config gap, or core-logic drift
+mid-work. It forces three cognitive moves — patch-vs-refactor evaluation,
+symmetric cascade synchronization across the full blast radius (CLI /
+config / schemas / hooks / visualizations / docs / tests / generated
+artifacts / external surfaces), and continuous digging & logging of
+adjacent discoveries into the framework. Without it, the agent defaults to
+the cheapest local patch and the codebase decays under its own edits.
+
+The posture sharpens, not widens. The triad is unchanged: doxa enters,
+episteme interposes, praxis lands. The grain is unchanged. The
+control-plane diagram's phase-12 dashed stroke solidifies (v0.11.0); four
+v1.0 RC additions get their own dashed strokes (blueprint selector /
+cascade detector / hash chain / framework query) until CP1-CP10 land.
 
 ---
 

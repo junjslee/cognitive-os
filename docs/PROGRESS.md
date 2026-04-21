@@ -67,6 +67,60 @@ No code. No CP1 work. No test runs. The session was pure governance: tag 0.11.0,
 
 ---
 
+## Event 7 — 2026-04-21 — CP1 code + Blueprint-D self-dogfood cascade sync
+
+First real architectural-cascade op on the episteme repo itself, manually executed to the Blueprint-D contract before the blueprint's code machinery exists (that lands in CP10). This is the Gate-28-equivalent self-dogfood: the kernel's author edits the kernel under Blueprint D's discipline, proving the blueprint is a forcing function the maintainer can live with. If the cascade is wrong, or if any named blast-radius surface was silently skipped, the blueprint fails at the cognitive level regardless of whether CP10 eventually ships green code.
+
+**Blueprint D surface (manually filled for this op):**
+
+- `flaw_classification` = `doc-code-drift` across multiple kernel and docs/ surfaces. The v1.0 RC third-pass reframe updated five authoritative docs to the new architecture (ultimate why, four named blueprints, generic fallback, cascade & escalation) but left every other surface stale — naming Phase 12 as "pending," citing "six named failure modes" when nine+two were current, describing the Reasoning Surface as strictly four fields when the blueprint-polymorphic shape was the new contract, and carrying a legacy `COGNITIVE_OS_ARCHITECTURE.md` filename.
+- `posture_selected` = `refactor`. Patch is not warranted because the drift is structural — every doc that describes the system's pillars, blueprints, or architecture must reflect the four-named-blueprint + generic-fallback + hash-chain + framework-memory + continuous-self-maintenance reality. Leaving any stale creates reader confusion and Goodhart-leaks where a new agent cites an outdated doc as ground truth.
+- `patch_vs_refactor_evaluation`. A patch would mean updating only `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` / `PLAN.md` / `PROGRESS.md` / `NEXT_STEPS.md` / `COGNITIVE_SYSTEM_PLAYBOOK.md` and leaving cross-referenced surfaces inconsistent. That would produce exactly the failure mode Blueprint D exists to prevent — "hash-chained authority under a silently-mismatched surface set." The refactor posture forces symmetric update across the full blast radius.
+- `blast_radius_map[]` (enumerated, non-`not-applicable` entries grounded to real files):
+  - docs prose — NARRATIVE.md, POSTURE.md, ARCHITECTURE.md, EPISTEME_ARCHITECTURE.md (renamed)
+  - kernel prose — kernel/REASONING_SURFACE.md, kernel/MEMORY_ARCHITECTURE.md, kernel/README.md, kernel/KERNEL_LIMITS.md, kernel/FAILURE_MODES.md
+  - kernel generated — kernel/CHANGELOG.md (Unreleased entry opening the v1.0 RC cycle)
+  - top-level surfaces — AGENTS.md, llms.txt (six→nine failure-mode references)
+  - code — core/hooks/_specificity.py (new; CP1), src/episteme/_profile_audit.py (CP1 import rewire)
+  - authoritative trio — docs/PLAN.md, docs/PROGRESS.md, docs/NEXT_STEPS.md (this event + CP1 tracking)
+  - `not-applicable` with reason: `kernel/CONSTITUTION.md` (philosophy is unchanged by the reframe — the four principles still stand), `kernel/OPERATOR_PROFILE_SCHEMA.md` (operator profile schema unchanged; blueprint registry is a separate artifact), `kernel/SUMMARY.md` (needs a minor update in a follow-up pass — logged as deferred discovery below).
+- `sync_plan[]` — one concrete edit per entry in the map above. All executed in this session; verification below.
+
+**CP1 code delivery (bundled with the cascade):**
+
+- New file `core/hooks/_specificity.py` — `_classify_disconfirmation` + three pattern tuples (`_ABSENCE_PATTERNS`, `_CONDITIONAL_TRIGGER_PATTERNS`, `_OBSERVABLE_PATTERNS`) + `DisconfirmationClass` Literal type moved verbatim from `src/episteme/_profile_audit.py`. Module docstring documents the CP1 rationale and the planned CP3 use by `reasoning_surface_guard.py`.
+- `src/episteme/_profile_audit.py` — in-place definitions removed (~70 lines). `sys.path` prepend of `<repo>/core/hooks` at module load, followed by explicit `as X` re-export of the five names so `pa._classify_disconfirmation(...)` test access stays green. `# pyright: ignore[reportMissingImports]` on the dynamic import.
+- Test verification — `pytest` (bare, no PYTHONPATH): **304 passed** (up from the 202 baseline cited in the spec; the spec count was stale — the real count at the v0.11.0 tag was already above 202 after the Phase 12 cascade tests landed). Zero regressions.
+
+**Cascade sync delivery:**
+
+- `docs/NARRATIVE.md` — §3/§4/§6/§7 Phase 12 "pending" → "shipped at v0.11.0." New §7.5 names the three pillars + four blueprints + Blueprint D continuous self-maintenance axis. Forward look is explicit.
+- `docs/POSTURE.md` — "six named failure modes" → "nine named failure modes (+ two v1.0 RC additions)." New paragraph naming scenario-polymorphic blueprints + BYOS as constant-across-swaps.
+- `kernel/REASONING_SURFACE.md` — Operational summary now names four fallback fields + scenario-polymorphic blueprints. New "Blueprint-polymorphic surface (v1.0 RC+)" section names all four blueprints with representative fields + the generic maximum-rigor fallback.
+- `kernel/MEMORY_ARCHITECTURE.md` — Tier count 5 → 6 (added Framework tier with protocols + deferred-discovery log). Hash-chain integrity guarantee added. Framework tier section documents synthesis-at-PreToolUse, advisory-only guidance posture, storage path, retirement discipline.
+- `kernel/README.md` — Added "The ultimate why" + "BYOS" sections. FAILURE_MODES file description updated (6 → 9 + 2 planned).
+- `kernel/KERNEL_LIMITS.md` — Operational summary 8 → 11 limits. Three new sections: (9) framework-as-Doxa, (10) cascade-theater, (11) guidance-loop collapse. Each carries indicator + correct-response like the existing limits.
+- `kernel/FAILURE_MODES.md` — Summary table extended with modes 10 (framework-as-Doxa) and 11 (cascade-theater) with named counter artifacts. Two new full sections after governance-layer mode 9.
+- `kernel/CHANGELOG.md` — New `[Unreleased] — v1.0.0 RC cycle open` entry above the 0.11.0 entry. Names the three pillars, four blueprints, Blueprint D self-dogfood criterion, ten CPs, and the CP1 state.
+- `docs/ARCHITECTURE.md` — Title "v0.12.0" → "v0.11.0 shipped · v1.0 RC in flight." Preamble scope note explicitly describes the diagram as the v0.11 shipped state with the four v1.0 RC additions (blueprint selector / cascade detector / hash chain / framework query) named in prose for now.
+- `docs/COGNITIVE_OS_ARCHITECTURE.md` → `docs/EPISTEME_ARCHITECTURE.md` via `git mv` (history preserved). Content updated: Purpose paragraph now names governance kernel + BYOS. Added "The ultimate why" section. Positioning bullets updated with BYOS + framework synthesis.
+- `AGENTS.md` + `llms.txt` — "six failure modes" → "nine failure modes (+ 2 v1.0 RC planned)." `llms.txt` gains a pointer to `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`.
+
+**`deferred_discoveries[]` — adjacent gaps found during the cascade, logged for Phase 12 triage rather than fixed in this pass:**
+
+1. **SVG assets `docs/assets/system-overview.svg` + `docs/assets/architecture_v2.svg` + `docs/assets/src/architecture_v2.{tex,dot}`** — still depict the v0.11.0 state. Phase 12 is drawn dashed/pending; no v1.0 RC nodes (blueprint selector / cascade detector / hash chain / framework query). Observable: grep shows "phase 12" + "pending" in the SVG sources. Log-only rationale: SVG regeneration is a separate visual-authoring workflow per the 0.11.0 coherence-pass discipline; bundling into this cascade would turn the refactor into a cross-surface SVG rework pass and exceed the bounded-scope contract.
+2. **`scripts/demo_posture.sh` narration** — references "phase 12 pending" in the demo-narration strings. Observable: grep hit inside the shell script. Log-only rationale: narration is a shipped cinematic demo with timing locked to the SVG (currently stale); re-recording is coupled to #1. Both unlock together in a dedicated demo-refresh pass.
+3. **`demos/01_attribution-audit/*`, `demos/03_differential/*`** — demo artifacts cite "six failure modes" or carry reasoning-surface JSON that reflects pre-v1.0 RC state. Observable: grep hits on `demos/**/*.{md,json}`. Log-only rationale: these are historical captures of specific sessions; rewriting them would destroy the record of what the kernel looked like at the time they were recorded. A new demo capture under the v1.0 RC blueprint shape is the right response, landed alongside CP5 (Fence Reconstruction end-to-end) or CP10 (Blueprint D first firing).
+4. **`docs/CONTRIBUTING.md`, `docs/DEMOS.md`** — likely need a v1.0 RC paragraph update; not verified in this pass. Observable: both files exist and both pre-date the reframe. Log-only rationale: contributor/demo docs are not on the critical path for CP1-CP10 and would bundle unrelated editorial work into a cascade focused on the kernel-spec surfaces.
+5. **`kernel/SUMMARY.md`** — the 30-line kernel distillation. May need an update to reference the blueprint registry, hash chain, and framework tier. Observable: file is the "load first" pointer in `kernel/README.md` and hasn't been touched by the reframe. Log-only rationale: the file's 30-line budget makes a surgical insert tricky without a full rebalance; logged for a dedicated pass after CP1-CP2 land so the code-level references are concrete.
+6. **`docs/DESIGN_V0_11_PHASE_12.md`, `docs/DESIGN_V0_11_COHERENCE_PASS.md`** — old in-flight specs that now describe shipped work. They carry "phase 12 pending" / "v0.11 in flight" state. Log-only rationale: these are archival spec docs — their historical value is preserved by NOT rewriting them; a header note or status-line update is the right minimum intervention and can land in a single small commit later.
+7. **`core/hooks/session_context.py`, `src/episteme/_memory_promote.py`, `src/episteme/cli.py`, `tests/test_profile_audit.py`** — grep-hits for "phase 12" exist in code/test. Almost certainly legitimate references to the shipped module (now that it's shipped, the references are fine — no rewrite needed). Flagged for Phase 12 audit completeness rather than as an action item.
+8. **No pyright configuration for `core/hooks/` on the project path** — the `# pyright: ignore[reportMissingImports]` on the dynamic import in `_profile_audit.py` is honest but it would be cleaner to extend `pyproject.toml`'s Pyright config with `extraPaths = ["core/hooks"]` so the static analyzer can follow the import. Log-only rationale: this is a workflow polish item, not a correctness issue — tests pass, the runtime works. Right bundle point: CP3 when `reasoning_surface_guard.py` starts importing from `_specificity.py` and the convention-vs-import question needs resolving at the project level anyway.
+
+Every deferred entry above would become an immediate hash-chained `deferred_discovery` framework record once CP7 + CP10 ship. For this pre-CP7 cascade, they live in this document — the same information, same provenance, same intent.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.

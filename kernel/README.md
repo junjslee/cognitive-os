@@ -12,6 +12,36 @@ kernel into a specific runtime.
 If the kernel is sound, the adapters are small. If an adapter starts
 growing, the fix is in the kernel's portability, not in more adapter code.
 
+## The ultimate why — a living thinking framework, not a stateless guardrail
+
+An operator drowning in conflicting sources (Stack Overflow, vendor docs,
+teammate folklore, LLM-synthesized "best practice") cannot reliably
+distinguish which source fits THIS context — and a stock auto-regressive
+LLM will not do it for them. Each conflicting pair of cases hides a
+context-dependent protocol ("in context X, do Y because Z"); extracting
+the protocol requires modeling *why* the sources conflict, not averaging
+them. The kernel exists to force the extraction — and, over time, to
+build a **living thinking framework** that synthesizes accumulated
+context-fit protocols, surfaces them proactively as operator guidance at
+the point of future decisions, and maintains its own architectural
+coherence as the agent edits the system. Four jobs: per-action causal
+decomposition, per-case protocol synthesis, active guidance at future
+decisions, continuous self-maintenance. Full specification (v1.0 RC):
+[`../docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](../docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md).
+
+## BYOS — bring your own skill
+
+episteme is a **cognitive and execution governance kernel**. It is not a
+skill provider, tool provider, or agent framework. The kernel does not
+give agents capabilities; it intercepts state mutation at the point of
+action and enforces the Reasoning Surface regardless of which external
+tool, MCP server, or agent framework generated the command. A
+`kubectl apply` from Claude Code, a `terraform plan` from a Cursor agent,
+a `gh pr merge` from a home-grown MCP server — the kernel does not care
+about provenance. It intercepts the mutation and enforces the
+blueprint-shaped cognitive contract before the mutation lands. The
+ecosystem provides the skills; the kernel provides the episteme.
+
 ---
 
 ## Files
@@ -24,9 +54,11 @@ growing, the fix is in the kernel's portability, not in more adapter code.
   protocol that operationalizes Principle I (Explicit > Implicit). The
   minimum viable explicitness required before any consequential action.
 
-- **[FAILURE_MODES.md](./FAILURE_MODES.md)** — the six failure modes the
+- **[FAILURE_MODES.md](./FAILURE_MODES.md)** — the named failure modes the
   kernel is built against, mapped to the specific artifact that counters
-  each one.
+  each one. Nine at v0.11.0 (six Kahneman-derived + three governance-layer:
+  Fence-Check / Goodhart / Ashby); two more land with v1.0 RC
+  (framework-as-Doxa, cascade-theater).
 
 - **[OPERATOR_PROFILE_SCHEMA.md](./OPERATOR_PROFILE_SCHEMA.md)** — the
   schema for encoding an operator's cognitive preferences so they travel

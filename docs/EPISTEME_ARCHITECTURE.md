@@ -1,31 +1,39 @@
 # episteme Architecture
 
+*Formerly `COGNITIVE_OS_ARCHITECTURE.md`. Renamed 2026-04-21 to match the repository's actual naming; content updated to the v1.0 RC state.*
+
 ## Purpose
 
-`episteme` is the cognitive + execution operating system for cross-project development and research workflows. It operationalizes decision quality, memory governance, execution cognition, and accountable evolution.
+`episteme` is the **cognitive and execution governance kernel** for cross-project development and research workflows. It operationalizes decision quality, memory governance, execution cognition, accountable evolution, and (v1.0 RC+) continuous architectural self-maintenance.
 
 Distributed via the `episteme` CLI/package.
 
 It provides:
-- stable memory outside chat sessions
-- reusable skills and workflow policy
-- tool-specific adapters for Claude Code, Codex, opencode, and Hermes
-- bounded execution patterns: worktrees, review gates, and handoffs
+- stable memory outside chat sessions — including hash-chained tamper-evident episodic / pending-contracts / framework streams at v1.0 RC
+- scenario-polymorphic Cognitive Blueprints that force the agent to decompose specific failure classes before acting
+- a context-indexed framework of synthesized protocols, surfaced as advisory operator guidance at future matching decisions
+- workflow policy, adapter matrix, and deterministic lifecycle hooks
+- bounded execution patterns: worktrees, review gates, paused-review-before-commit
 
-It is not:
+It is explicitly **not**:
 - a project requirements document
 - a plugin marketplace
 - a replacement for repo-local project truth
+- **a skill provider, tool provider, or agent framework (BYOS stance).** The kernel does not give agents capabilities; it intercepts state mutation at the point of action and enforces the Reasoning Surface regardless of which external tool, MCP server, or agent framework generated the command. The ecosystem provides the skills; the kernel provides the episteme.
+
+## The ultimate why — protocol synthesis, active guidance, continuous self-maintenance
+
+An operator drowning in conflicting sources (Stack Overflow, vendor docs, teammate folklore, LLM-synthesized "best practice") cannot reliably distinguish which source fits THIS context. Each conflicting pair of cases hides a context-dependent protocol ("in context X, do Y because Z"); extracting the protocol requires modeling *why* the sources conflict, not averaging them. A stock auto-regressive LLM cannot perform this extraction natively. The kernel's v1.0 RC architecture grafts four jobs onto the substrate: (1) per-action causal-consequence decomposition, (2) per-case context-fit protocol synthesis, (3) active operator guidance using accumulated protocols at future decisions, (4) continuous architectural self-maintenance — patch-vs-refactor evaluation, symmetric cascade synchronization across the full blast radius, and continuous digging & logging of adjacent discoveries back into the hash-chained framework. Full specification: [`./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md).
 
 ## Positioning
 
 episteme is the governance and identity layer that sits above agent platforms. The platforms are delivery vessels; episteme is the authority.
 
-- episteme lives above Claude Code, Codex, opencode, and Hermes. Those tools are adapters -- they consume the cognitive contract but do not define it.
-- No single agent platform is authoritative. episteme is. A context reset in Claude Code, a new Codex session, or a Cursor workspace change does not reset your identity -- only episteme holds that.
-- The layer distinction matters: agent platforms handle execution (run code, call tools, respond in sessions). episteme handles governance (who the agent is, what it knows, how it behaves, what it remembers across sessions and tools).
-- Sync flows one direction: from episteme outward to platforms. Platforms do not write back into episteme automatically; durable lessons are explicitly promoted via `episteme evolve` or manual authoring.
-- This architecture makes episteme portable across the current toolchain and any future tools -- a new adapter can be added without changing the identity layer.
+- episteme lives above Claude Code, Codex, opencode, and Hermes. Those tools are adapters — they consume the cognitive contract but do not define it. At v1.0 RC the BYOS stance is absorbed into the kernel preamble: state mutation is intercepted regardless of tool provenance; no tool-specific validation paths in the hook layer.
+- No single agent platform is authoritative. episteme is. A context reset in Claude Code, a new Codex session, or a Cursor workspace change does not reset your identity — only episteme holds that.
+- The layer distinction matters: agent platforms handle execution (run code, call tools, respond in sessions). episteme handles governance (who the agent is, what it knows, how it behaves, what it remembers across sessions and tools, AND — at v1.0 RC — how it keeps its own architecture coherent as it edits the system).
+- Sync flows one direction: from episteme outward to platforms. Platforms do not write back into episteme automatically; durable lessons are explicitly promoted via `episteme evolve` (v0.10+) or synthesized into the hash-chained framework by v1.0 RC Pillar-3-capable blueprints at PreToolUse.
+- This architecture makes episteme portable across the current toolchain and any future tools — a new adapter can be added without changing the identity layer, and a new tool (MCP server / skill library / agent framework) integrates transparently because the kernel intercepts at the mutation boundary.
 
 ## 🧬 Layer Model: The Soul and the Vessel
 

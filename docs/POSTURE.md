@@ -107,11 +107,25 @@ thing.
 
 ## What stays constant, what is swappable
 
-- **Constant:** the four artifacts, the six named failure modes, the
-  Knowns/Unknowns/Assumptions/Disconfirmation structure, the authority
-  hierarchy (project docs > operator profile > kernel defaults > runtime).
+- **Constant:** the four canonical artifacts, the nine named failure modes
+  (six reasoner + three governance-layer, with two v1.0 RC additions —
+  framework-as-Doxa, cascade-theater — registered against Blueprint D's
+  introduction; see
+  [`kernel/FAILURE_MODES.md`](../kernel/FAILURE_MODES.md) and
+  [`kernel/KERNEL_LIMITS.md`](../kernel/KERNEL_LIMITS.md)), the
+  Knowns/Unknowns/Assumptions/Disconfirmation structure *as fallback shape*,
+  the authority hierarchy (project docs > operator profile > kernel
+  defaults > runtime). At v1.0 RC the posture gains a **scenario-polymorphic
+  blueprint registry** above the four-field surface — Axiomatic Judgment
+  (source-conflict synthesis), Fence Reconstruction (constraint-removal
+  safety), Consequence Chain (irreversible ops), and Architectural Cascade
+  & Escalation (emergent-flaw patch-vs-refactor + blast-radius sync); plus
+  a generic maximum-rigor fallback for unclassified high-impact ops. See
+  [`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md).
 - **Swappable:** the memory substrate, the runtime, the specific LLM, the
-  capture ergonomics, the viewer.
+  capture ergonomics, the viewer. Also by construction: the tools,
+  skills, and MCP servers the agent uses — the kernel intercepts state
+  mutation regardless of provenance (BYOS; bring-your-own-skill).
 
 A successful posture installation survives every swap below it.
 

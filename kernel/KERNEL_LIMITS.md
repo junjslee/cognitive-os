@@ -9,8 +9,11 @@
 6. Unvalidated claims about the kernel itself (calibration telemetry shipping in 0.10+; recommendations still partly rest on coherence).
 7. Rule-based governance against general-capability agents (controller coverage < action space; escalate rather than default-allow or default-deny).
 8. Scorecard as target (the profile starts describing who the operator thinks they should be rather than how they actually reason).
+9. **Framework-as-Doxa (v1.0 RC+).** Synthesized protocols that are too vague or over-general silently re-introduce the very averaging the scaffold was built to resist — with hash-chained authority. The framework becomes the operator's OWN Doxa, served back with tamper-evident confidence.
+10. **Cascade-theater (v1.0 RC+).** Blueprint D's `blast_radius_map[]` filled with `not-applicable` entries to pass the gate, or with honest-but-unbounded maps that turn every small edit into an hour of form-filling. Either direction defeats the blueprint's purpose.
+11. **Guidance-loop collapse (v1.0 RC+).** Advisory framework guidance is treated as de-facto blocking by operators who feel the social cost of dismissing the kernel's own recommendation. The kernel ends up enforcing its own synthesis against the operator — a feedback loop Pillar 3 was explicitly designed to avoid.
 
-Declared gaps (known, not yet closed): multi-operator mode · semantic-tier retrieval · drift-signal audit loop · fence-check enforcement in hooks.
+Declared gaps (known, not yet closed): multi-operator mode · semantic-tier retrieval · drift-signal audit loop · fence-check enforcement in hooks (closed in Blueprint B / Fence Reconstruction once v1.0 RC CP5 lands).
 
 ---
 
@@ -175,6 +178,91 @@ measure.
   honestly reported profile to a clean, aspirational one. When
   claimed value and observed behavior diverge for N consecutive
   cycles, the axis is flagged for re-elicitation, not silently kept.
+
+### 9. Framework-as-Doxa (v1.0 RC+)
+
+The v1.0 RC framework (Pillar 3) accumulates context-indexed protocols
+synthesized from resolved Axiomatic Judgment / Fence Reconstruction /
+Blueprint D firings. If the synthesized protocols are too vague or too
+eager to generalize, the framework becomes the very Doxa the scaffold
+was built to resist — except now it is the operator's OWN Doxa, served
+back with hash-chained, tamper-evident authority. A subsequent decision
+cites a framework protocol that was synthesized from a single barely-
+relevant prior case and treats it as grounded know-how; the averaging
+the kernel exists to prevent happens inside the kernel's own outputs.
+
+- Indicator: surfaced protocols carry context signatures so broad they
+  match nearly every future op; or so narrow they never match a future
+  op but inflate the framework; or the operator's spot-check verdicts
+  show "vague" / "overfit" outweighing "useful."
+- Correct response: Layer 3 (contextual grounding) rejects framework
+  entries whose `context_signature` doesn't ground to real project
+  entities; Layer 8 spot-checks synthesized protocols at 2× base rate
+  with an explicit "useful / vague / overfit" verdict dimension;
+  Phase 12 audits the synthesis distribution quarterly for drift
+  toward generic-advice shape. If the synthesis-rate is high but the
+  guidance-bind-rate is low (protocols accumulate but never match
+  future ops usefully), the operator tightens the `context_signature`
+  contract or pauses synthesis for the offending blueprint class.
+
+### 10. Cascade-theater (v1.0 RC+)
+
+Blueprint D (Architectural Cascade & Escalation) requires the agent to
+enumerate a `blast_radius_map[]` of surfaces that must update
+symmetrically and declare a concrete `sync_plan[]` per entry. Two
+failure shapes:
+
+- *Padded-not-applicable:* the agent produces a map full of
+  `not-applicable` entries (with superficial rationales) so the
+  blueprint's structural check passes while the actual cascade is
+  ignored.
+- *Unbounded honesty:* the agent produces an exhaustively honest map
+  that turns every small rename into an hour of form-filling,
+  discouraging use of Blueprint D entirely and pushing the agent
+  toward bypass.
+
+Both directions defeat the blueprint's purpose. The first produces
+orphan-reference regressions under hash-chained claims of
+coherence; the second produces bypass.
+
+- Indicator: Layer 8 spot-check verdicts on Blueprint D resolutions
+  show high "cascade-theater vs real sync" failure rate; Phase 12
+  audit shows `blast_radius_map[]` entries that grep-grounded to zero
+  real files; or Blueprint D fires rarely despite repeated
+  architectural edits in the episodic stream.
+- Correct response: keep Layer 3 entity grounding strict on every
+  non-`not-applicable` entry; keep the Layer 8 verdict dimension
+  explicit; if the unbounded-honesty failure dominates, the selector
+  narrows the trigger classes (not every cross-surface edit is
+  Blueprint D territory); retrospective sync-plan completeness
+  verification (v1.0.1) catches the padded-not-applicable failure
+  retroactively by scanning for orphan references after the
+  declared window.
+
+### 11. Guidance-loop collapse (v1.0 RC+)
+
+Pillar 3 active guidance is advisory, never blocking — the framework
+informs decisions; blueprints enforce them. But advisory guidance
+carries social and cognitive weight. An operator who dismisses the
+kernel's own framework-sourced recommendation may feel they are
+defying the system they built. Over time, dismissal becomes costly,
+advisory becomes de-facto blocking, and the kernel ends up enforcing
+its own synthesis against the operator — the exact feedback loop
+Pillar 3 was designed to prevent.
+
+- Indicator: operator-verdict rate on surfaced guidance is near 100%
+  accept even for low-believability matches; or operator reports that
+  guidance feels "unskippable"; or Phase 12 shows the operator's
+  reasoning patterns conforming to framework protocols in a way that
+  masks the operator's own drift.
+- Correct response: hold the advisory posture as load-bearing — any
+  proposal to make guidance blocking is a governance event, not an
+  implementation tweak. Preserve a bright line between blueprints
+  (Pillar 1, enforcing) and framework (Pillar 3, advising). If the
+  collapse is observed, add friction: require an explicit operator
+  verdict on every surfaced guidance line before the session can
+  proceed, so acceptance becomes a conscious act rather than a
+  default.
 
 ---
 

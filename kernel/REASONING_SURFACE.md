@@ -1,12 +1,14 @@
 # The Reasoning Surface
 
 **Operational summary:**
-- Four required fields: **Knowns** (verifiable), **Unknowns** (sharp), **Assumptions** (with falsification conditions), **Disconfirmation** (specific observable outcome).
+- **Four fallback fields:** **Knowns** (verifiable), **Unknowns** (sharp), **Assumptions** (with falsification conditions), **Disconfirmation** (specific observable outcome). This is the fallback shape — it applies when no named blueprint scenario fires.
+- **Scenario-polymorphic blueprints (v1.0 RC+):** when a named scenario fires, the surface mutates to a **Cognitive Blueprint** whose required fields are the causal decomposition specific to that scenario's known failure class. Four named blueprints at v1.0 RC — see *Blueprint-polymorphic surface* below.
 - Two required markers: **domain** (Clear/Complicated/Complex/Chaotic — posture changes accordingly) and **tacit_call** (true when the decision rests on calibrated expert intuition rather than articulable evidence).
 - Fill always before irreversible or blast-radius actions; usually before non-trivial design choices.
 - Blank Unknowns = refusal signal. Knowns-as-assumptions = most common failure. Unfalsifiable plan = story, not plan.
 - **Update mechanic:** evidence updates plausibility; it does not flip booleans. An Assumption moves to Knowns only when the evidence is decisive. Otherwise it carries an updated plausibility and a sharpened falsification condition.
 - State stored at `.episteme/reasoning-surface.json` for high-impact ops; enforced via `kernel/HOOKS_MAP.md`.
+- Full v1.0 RC specification: [`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](../docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md).
 
 ---
 
@@ -65,6 +67,67 @@ What evidence, if observed, would prove the current plan wrong.
   falsified is a story, not a plan.
 - If no disconfirmation can be named, the decision has not been understood
   yet. Stay there until it sharpens.
+
+---
+
+## Blueprint-polymorphic surface (v1.0 RC+)
+
+The four fields are the **fallback shape**. At v1.0 RC, the surface becomes
+scenario-polymorphic: when a named scenario fires, the surface mutates to a
+**Cognitive Blueprint** whose required fields are the causal decomposition
+specific to that scenario's known failure class.
+
+Four named blueprints ship at v1.0 RC, each anchored to a failure class
+the kernel already names:
+
+- **Axiomatic Judgment** — *conflicting-source resolution.* Source A
+  says X, Source B says Y; the agent must pick. Required fields include
+  per-source believability-weighting with rationale, the named axiom
+  being applied, the fail-condition per source, and (synthesis arm) the
+  distilled *"in context X, do Y because Z"* protocol committed to the
+  hash-chained framework. The *ultimate why* engine — this is how the
+  kernel extracts context-fit know-how from multi-source chaos.
+- **Fence Reconstruction** — *removal of an unexplained constraint.*
+  Maps to `fence_discipline` (operator profile axis). Required fields:
+  pointer to the constraint, origin evidence (git blame / doc /
+  incident), removal-consequence prediction with observable,
+  reversibility classification, rollback path. First real
+  synthesis-capable blueprint in v1.0 RC (CP5).
+- **Consequence Chain** — *irreversible or high-blast-radius operation.*
+  `terraform apply` against prod, `kubectl apply` against prod, db
+  migrations, release cuts. Required fields: first-order effect,
+  second-order effect, failure-mode inversion, base-rate reference,
+  margin of safety. Hooks to Munger's mental-model lattice.
+- **Architectural Cascade & Escalation** — *emergent flaw, deprecation,
+  config gap, or core-logic drift discovered mid-work.* Required fields:
+  `flaw_classification`, `posture_selected` (patch | refactor) with
+  rationale, `patch_vs_refactor_evaluation` (the cognitive check),
+  `blast_radius_map[]` (enumerated surfaces — CLI / config / schemas /
+  hooks / visualizations / docs / tests / generated artifacts /
+  external-facing), `sync_plan[]` (one atomic action per map entry),
+  `deferred_discoveries[]` (adjacent gaps logged immediately to the
+  hash-chained framework). Makes continuous self-maintenance
+  structural rather than aspirational.
+
+**Generic maximum-rigor fallback.** When no named blueprint fires for a
+high-impact op, the kernel applies a generic Consequence-Chain-shaped
+schema — at least as strict as any single named blueprint. The fallback
+is the Goodhart closer for blueprint-absence evasion: an agent cannot
+evade blueprint enforcement by producing actions whose shape matches no
+named pattern. The fallback is not itself a blueprint — it has no
+synthesis arm and emits no framework protocols.
+
+**What this replaces.** The four fields still apply when no blueprint
+fires. Under a blueprint, the four fields are subsumed by the blueprint's
+richer field set — the blueprint carries its own Knowns / Unknowns /
+Assumptions / Disconfirmation equivalents plus scenario-specific
+extensions. The structural invariants (Disconfirmation must be observable,
+Assumptions carry falsification conditions) survive inside the blueprint.
+
+Full specification, selection logic, and governance discipline on
+blueprint additions:
+[`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](../docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md)
+§ "Pillar 1 · Cognitive Blueprints."
 
 ---
 
