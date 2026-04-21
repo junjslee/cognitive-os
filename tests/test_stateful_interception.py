@@ -31,13 +31,23 @@ from core.hooks import state_tracker as tracker
 
 
 def _fresh_surface_payload() -> dict:
+    # v1.0 RC CP3 — both classifier-eligible fields (disconfirmation,
+    # per-entry unknowns) need a conditional trigger + specific
+    # observable. Original intent preserved: surface describes
+    # variable-indirection coverage concerns.
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "core_question": "Does the posture hold?",
         "knowns": ["tracker records .py"],
-        "unknowns": ["whether variable-indirection is caught by the guard"],
+        "unknowns": [
+            "if variable-indirection slips past the deep-scan, "
+            "the guard returns exit code 0 on a blocked op"
+        ],
         "assumptions": ["cwd is repo root"],
-        "disconfirmation": "CI fails on push or deep-scan misses git push in content",
+        "disconfirmation": (
+            "CI fails on push once a deep-scan false-negative "
+            "returns non-zero exit code downstream"
+        ),
     }
 
 

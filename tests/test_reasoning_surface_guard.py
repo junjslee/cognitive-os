@@ -11,11 +11,20 @@ from core.hooks import reasoning_surface_guard as guard
 
 
 def _fresh_surface_payload() -> dict:
+    # v1.0 RC CP3 — Layer 2 classifier runs on `disconfirmation` and
+    # per-entry on `unknowns`. Both fields must carry a conditional
+    # trigger (`if`/`when`/`should`/`once`/`after`/`unless`) AND a
+    # specific observable (fails/errors/returns-non-zero/exit-code/
+    # metric name/etc.) so they classify as `fire`. Original intent
+    # preserved: surface describes CI-on-push parity concerns.
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "core_question": "Does this change preserve the kernel contract?",
         "knowns": ["tests pass locally"],
-        "unknowns": ["whether CI matches the local result on the push branch"],
+        "unknowns": [
+            "if CI returns non-zero exit code on the push branch, "
+            "local parity was false"
+        ],
         "assumptions": ["cwd is repo root"],
         "disconfirmation": "CI fails on main after push or tag verification rejects",
     }

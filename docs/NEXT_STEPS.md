@@ -12,23 +12,26 @@ Exact next actions, in priority order. Update this file at every handoff.
 - **Second pass** — added Pillar 3 (Framework Synthesis & Active Guidance); renamed subtitle to *Causal-Consequence Scaffolding & Protocol Synthesis*; CP plan 8 → 9.
 - **Third pass** — enshrined the **ultimate why** in the preamble (information overload → context-fit protocol extraction → living thinking framework → active guidance → continuous self-maintenance). Promoted the prior "Blueprint D · Unclassified High-Impact (catchall)" to a load-bearing **Blueprint D · Architectural Cascade & Escalation** (patch-vs-refactor evaluation, symmetric cascade synchronization, continuous digging & logging). Goodhart closer for blueprint-absence preserved as a **generic maximum-rigor fallback** (Consequence-Chain-shaped), not a blueprint. CP plan 9 → 10 (CP10 = Blueprint D scaffolding + cascade detector + deferred-discovery hash-chained write).
 
-**Next action (fresh session):** review + commit the **CP2 pass** landed 2026-04-21 (scenario detector + blueprint registry substrate + generic_fallback.yaml + 22 tests). After commit, proceed to **CP3 — Layer 2 in the hot path, blueprint-aware** (wires `reasoning_surface_guard.py` to call `_specificity._classify_disconfirmation` against `_scenario_detector.detect_scenario(...)`'s selected blueprint's fields).
+**Next action (fresh session):** review + commit the **CP3 pass** landed 2026-04-21 (Layer 2 classifier wired into the hot path + 2 fixture migrations + 14 new tests). After commit, proceed to **CP4 — Layer 3 contextual grounding, blueprint-aware** (new `core/hooks/_grounding.py`; blueprint-aware entity extraction + project grep with FP-averse gating; closes the classifier-permissiveness gap that CP3 surfaced — see deferred-discovery #9).
 
-**CP2 pass state (awaiting paused-review):**
+**CP3 pass state (awaiting paused-review):**
 
-- `core/blueprints/generic_fallback.yaml` — source of truth for the historic four fields.
-- `core/hooks/_blueprint_registry.py` — zero-dep YAML subset parser + `Blueprint` frozen dataclass + `Registry` class with lazy-load + cache + duplicate-name rejection. Exceptions: `BlueprintParseError`, `BlueprintValidationError`.
-- `core/hooks/_scenario_detector.py` — `detect_scenario(pending_op, surface_text, project_context) -> str` stub; always returns `"generic"` at CP2; signature locked for CP3.
-- `tests/test_scenario_detector.py` — 22 tests covering load / field tuple / detector contract / error cases / caching / parser edge cases / dataclass immutability.
-- Tests: **326/326 passing** (304 baseline + 22 new).
-- Narrative: `docs/PROGRESS.md` Event 8.
-- Hot-path behavior: **unchanged** (CP2 is substrate only; `reasoning_surface_guard.py` is untouched).
+- `core/hooks/reasoning_surface_guard.py` — sys.path injection + `_layer2_classify_blueprint_fields` helper + `_CLASSIFIED_FIELDS_BY_BLUEPRINT` dict + `main()` wiring between Layer 1 "ok" and existing ok branch.
+- `tests/test_reasoning_surface_guard.py` + `tests/test_stateful_interception.py` — 2 fixture migrations (unknowns + disconfirmation sharpened with observables; original intents preserved).
+- `tests/test_layer2_classifier_hot_path.py` (new) — 14 tests covering fire/tautological/absence classifier behavior, per-entry unknowns, fluent-vacuous example blocks, knowns/assumptions NOT classified, graceful registry-failure degrade, latency budget.
+- Tests: **340/340 passing** (326 baseline + 14 new). Zero regressions.
+- Narrative: `docs/PROGRESS.md` Event 9.
+- **Hot-path behavior change (first of the v1.0 RC cycle):** tautological disconfirmation / unknowns entries now block at write time; absence-shape fields advisory (stderr + pass).
+- **Known limit:** 2 of 5 spec fluent-vacuous examples block at Layer 2 alone; remaining 3 need CP4 Layer 3 entity grounding + CP6 Layer 4 verification_trace (deferred-discovery #9).
 
-**CP1 bundle (committed) for reference:**
+**CP2 bundle (committed `6ceaa44`):**
 
-- Commit: chkpts `ce0f4e3` / `3d4b20a` / `f5f8d0f` on master; narrative preserved in annotated tag `v1.0-rc-cp1` (`git show v1.0-rc-cp1`).
-- Follow-up fix: `2a2ed68` — `fix(v1.0-rc): pytest pythonpath includes repo root for core.hooks` (closes runtime half of deferred-discovery #8).
-- Cascade touched 13 surfaces; 8 deferred discoveries logged in Event 7 (one now partially resolved by `2a2ed68`).
+- Scenario detector + blueprint registry substrate + generic_fallback.yaml + 22 tests. Hot path untouched at CP2.
+
+**CP1 bundle (committed on `f5f8d0f`/`3d4b20a`/`ce0f4e3`):**
+
+- Code extraction + Blueprint-D self-dogfood cascade sync across 13 surfaces. Narrative preserved in annotated tag `v1.0-rc-cp1` (`git show v1.0-rc-cp1`).
+- Follow-up fix: `2a2ed68` — pytest pythonpath closes runtime half of deferred-discovery #8.
 
 **The ten v1.0 RC checkpoints:**
 
@@ -251,23 +254,26 @@ Exact next actions, in priority order. Update this file at every handoff.
 - **Second pass** — added Pillar 3 (Framework Synthesis & Active Guidance); renamed subtitle to *Causal-Consequence Scaffolding & Protocol Synthesis*; CP plan 8 → 9.
 - **Third pass** — enshrined the **ultimate why** in the preamble (information overload → context-fit protocol extraction → living thinking framework → active guidance → continuous self-maintenance). Promoted the prior "Blueprint D · Unclassified High-Impact (catchall)" to a load-bearing **Blueprint D · Architectural Cascade & Escalation** (patch-vs-refactor evaluation, symmetric cascade synchronization, continuous digging & logging). Goodhart closer for blueprint-absence preserved as a **generic maximum-rigor fallback** (Consequence-Chain-shaped), not a blueprint. CP plan 9 → 10 (CP10 = Blueprint D scaffolding + cascade detector + deferred-discovery hash-chained write).
 
-**Next action (fresh session):** review + commit the **CP2 pass** landed 2026-04-21 (scenario detector + blueprint registry substrate + generic_fallback.yaml + 22 tests). After commit, proceed to **CP3 — Layer 2 in the hot path, blueprint-aware** (wires `reasoning_surface_guard.py` to call `_specificity._classify_disconfirmation` against `_scenario_detector.detect_scenario(...)`'s selected blueprint's fields).
+**Next action (fresh session):** review + commit the **CP3 pass** landed 2026-04-21 (Layer 2 classifier wired into the hot path + 2 fixture migrations + 14 new tests). After commit, proceed to **CP4 — Layer 3 contextual grounding, blueprint-aware** (new `core/hooks/_grounding.py`; blueprint-aware entity extraction + project grep with FP-averse gating; closes the classifier-permissiveness gap that CP3 surfaced — see deferred-discovery #9).
 
-**CP2 pass state (awaiting paused-review):**
+**CP3 pass state (awaiting paused-review):**
 
-- `core/blueprints/generic_fallback.yaml` — source of truth for the historic four fields.
-- `core/hooks/_blueprint_registry.py` — zero-dep YAML subset parser + `Blueprint` frozen dataclass + `Registry` class with lazy-load + cache + duplicate-name rejection. Exceptions: `BlueprintParseError`, `BlueprintValidationError`.
-- `core/hooks/_scenario_detector.py` — `detect_scenario(pending_op, surface_text, project_context) -> str` stub; always returns `"generic"` at CP2; signature locked for CP3.
-- `tests/test_scenario_detector.py` — 22 tests covering load / field tuple / detector contract / error cases / caching / parser edge cases / dataclass immutability.
-- Tests: **326/326 passing** (304 baseline + 22 new).
-- Narrative: `docs/PROGRESS.md` Event 8.
-- Hot-path behavior: **unchanged** (CP2 is substrate only; `reasoning_surface_guard.py` is untouched).
+- `core/hooks/reasoning_surface_guard.py` — sys.path injection + `_layer2_classify_blueprint_fields` helper + `_CLASSIFIED_FIELDS_BY_BLUEPRINT` dict + `main()` wiring between Layer 1 "ok" and existing ok branch.
+- `tests/test_reasoning_surface_guard.py` + `tests/test_stateful_interception.py` — 2 fixture migrations (unknowns + disconfirmation sharpened with observables; original intents preserved).
+- `tests/test_layer2_classifier_hot_path.py` (new) — 14 tests covering fire/tautological/absence classifier behavior, per-entry unknowns, fluent-vacuous example blocks, knowns/assumptions NOT classified, graceful registry-failure degrade, latency budget.
+- Tests: **340/340 passing** (326 baseline + 14 new). Zero regressions.
+- Narrative: `docs/PROGRESS.md` Event 9.
+- **Hot-path behavior change (first of the v1.0 RC cycle):** tautological disconfirmation / unknowns entries now block at write time; absence-shape fields advisory (stderr + pass).
+- **Known limit:** 2 of 5 spec fluent-vacuous examples block at Layer 2 alone; remaining 3 need CP4 Layer 3 entity grounding + CP6 Layer 4 verification_trace (deferred-discovery #9).
 
-**CP1 bundle (committed) for reference:**
+**CP2 bundle (committed `6ceaa44`):**
 
-- Commit: chkpts `ce0f4e3` / `3d4b20a` / `f5f8d0f` on master; narrative preserved in annotated tag `v1.0-rc-cp1` (`git show v1.0-rc-cp1`).
-- Follow-up fix: `2a2ed68` — `fix(v1.0-rc): pytest pythonpath includes repo root for core.hooks` (closes runtime half of deferred-discovery #8).
-- Cascade touched 13 surfaces; 8 deferred discoveries logged in Event 7 (one now partially resolved by `2a2ed68`).
+- Scenario detector + blueprint registry substrate + generic_fallback.yaml + 22 tests. Hot path untouched at CP2.
+
+**CP1 bundle (committed on `f5f8d0f`/`3d4b20a`/`ce0f4e3`):**
+
+- Code extraction + Blueprint-D self-dogfood cascade sync across 13 surfaces. Narrative preserved in annotated tag `v1.0-rc-cp1` (`git show v1.0-rc-cp1`).
+- Follow-up fix: `2a2ed68` — pytest pythonpath closes runtime half of deferred-discovery #8.
 
 **The ten v1.0 RC checkpoints:**
 

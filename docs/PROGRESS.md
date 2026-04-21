@@ -147,6 +147,49 @@ Substrate-only delivery per the spec's CP2 scope ("No behavior change until CP5 
 
 ---
 
+## Event 9 — 2026-04-21 — CP3 shipped: Layer 2 in the hot path, blueprint-aware
+
+**The first user-visible behavior change of the v1.0 RC cycle.** The `reasoning_surface_guard.py` hot path now consults `_scenario_detector.detect_scenario(...)` → `_blueprint_registry.load_registry().get(name)` → `_specificity._classify_disconfirmation(...)` for each classifier-eligible field on the selected blueprint. Surfaces that passed Layer 1 (length + lazy-token) but carry a tautological `disconfirmation` or `unknowns[]` entry are now rejected with a `Layer 2 classifier ... (tautological)` stderr message. Surfaces with absence-shape fields (`if no issues arise`) get a `[episteme advisory]` stderr line but still pass. Tests: **340/340 passing** (+14 new on top of the 326 CP2 baseline).
+
+**CP3 delivery:**
+
+- **`core/hooks/reasoning_surface_guard.py`** — sys.path injection + absolute imports of `_specificity`, `_blueprint_registry`, `_scenario_detector` (matches CP1's `_profile_audit.py` pattern). New `_layer2_classify_blueprint_fields(surface, pending_op) -> (verdict, detail)` returning one of `"pass"` / `"advisory"` / `"reject"`. Graceful degrade: registry or classifier errors emit a one-line stderr fallback note and yield `"pass"` — Layer 1 still enforced. New inline `_CLASSIFIED_FIELDS_BY_BLUEPRINT` dict seeded with `{"generic": ("disconfirmation", "unknowns")}`; per-entry classification on `unknowns[]`. `main()` wires the call after Layer 1 returns `"ok"`; a Layer-2 `"reject"` downgrades status to `"incomplete"` so the existing block path handles it uniformly; `"advisory"` emits stderr and continues.
+
+- **`tests/test_reasoning_surface_guard.py`** — migrated `_fresh_surface_payload()` unknowns entry from `"whether CI matches the local result on the push branch"` (tautological — no trigger) to `"if CI returns non-zero exit code on the push branch, local parity was false"` (fire — trigger `if`, observable `returns non-zero`). Disconfirmation unchanged (`"CI fails on main after push or tag verification rejects"` already classified as fire via `\bafter\b` trigger + `\bfails?\b` + `\brejects?\b` observables). All 30 existing tests continue to pass unchanged.
+
+- **`tests/test_stateful_interception.py`** — migrated both classifier-eligible fields. Unknowns now: `"if variable-indirection slips past the deep-scan, the guard returns exit code 0 on a blocked op"`. Disconfirmation now: `"CI fails on push once a deep-scan false-negative returns non-zero exit code downstream"`. Original intents (variable-indirection coverage, deep-scan false-negative concerns) preserved with concrete observables added. All 12 existing tests continue to pass unchanged.
+
+- **`tests/test_layer2_classifier_hot_path.py` (new, 14 tests)** — 7 test classes:
+  - `Layer2FireClassificationPasses` (2): fire disconfirmation + fire unknowns passes with zero stderr; multiple fire unknowns all clean
+  - `Layer2RejectsTautological` (2): tautological disconfirmation blocks with `Layer 2` + `tautological` in stderr; `unknown` classification doesn't spuriously fire on absence-shape content
+  - `Layer2AdvisoryOnAbsence` (2): absence disconfirmation advisories + passes (rc=0 with `[episteme advisory]` in stderr); per-entry absence also advisories
+  - `Layer2PerEntryUnknowns` (2): tautological `unknowns[1]` blocks with `unknowns[1]` in stderr; mixed fire entries pass cleanly
+  - `Layer2OnFluentVacuousExamples` (2): honest CP3 reporting — 2 of 5 spec fluent-vacuous examples block at Layer 2; remaining 3 documented as `CP3_GAP_NEEDS_CP4_OR_CP6` (see deferred_discovery #9 below)
+  - `Layer2DoesNotClassifyKnownsOrAssumptions` (2): arbitrary knowns / assumptions values pass cleanly (classifier runs only on disconfirmation + unknowns per the spec's category-alignment rule)
+  - `Layer2GracefulDegradeOnRegistryFailure` (1): broken registry → stderr fallback note + surface passes on Layer 1 only
+  - `Layer2LatencyIsBounded` (1): 20-call warm-cache timing; worst-case < 100ms per call (well within the spec's combined-stack budget)
+
+**Honest CP3 limits — deferred discoveries:**
+
+9. **Classifier permissiveness — 3 of 5 spec fluent-vacuous examples slip through Layer 2 alone.** The v0.11.0 `_classify_disconfirmation` accepts `produces X` / `returns Y` / `build Z` as observable-shaped tokens (patterns `(?:returns?|produces?)\s+\S` and `\bbuild\b` in the pipeline-observable set). So the spec examples *"the migration may produce unexpected behavior..."* / *"if the build process exhibits anomalous behavior..."* / *"if results diverge from expectations we will return to first principles"* all classify as `fire` and pass. This is not a CP3 regression — it is a classifier-pattern limitation carried forward from Phase 12. The spec's Verification section acknowledges the gap by naming *"some combination of Layers 2-4 + Fence Reconstruction blueprint"* rather than Layer 2 alone. Resolution path: (a) CP4 Layer 3 entity grounding will require these fluent-vacuous surfaces to ground their terms to real project entities (e.g., "build process" must grep to a named CI step); (b) CP6 Layer 4 `verification_trace` will require an executable verification that fluent-vacuous surfaces cannot declare. If either CP tightens the classifier itself, the `CP3_GAP_NEEDS_CP4_OR_CP6` list in `tests/test_layer2_classifier_hot_path.py` is the exact place where strings graduate from GAP → BLOCKS. Logged here; would be hash-chained to the framework when CP7 substrate ships.
+
+**What did NOT happen:**
+
+- No changes to `_specificity.py` — the classifier's observable-pattern list is untouched. CP5+ may tighten it as Phase 12 audit data shows which patterns are most Goodhart-prone.
+- No changes to blueprint registry API or scenario detector signature — both stable from CP2.
+- No synthesis arm, no hash chain, no framework query. Those land at CP5 / CP7 / CP9.
+- Pyright `extraPaths` fix for `core.hooks` still pending — the pattern sys.path injection + `# pyright: ignore[reportMissingImports]` is now used in `_profile_audit.py` (CP1) and `reasoning_surface_guard.py` (CP3); CP3 did not resolve the project-level Pyright config question because no further hook-to-hook imports are expected until CP5/CP7/CP10.
+
+**Honest open questions carrying into CP4:**
+
+- Whether the CP3 per-entry `unknowns` classification is aggressive enough. The current rule: one tautological entry blocks the whole surface. Alternative: require all entries to be tautological. If CP4/5 data shows operators legitimately mixing fire + absence + tautological unknowns, revisit.
+- Whether the stderr advisory format (`[episteme advisory] Layer 2 advisory (blueprint `generic`): ...`) is parse-friendly for future tooling (Phase 12 audit ingest). Format stable at CP3; review at CP8 when spot-check tooling starts reading it.
+- Whether `_layer2_classify_blueprint_fields` should read the surface directly (via `_read_surface(cwd)` call in `main()`) or accept the already-parsed dict. Current design reads twice (once inside `_surface_status` via `_surface_missing_fields`, once from `main()` to pass into Layer 2). Minor waste. Revisit at CP5 when the parsed surface gets reused across more layers.
+
+**Commit plan:** one atomic commit for CP3, message subject `feat(v1.0-rc): CP3 Layer 2 classifier in the hot path, blueprint-aware`. Awaiting paused-review per CP discipline.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.

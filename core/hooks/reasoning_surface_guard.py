@@ -44,7 +44,44 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+# v1.0 RC CP3 — Layer 2 in the hot path, blueprint-aware.
+# Import sibling hook modules (_specificity, _blueprint_registry,
+# _scenario_detector) via sys.path injection so the guard works
+# identically whether invoked as a standalone script by the host runtime
+# (its own dir is on sys.path by default) or imported under pytest
+# (which sets sys.path from pyproject's pythonpath = ["src", "."]
+# extension at commit 2a2ed68). Same pattern CP1 used for
+# _profile_audit.py's _specificity import.
+_HOOKS_DIR = Path(__file__).resolve().parent
+if str(_HOOKS_DIR) not in sys.path:
+    sys.path.insert(0, str(_HOOKS_DIR))
+
+from _blueprint_registry import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    BlueprintParseError as _BlueprintParseError,
+    BlueprintValidationError as _BlueprintValidationError,
+    load_registry as _load_registry,
+)
+from _scenario_detector import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    detect_scenario as _detect_scenario,
+)
+from _specificity import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    _classify_disconfirmation as _classify_for_layer2,
+)
+
+
 SURFACE_TTL_SECONDS = 30 * 60  # 30 minutes
+
+
+# Per-blueprint declaration of which required_fields the Layer-2
+# specificity classifier actually runs against. Some fields are
+# statements-of-fact (Knowns) or provisional-beliefs (Assumptions) —
+# classifying them as "trigger+observable" would be a category error.
+# CP3 seeds the generic fallback (classifier runs on `disconfirmation`
+# and per-entry on `unknowns`). CP5 / CP10 add named-blueprint entries
+# as Fence Reconstruction / Architectural Cascade land.
+_CLASSIFIED_FIELDS_BY_BLUEPRINT: dict[str, tuple[str, ...]] = {
+    "generic": ("disconfirmation", "unknowns"),
+}
 
 # Minimum character thresholds — lazy one-word answers are rejected.
 # These are now derived from the operator profile's uncertainty_tolerance +
@@ -423,6 +460,102 @@ def _surface_missing_fields(surface: dict) -> list[str]:
     return missing
 
 
+def _layer2_classify_blueprint_fields(
+    surface: dict,
+    pending_op: dict,
+) -> tuple[str, str]:
+    """Layer 2 · v1.0 RC CP3: blueprint-aware specificity classifier.
+
+    Runs AFTER Layer 1 (`_surface_missing_fields`) has already passed.
+    Consults the scenario detector for the selected blueprint name,
+    loads that blueprint from the registry, and classifies each of the
+    blueprint's classifier-eligible fields via `_classify_disconfirmation`.
+
+    Returns ``(verdict, detail)`` where ``verdict`` is one of:
+
+    - ``"pass"``     — every classifier-eligible field classifies as ``fire``
+                       (conditional trigger + specific observable). Surface
+                       proceeds to the existing ok path.
+    - ``"advisory"`` — at least one field classifies as ``absence``
+                       (`if no issues arise`-shape). Surface still passes;
+                       caller emits a one-line stderr advisory.
+    - ``"reject"``   — at least one field classifies as ``tautological``
+                       or ``unknown``. Surface is rejected with detail
+                       naming the failing fields; caller treats this
+                       identically to a Layer-1 ``incomplete`` result.
+
+    Graceful degrade: any error in the scenario detector, registry
+    load, or classifier yields ``("pass", "")`` plus a one-line stderr
+    note. Layer 1 already passed; we do not synthesize a block from
+    our own infrastructure failing.
+    """
+    try:
+        blueprint_name = _detect_scenario(
+            pending_op, surface_text=None, project_context={}
+        )
+        blueprint = _load_registry().get(blueprint_name)
+    except (_BlueprintParseError, _BlueprintValidationError, KeyError, OSError) as exc:
+        sys.stderr.write(
+            f"[episteme] Layer 2 fallback: blueprint registry error "
+            f"({exc.__class__.__name__}); Layer-1 validation still enforced.\n"
+        )
+        return ("pass", "")
+
+    classified_fields = _CLASSIFIED_FIELDS_BY_BLUEPRINT.get(blueprint.name, ())
+    if not classified_fields:
+        return ("pass", "")
+
+    rejections: list[str] = []
+    advisories: list[str] = []
+    required = set(blueprint.required_fields)
+
+    for field_name in classified_fields:
+        if field_name not in required:
+            continue  # classifier map lists a field the blueprint doesn't require
+        value = surface.get(field_name)
+        if field_name == "unknowns" and isinstance(value, list):
+            # Per-entry classification. Each unknown carries its own
+            # trigger+observable contract under the v1.0 RC blueprint
+            # rules (spec § Layer 2 — "the generic surface's
+            # `disconfirmation` and `unknowns` entries are classified
+            # against the same contract").
+            for i, entry in enumerate(value):
+                verdict = _classify_for_layer2(entry)
+                if verdict in ("tautological", "unknown"):
+                    rejections.append(f"unknowns[{i}] ({verdict})")
+                elif verdict == "absence":
+                    advisories.append(f"unknowns[{i}] (absence)")
+        else:
+            verdict = _classify_for_layer2(value)
+            if verdict in ("tautological", "unknown"):
+                rejections.append(f"{field_name} ({verdict})")
+            elif verdict == "absence":
+                advisories.append(f"{field_name} (absence)")
+
+    if rejections:
+        detail = (
+            f"Layer 2 classifier (blueprint `{blueprint.name}`) rejected: "
+            + "; ".join(rejections)
+            + ". A tautological field carries a conditional trigger "
+              "(`if`/`when`/`should`/`once`/`after`/`unless`) but no specific "
+              "observable (numeric threshold, metric name, failure verb, "
+              "log/dashboard reference). Add an observable that would "
+              "falsify the claim."
+        )
+        return ("reject", detail)
+
+    if advisories:
+        detail = (
+            f"Layer 2 advisory (blueprint `{blueprint.name}`): "
+            + "; ".join(advisories)
+            + ". Absence-conditions (`if no issues arise`) are less useful "
+              "than fire-conditions (`if p95 > 400ms`); consider sharpening."
+        )
+        return ("advisory", detail)
+
+    return ("pass", "")
+
+
 def _surface_status(cwd: Path) -> tuple[str, str]:
     # Disambiguate "file absent" from "file present but malformed". The
     # two cases surface the same `_read_surface` return (None) but ask
@@ -605,6 +738,22 @@ def main() -> int:
     status, detail = _surface_status(cwd)
     advisory_only = (cwd / ".episteme" / "advisory-surface").exists()
     mode = "advisory" if advisory_only else "strict"
+
+    # Layer 2 · v1.0 RC CP3 — runs only after Layer 1 passes. A Layer-2
+    # rejection downgrades status from "ok" to "incomplete" so the
+    # existing block path handles it; an absence-advisory emits a
+    # stderr warning and leaves status at "ok".
+    if status == "ok":
+        layer2_surface = _read_surface(cwd)
+        if layer2_surface is not None:
+            l2_verdict, l2_detail = _layer2_classify_blueprint_fields(
+                layer2_surface, payload
+            )
+            if l2_verdict == "reject":
+                status = "incomplete"
+                detail = l2_detail
+            elif l2_verdict == "advisory":
+                sys.stderr.write(f"[episteme advisory] {l2_detail}\n")
 
     if status == "ok":
         _write_audit(tool_name, label, cwd, status, "passed", mode)
