@@ -41,5 +41,13 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+# `src` for `import episteme`; `.` for `from core.hooks import X` — the hook
+# layer lives at `core/hooks/` (not packaged under `src/` because hooks are
+# invoked as standalone scripts by the host runtime). Adding `.` makes the
+# repo root resolve `core` as a namespace package so stock venvs collect
+# the hook tests without a conftest.py or __init__.py scaffolding. Closes
+# the out-of-box-pytest gap for `core.hooks` imports that the v0.11.0 fix
+# left behind (RC checklist item #2 extension; deferred_discoveries #8 from
+# the v1.0-rc-cp1 Blueprint-D cascade).
+pythonpath = ["src", "."]
 testpaths = ["tests"]
