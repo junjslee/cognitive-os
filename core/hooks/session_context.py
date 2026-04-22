@@ -72,6 +72,39 @@ def _write_last_session_ts(ts: str) -> None:
         pass
 
 
+def _noise_watch_line() -> str | None:
+    """Phase A · v1.0.1 — surface `noise_watch_set` derived knob at SessionStart.
+
+    Reads the operator's declared noise susceptibilities (e.g.
+    status-pressure / false-urgency / regret / social-scripts) from
+    `~/.episteme/derived_knobs.json` so the operator opens the session
+    already oriented against the dominant failure modes they have
+    previously flagged. Advisory-only — never blocks session open.
+
+    Silent when the knobs file is absent, malformed, or the knob is not
+    set. Graceful degrade on any import / IO failure: the SessionStart
+    banner remains useful even when one producer returns None.
+
+    Kernel anchor: `kernel/OPERATOR_PROFILE_SCHEMA.md` § 5 names
+    `noise_watch_set` as a declared derived knob; Event 25 narrative
+    names the consumption gap this producer closes.
+    """
+    _hooks_dir = Path(__file__).resolve().parent
+    if str(_hooks_dir) not in sys.path:
+        sys.path.insert(0, str(_hooks_dir))
+    try:
+        import _derived_knobs  # type: ignore  # pyright: ignore[reportMissingImports]
+        watch = _derived_knobs.load_knob("noise_watch_set", None)
+    except Exception:
+        return None
+    if not isinstance(watch, list) or not watch:
+        return None
+    names = [str(x) for x in watch if isinstance(x, str) and x]
+    if not names:
+        return None
+    return f"noise watch: {', '.join(names)}"
+
+
 def _framework_digest_line() -> str | None:
     """CP9 · 'N protocols synthesized since last session (T total),
     M deferred discoveries pending'. Silent when both counts are zero.
@@ -258,6 +291,14 @@ def main() -> int:
     framework_line = _framework_digest_line()
     if framework_line:
         lines.append(framework_line)
+
+    # Phase A · v1.0.1 — noise-watch advisory derived from the operator
+    # profile's cognitive.noise_signature axis. Silent when the knob is
+    # absent. Ordering: AFTER the framework digest so the cognitive
+    # context lands last, closest to the operator's first read.
+    noise_line = _noise_watch_line()
+    if noise_line:
+        lines.append(noise_line)
 
     # NEXT_STEPS.md if present
     ns = Path("docs/NEXT_STEPS.md")
