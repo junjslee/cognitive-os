@@ -57,7 +57,7 @@ Three acts:
    operator keeps under-naming, and emits a Friction Report that
    feeds the calibration loop.
 
-GIF: [`docs/assets/strict_mode_demo.gif`](./assets/strict_mode_demo.gif).
+GIF: not shipped — run the script locally to see it. The Cognitive Cascade (demo ①) is the product hero.
 
 ## Why two demos, in this order
 
@@ -67,10 +67,9 @@ it?* The order matters: the kernel exists to protect the surface, not
 the other way around. A reader who only watches one should watch the
 first.
 
-## Recording
+## Recording the hero
 
-Both scripts run hermetically against a tempdir HOME so re-recording
-does not touch real `~/.episteme/` state.
+Only the Cognitive Cascade ships as a rendered artifact today. `demo_strict_mode.sh` remains runnable locally for the blocking-story audience; its GIF is no longer shipped.
 
 ```bash
 asciinema rec --cols 100 --rows 32 --idle-time-limit 2 \
@@ -78,12 +77,7 @@ asciinema rec --cols 100 --rows 32 --idle-time-limit 2 \
   docs/assets/demo_posture.cast
 agg --speed 0.8 --cols 100 --rows 32 --font-size 15 --theme monokai \
   docs/assets/demo_posture.cast docs/assets/demo_posture.gif
-
-asciinema rec -c ./scripts/demo_strict_mode.sh \
-  docs/assets/strict_mode_demo.cast
-agg docs/assets/strict_mode_demo.cast docs/assets/strict_mode_demo.gif \
-  --cols 100 --rows 34 --font-size 15 --theme monokai
 ```
 
-See [`docs/CONTRIBUTING.md`](./CONTRIBUTING.md#recording-the-strict-mode-demo)
+See [`docs/CONTRIBUTING.md`](./CONTRIBUTING.md#recording-the-hero-demo)
 for the full recording workflow.

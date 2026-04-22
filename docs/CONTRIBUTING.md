@@ -12,9 +12,9 @@ Everything below is the "how-to" for recurring maintainer tasks that aren't cove
 
 ---
 
-## Recording the Strict Mode demo
+## Recording the hero demo
 
-The README embeds `docs/assets/strict_mode_demo.gif` as a three-act "show, don't tell" proof: (1) the posture (lazy vs. valid Reasoning Surface), (2) the kernel remembers (v0.10 stateful interceptor catches an agent-written script bypass), (3) the kernel learns (calibration telemetry + `episteme evolve friction` ranked unknowns). To refresh after a hook change:
+The README embeds `docs/assets/demo_posture.gif` as the hero — a four-act **Cognitive Cascade** (Blueprint B fence reconstruction → Blueprint D architectural cascade → Pillar 3 active guidance). To refresh after a hook or narrative change:
 
 ### 1. Install the recording toolchain
 
@@ -27,40 +27,33 @@ sudo apt install asciinema
 cargo install --git https://github.com/asciinema/agg
 ```
 
-- `asciinema` records a terminal session as a `.cast` file (JSON, tiny).
-- `agg` renders `.cast` to an animated GIF without a browser in the loop.
-
 ### 2. Record the script
 
-The demo script is hermetic — it runs in a tempdir and never touches a real remote. Record from the repo root:
+`scripts/demo_posture.sh` is cinematic — all kernel output is simulated, so it runs in any clean bash environment. Record from the repo root:
 
 ```bash
-cd ~/episteme
-asciinema rec --overwrite --cols 100 --rows 34 \
-  -c ./scripts/demo_strict_mode.sh docs/assets/strict_mode_demo.cast
+asciinema rec --cols 100 --rows 32 --idle-time-limit 2 \
+  -c ./scripts/demo_posture.sh \
+  docs/assets/demo_posture.cast
 ```
 
-The script auto-paces with `sleep` calls (tunable via `DEMO_PAUSE=<seconds>`). Do not override the pauses during recording — the default cadence is tuned for readability.
-
-> **Heads-up:** running `bash ./scripts/demo_strict_mode.sh` will itself trip the Reasoning Surface guard (the script-scan heuristic reads the file, finds `git push`, and enforces the surface on your repo's cwd). That is working-as-intended. Make sure `.episteme/reasoning-surface.json` in your cwd is fresh (< 30 min old, valid) before you start recording.
-
-### 3. Render to GIF
+### 3. Render to GIF at 0.8× playback
 
 ```bash
-agg docs/assets/strict_mode_demo.cast docs/assets/strict_mode_demo.gif \
-  --cols 100 --rows 34 --font-size 15 --theme monokai
+agg --speed 0.8 --cols 100 --rows 32 --font-size 15 --theme monokai \
+  docs/assets/demo_posture.cast docs/assets/demo_posture.gif
 ```
 
-Keep it a quick demo — readable at 1x on GitHub without zoom, small enough to load instantly in the README. If the GIF is too heavy, drop `--font-size` or re-record with a shorter `DEMO_PAUSE`.
+Keep it under ~2 MB — readable at 1x on GitHub without zoom, fast to load in the README hero.
 
 ### 4. Commit both artifacts
 
-Commit the `.cast` file alongside the `.gif` — the cast is the source of truth, the GIF is the rendered artifact.
-
 ```bash
-git add docs/assets/strict_mode_demo.cast docs/assets/strict_mode_demo.gif
-git commit -m "docs: refresh strict-mode demo GIF"
+git add docs/assets/demo_posture.cast docs/assets/demo_posture.gif
+git commit -m "docs: refresh hero demo GIF"
 ```
+
+> The earlier `scripts/demo_strict_mode.sh` script remains runnable for ad-hoc local demos of the blocking path, but its rendered GIF is no longer shipped — the Cognitive Cascade supersedes it as the product hero.
 
 ---
 

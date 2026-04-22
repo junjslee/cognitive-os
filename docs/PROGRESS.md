@@ -1140,6 +1140,65 @@ GitHub serves repo-embedded images through its camo proxy which caches on the im
 
 ---
 
+## Event 24 — 2026-04-22 — Post-live asset audit + 2 MB cleanup (PNGs + strict_mode_demo)
+
+After the Vercel deploy landed, the operator asked for an honest unused-asset audit. The grep discipline: count as "used" only what is **embedded** (`![...](...)`) on a surface reachable from the README, or **linked** (`[label](path)`) from a surface that is itself linked from the README. Anything else, regardless of archival mention count, was a deletion candidate.
+
+### Audit method
+
+- `grep '!\[.*\](' **/*.md` across the entire repo returned **exactly one image embed live**: `README.md:7 → docs/assets/demo_posture.gif`. Everything else is either a link reference, a prose mention in an Event, or a placeholder note inside an archival spec.
+- Transitive reachability from README: followed every `[text](./docs/...)` / `[text](./demos/...)` / `[text](./web/...)` link; confirmed `docs/DEMOS.md` and `docs/CONTRIBUTING.md` are NOT in the reachable set (they exist but nothing in README's link table points at them). They remain valid docs — GitHub's convention surfaces `CONTRIBUTING.md` on PR pages independently — but for the hero-rendering question, they do not render any assets.
+
+### Deleted (freed ~1.95 MB)
+
+- `docs/assets/architecture_v2.png` (628 KB) — zero live embeds anywhere; the SVG at the same stem is linked from `docs/NARRATIVE.md` and renders on GitHub click-through.
+- `docs/assets/system-overview.png` (439 KB) — same rationale.
+- `docs/assets/strict_mode_demo.gif` (904 KB) — only referenced by `docs/CONTRIBUTING.md` (non-reachable) and `docs/DEMOS.md` (non-reachable); zero live embeds. Operator-explicit callout for this one.
+- `docs/assets/strict_mode_demo.cast` (7 KB) — the cast source of the deleted GIF. No reason to keep a recording whose render is no longer shipped.
+
+### Doc edits to close the dangling references
+
+- `docs/CONTRIBUTING.md` § *Recording the Strict Mode demo* → **§ *Recording the hero demo***. Section rewritten to describe `scripts/demo_posture.sh` and the Cognitive Cascade. Recording commands updated to the v1.0 RC contract (`asciinema rec --cols 100 --rows 32 --idle-time-limit 2` + `agg --speed 0.8 --theme monokai`). Closing sentence preserves the fact that `demo_strict_mode.sh` is still runnable locally for the blocking-story audience, but its rendered GIF is no longer a shipped artifact.
+- `docs/DEMOS.md` § *② Posture as enforcement of the surface* GIF-link line replaced with a one-liner pointing readers at the local script (no shipped GIF). Recording block collapsed to just the Cognitive Cascade commands (the previous `strict_mode_demo.cast/.gif` block deleted). Trailing cross-ref anchor updated from `#recording-the-strict-mode-demo` → `#recording-the-hero-demo`.
+- `docs/PROGRESS.md` Event 24 (this entry).
+- `docs/NEXT_STEPS.md` and `docs/PLAN.md` aligned with the delete manifest.
+
+### Retained (audited, not deleted)
+
+- `docs/assets/demo_posture.{cast,gif}` — the one live embed; the cast is its regeneration source. KEEP.
+- `docs/assets/architecture_v2.svg` (40 KB) + `docs/assets/system-overview.svg` (23 KB) — both linked from `docs/NARRATIVE.md` which is itself reachable from README. Opening the links on GitHub renders the SVG inline via the raw.githubusercontent viewer. KEEP both.
+- `docs/assets/setup-demo.svg` (3 KB) — tiny; only referenced by `kernel/CHANGELOG.md` (immutable per historical-record policy). Deleting would orphan that archival link. KEEP.
+- `docs/assets/src/architecture_v2.dot` — source of the live `architecture_v2.svg`. KEEP.
+- `docs/assets/src/architecture_v2.tex` — DD #1 (Event 21): TikZ sibling preserved for on-demand LaTeX render. KEEP.
+- `scripts/demo_strict_mode.sh` — operator did not ask to remove the script itself; it's a runnable demo for the blocking audience. Its `.cast/.gif` went; the script stays.
+
+### Orphan-reference sweep after deletes
+
+`grep -nR '(architecture_v2\.png|system-overview\.png|strict_mode_demo)' **/*.md` returns only:
+- `docs/DESIGN_V0_11_COHERENCE_PASS.md:40,157` — archival v0.11 spec, immutable.
+- `docs/PLAN.md:156` — inside the `### 0.9.0-entry` closed-milestone block, immutable.
+- `docs/PROGRESS.md` historical Events 21/22/23 — immutable.
+
+**Zero live surfaces broken.**
+
+### Final `docs/assets/` inventory
+
+```
+architecture_v2.svg    40 KB   live link from NARRATIVE.md + ARCHITECTURE.md
+demo_posture.cast      26 KB   source of the one live GIF
+demo_posture.gif       1.9 MB  README.md:7 hero embed
+setup-demo.svg         3 KB    archival link target (kernel/CHANGELOG.md)
+system-overview.svg    23 KB   live link from NARRATIVE.md + handoff.md
+src/architecture_v2.dot        source of architecture_v2.svg
+src/architecture_v2.tex        TikZ sibling (DD #1 deferred sync)
+```
+
+Three SVGs · one GIF · one cast · two source files · 4.2 MB total (mostly the hero GIF). Every file now has a live reason to exist or a named deferred-sync entry protecting it.
+
+**Commit plan:** atomic cleanup, message subject `docs: prune unused assets (architecture_v2.png + system-overview.png + strict_mode_demo.{cast,gif}) + rewire CONTRIBUTING/DEMOS to hero demo`.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.
