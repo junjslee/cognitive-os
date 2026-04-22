@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1400" viewBox="0 0 1600 1400" role="img" aria-label="episteme — Figure 1. Structural stratification of the epistemic posture. Three strata — doxa (top), episteme (middle), praxis (bottom) — traversed by the grain (결 · gyeol) of epistemic discipline.">
-  <title>Figure 1 — structural stratification of the epistemic posture</title>
-  <desc>Arxiv-style figure. Three horizontal bands labeled DOXA, EPISTEME, PRAXIS. Doxa band lists nine named failure modes and the kernel artifacts that counter each. Episteme band holds the four principles, the seven kernel markdown files, and the runtime components grouped by role (texture of thought, texture of action, rationale, memory). Praxis band holds the four canonical artifacts and the four delivery adapters. An accent sync pill bridges episteme to praxis.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1520" viewBox="0 0 1600 1520" role="img" aria-label="episteme — Figure 1. Structural stratification of the epistemic posture (v1.0 RC). Three strata — doxa (top), episteme (middle), praxis (bottom) — traversed by the grain (결 · gyeol) of epistemic discipline. The episteme band now carries the three v1.0 RC pillars (blueprints · hash chain · framework synthesis) layered on the four v0.11 components.">
+  <title>Figure 1 — structural stratification of the epistemic posture (v1.0 RC)</title>
+  <desc>Arxiv-style figure. Three horizontal bands labeled DOXA, EPISTEME, PRAXIS. Doxa band lists nine named failure modes and the kernel artifacts that counter each (all counters shipped in v1.0 RC: CP5 Fence, CP8 cascade-theater verdict, CP10 Blueprint D). Episteme band holds the four principles, the seven kernel markdown files, the v0.11 runtime components grouped by role (texture of thought, texture of action, rationale, memory), and the v1.0 RC pillar row (Pillar 1 blueprints · Pillar 2 hash chain · Pillar 3 framework + active guidance). Praxis band holds the four canonical artifacts and the four delivery adapters. An accent sync pill bridges episteme to praxis.</desc>
 
   <defs>
     <style type="text/css"><![CDATA[
@@ -16,6 +16,7 @@
       .mode-title      { font: 600 12.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #1A1A1A; }
       .mode-gloss      { font: 400 11px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; }
       .mode-counter    { font: 400 italic 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #7A7A7A; }
+      .mode-shipped    { font: 600 italic 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #2C6E49; }
 
       .p-roman         { font: 400 28px ui-serif, Georgia, "Times New Roman", serif; fill: #1A1A1A; letter-spacing: 0.01em; }
       .p-title         { font: 600 13px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #1A1A1A; }
@@ -30,7 +31,13 @@
       .col-hdr         { font: 600 9px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; letter-spacing: 0.18em; }
       .comp-name       { font: 500 12px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #1A1A1A; }
       .comp-note       { font: 400 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #7A7A7A; }
-      .comp-pending    { font: 400 italic 12px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #9A9A9A; }
+      .comp-shipped    { font: 600 italic 11.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #2C6E49; }
+
+      .pillar-hdr      { font: 600 9px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #7A2E2A; letter-spacing: 0.18em; }
+      .pillar-id       { font: 600 11px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #7A2E2A; letter-spacing: 0.06em; }
+      .pillar-name     { font: 600 13px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #1A1A1A; }
+      .pillar-gloss    { font: 400 11px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; }
+      .pillar-ship     { font: 400 italic 10.5px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #2C6E49; }
 
       .art4-name       { font: 600 12px ui-monospace, "SF Mono", Menlo, Monaco, monospace; fill: #1A1A1A; letter-spacing: 0.01em; }
       .art4-gloss      { font: 400 11px ui-sans-serif, -apple-system, "Segoe UI", sans-serif; fill: #5C5C5C; }
@@ -49,6 +56,7 @@
       .rule-main       { stroke: #1A1A1A; stroke-width: 0.75; fill: none; }
       .rule-thin       { stroke: #1A1A1A; stroke-width: 0.5; stroke-opacity: 0.25; fill: none; }
       .rule-accent     { stroke: #7A2E2A; stroke-width: 1.25; fill: none; }
+      .rule-pillar     { stroke: #7A2E2A; stroke-width: 0.5; stroke-opacity: 0.4; fill: none; stroke-dasharray: 3 3; }
 
       .pill-fill       { fill: #7A2E2A; }
 
@@ -61,11 +69,11 @@
     </marker>
   </defs>
 
-  <rect width="1600" height="1400" fill="#FDFDFC"/>
+  <rect width="1600" height="1520" fill="#FDFDFC"/>
 
   <!-- ════════════════════ HEADER (y 60 – 150) ════════════════════ -->
   <text x="60"   y="85"  class="header-title">episteme — structural stratification of the epistemic posture</text>
-  <text x="1540" y="85"  class="header-sub end">v0.11 · an audit against the grain</text>
+  <text x="1540" y="85"  class="header-sub end">v1.0 RC · three pillars shipped · 565/565 green</text>
   <text x="60"   y="112" class="header-sub">Figure 1 · the doxa / episteme / praxis axis, traversed by the grain (결 · gyeol) · see docs/NARRATIVE.md</text>
   <line x1="60" y1="140" x2="1540" y2="140" class="rule-main"/>
 
@@ -114,29 +122,29 @@
     <text y="40" class="mode-counter">→ believability-weighting · calibrated unknowns</text>
   </g>
 
-  <!-- Row 3 · modes 07 / 08 / 09 (governance) -->
+  <!-- Row 3 · modes 07 / 08 / 09 (governance) — all counters shipped in v1.0 RC -->
   <g transform="translate(80,375)">
     <text class="mode-id">07</text>
     <text x="32" class="mode-title">Fence-Check</text>
     <text y="20" class="mode-gloss">constraint removed without reconstructing its reason</text>
-    <text y="40" class="mode-counter">→ fence-hook (pending, per NEXT_STEPS)</text>
+    <text y="40" class="mode-shipped">→ Blueprint B · Fence Reconstruction (CP5 · synthesis)</text>
   </g>
   <g transform="translate(600,375)">
     <text class="mode-id">08</text>
     <text x="32" class="mode-title">Goodhart · measure-as-target</text>
     <text y="20" class="mode-gloss">scorecard claim drifts from underlying reality over time</text>
-    <text y="40" class="mode-counter">→ profile-audit loop (phase 12 · pending)</text>
+    <text y="40" class="mode-shipped">→ Phase 12 shipped · Layer 8 cascade-theater verdict (CP8)</text>
   </g>
   <g transform="translate(1120,375)">
     <text class="mode-id">09</text>
     <text x="32" class="mode-title">Ashby · controller variety</text>
     <text y="20" class="mode-gloss">allow/deny sets &lt; action space; uncovered actions default-allowed</text>
-    <text y="40" class="mode-counter">→ escalate-on-uncovered (pending)</text>
+    <text y="40" class="mode-shipped">→ Blueprint D · architectural cascade (CP10)</text>
   </g>
 
-  <!-- ════════════════════ EPISTEME BAND (y 460 – 1050) ════════════════════ -->
+  <!-- ════════════════════ EPISTEME BAND (y 460 – 1160) ════════════════════ -->
   <text x="60"   y="480" class="band-label">EPISTEME · WHAT THE KERNEL DEMANDS</text>
-  <text x="1540" y="480" class="band-sub end">constitution · reasoning surface · memory architecture · four hooks</text>
+  <text x="1540" y="480" class="band-sub end">constitution · reasoning surface · memory · three pillars · ten hooks</text>
   <line x1="60" y1="498" x2="1540" y2="498" class="rule-main"/>
 
   <!-- ── Sub-section A · FOUR PRINCIPLES (y 520 – 660) ── -->
@@ -186,13 +194,13 @@
 
     <text x="80"   y="762" class="art-id">02</text>
     <text x="130"  y="762" class="art-title">Reasoning Surface</text>
-    <text x="320"  y="762" class="art-gloss">Core Question + Knowns / Unknowns / Assumptions / Disconfirmation · the grain of discipline</text>
+    <text x="320"  y="762" class="art-gloss">Core Question + Knowns / Unknowns / Assumptions / Disconfirmation · + BP-D six-field on cascade ops</text>
     <text x="1540" y="762" class="art-path end">kernel/REASONING_SURFACE.md</text>
     <line x1="60" y1="774" x2="1540" y2="774" class="rule-thin"/>
 
     <text x="80"   y="792" class="art-id">03</text>
     <text x="130"  y="792" class="art-title">Failure Modes</text>
-    <text x="320"  y="792" class="art-gloss">nine doxa-patterns · each paired with the artifact that counters it</text>
+    <text x="320"  y="792" class="art-gloss">nine doxa-patterns · each paired with the artifact that counters it (all shipped in v1.0 RC)</text>
     <text x="1540" y="792" class="art-path end">kernel/FAILURE_MODES.md</text>
     <line x1="60" y1="804" x2="1540" y2="804" class="rule-thin"/>
 
@@ -220,8 +228,8 @@
     <text x="1540" y="912" class="art-path end">kernel/REFERENCES.md</text>
   </g>
 
-  <!-- ── Sub-section C · COMPONENTS BY ROLE (y 940 – 1040) ── -->
-  <text x="60" y="946" class="section-label">COMPONENTS · TEXTURE OF THOUGHT · TEXTURE OF ACTION · RATIONALE · MEMORY</text>
+  <!-- ── Sub-section C · COMPONENTS BY ROLE (y 940 – 1070) ── -->
+  <text x="60" y="946" class="section-label">RUNTIME COMPONENTS · TEXTURE OF THOUGHT · TEXTURE OF ACTION · RATIONALE · MEMORY</text>
   <line x1="60" y1="960" x2="1540" y2="960" class="rule-thin"/>
 
   <g transform="translate(80,978)">
@@ -251,64 +259,89 @@
     <text y="38" class="comp-note">per-action records (phase 10)</text>
     <text y="60" class="comp-name">Semantic Promoter</text>
     <text y="78" class="comp-note">episodic → reflective proposals (phase 11)</text>
-    <text y="100" class="comp-pending">Profile-Audit Loop · phase 12 · pending</text>
+    <text y="100" class="comp-shipped">Profile-Audit Loop · phase 12 · shipped · chain_integrity gated</text>
   </g>
 
-  <!-- ════════════════════ SYNC BRIDGE (y 1055 – 1085) ════════════════════ -->
-  <rect x="720" y="1055" width="160" height="24" rx="2" class="pill-fill"/>
-  <text x="800" y="1071" class="pill-label center">episteme sync</text>
-  <line x1="800" y1="1080" x2="800" y2="1120" class="rule-accent" marker-end="url(#arr-accent)"/>
+  <!-- ── Sub-section D · v1.0 RC PILLARS (y 1085 – 1195) ── -->
+  <line x1="60" y1="1085" x2="1540" y2="1085" class="rule-pillar"/>
+  <text x="60" y="1105" class="pillar-hdr">v1.0 RC · THREE PILLARS · causal-consequence scaffolding · shipped CP1 – CP10</text>
 
-  <!-- ════════════════════ PRAXIS BAND (y 1130 – 1300) ════════════════════ -->
-  <text x="60"   y="1150" class="band-label">PRAXIS · WHAT LANDS</text>
-  <text x="1540" y="1150" class="band-sub end">four canonical artifacts · four delivery adapters</text>
-  <line x1="60" y1="1168" x2="1540" y2="1168" class="rule-main"/>
+  <g transform="translate(80,1130)">
+    <text class="pillar-id">P1</text>
+    <text x="42" class="pillar-name">Cognitive Blueprints</text>
+    <text x="42" y="20" class="pillar-gloss">Axiomatic · Fence · Consequence-Chain · Blueprint D · generic max-rigor fallback</text>
+    <text x="42" y="38" class="pillar-gloss">selector + 6-field BP-D validator + 4-trigger cascade detector</text>
+    <text x="42" y="56" class="pillar-ship">shipped · CP2 selector · CP5 Fence · CP10 Blueprint D</text>
+  </g>
+  <g transform="translate(600,1130)">
+    <text class="pillar-id">P2</text>
+    <text x="42" class="pillar-name">Append-Only Hash Chain</text>
+    <text x="42" y="20" class="pillar-gloss">cp7-chained-v1 envelope · SHA-256 · prev_hash linkage · fcntl.flock exclusive</text>
+    <text x="42" y="38" class="pillar-gloss">protocols.jsonl · deferred_discoveries.jsonl · pending_contracts</text>
+    <text x="42" y="56" class="pillar-ship">shipped · CP7 substrate · CP10 deferred-discovery writer</text>
+  </g>
+  <g transform="translate(1120,1130)">
+    <text class="pillar-id">P3</text>
+    <text x="42" class="pillar-name">Framework + Active Guidance</text>
+    <text x="42" y="20" class="pillar-gloss">PreToolUse framework query · one stderr advisory · never blocking</text>
+    <text x="42" y="38" class="pillar-gloss">episteme guide CLI · SessionStart digest · L8 spot-check CP8</text>
+    <text x="42" y="56" class="pillar-ship">shipped · CP5 first synth · CP8 spot-check · CP9 guidance</text>
+  </g>
 
-  <!-- ── Sub-section A · ADAPTERS (y 1180 – 1235) ── -->
-  <text x="60" y="1188" class="section-label">ADAPTERS · delivery surfaces · same kernel, ~50-line shim each</text>
-  <line x1="60" y1="1202" x2="1540" y2="1202" class="rule-thin"/>
+  <!-- ════════════════════ SYNC BRIDGE (y 1215 – 1245) ════════════════════ -->
+  <rect x="720" y="1215" width="160" height="24" rx="2" class="pill-fill"/>
+  <text x="800" y="1231" class="pill-label center">episteme sync</text>
+  <line x1="800" y1="1240" x2="800" y2="1280" class="rule-accent" marker-end="url(#arr-accent)"/>
 
-  <g transform="translate(80,1226)">
+  <!-- ════════════════════ PRAXIS BAND (y 1290 – 1460) ════════════════════ -->
+  <text x="60"   y="1310" class="band-label">PRAXIS · WHAT LANDS</text>
+  <text x="1540" y="1310" class="band-sub end">four canonical artifacts · four delivery adapters</text>
+  <line x1="60" y1="1328" x2="1540" y2="1328" class="rule-main"/>
+
+  <!-- ── Sub-section A · ADAPTERS (y 1340 – 1395) ── -->
+  <text x="60" y="1348" class="section-label">ADAPTERS · delivery surfaces · same kernel, ~50-line shim each</text>
+  <line x1="60" y1="1362" x2="1540" y2="1362" class="rule-thin"/>
+
+  <g transform="translate(80,1386)">
     <text class="adapter-name">Claude Code</text>
     <text y="16" class="adapter-sub">CLAUDE.md · safety hooks · personas</text>
   </g>
-  <g transform="translate(445,1226)">
+  <g transform="translate(445,1386)">
     <text class="adapter-name">Hermes</text>
     <text y="16" class="adapter-sub">OPERATOR.md · SOUL.md · native skills</text>
   </g>
-  <g transform="translate(810,1226)">
+  <g transform="translate(810,1386)">
     <text class="adapter-name">OMO · OMX</text>
     <text y="16" class="adapter-sub">shared governance · Claude-format settings</text>
   </g>
-  <g transform="translate(1175,1226)" class="adapter-future">
+  <g transform="translate(1175,1386)" class="adapter-future">
     <text class="adapter-name adapter-future" style="font-style:italic">Future runtimes</text>
     <text y="16" class="adapter-sub adapter-future">Codex · Cursor · opencode · MCP</text>
   </g>
 
-  <!-- ── Sub-section B · FOUR CANONICAL ARTIFACTS (y 1260 – 1310) ── -->
-  <text x="60" y="1270" class="section-label">FOUR CANONICAL ARTIFACTS · the visible form of the posture</text>
-  <line x1="60" y1="1284" x2="1540" y2="1284" class="rule-thin"/>
+  <!-- ── Sub-section B · FOUR CANONICAL ARTIFACTS (y 1420 – 1465) ── -->
+  <text x="60" y="1430" class="section-label">FOUR CANONICAL ARTIFACTS · the visible form of the posture</text>
+  <line x1="60" y1="1444" x2="1540" y2="1444" class="rule-thin"/>
 
-  <g transform="translate(80,1306)">
+  <g transform="translate(80,1466)">
     <text class="art4-name">reasoning-surface.json</text>
     <text y="16" class="art4-gloss">the posture entering the action</text>
   </g>
-  <g transform="translate(445,1306)">
+  <g transform="translate(445,1466)">
     <text class="art4-name">decision-trace.md</text>
     <text y="16" class="art4-gloss">options · because-chain · rejections</text>
   </g>
-  <g transform="translate(810,1306)">
+  <g transform="translate(810,1466)">
     <text class="art4-name">verification.md</text>
     <text y="16" class="art4-gloss">assumptions graded · disconfirmation checked</text>
   </g>
-  <g transform="translate(1175,1306)">
+  <g transform="translate(1175,1466)">
     <text class="art4-name">handoff.md</text>
     <text y="16" class="art4-gloss">shipped · pre-rejected · do-not-relitigate</text>
   </g>
 
-  <!-- ════════════════════ FIGURE CAPTION (y 1350 – 1400) ════════════════════ -->
-  <line x1="60" y1="1340" x2="1540" y2="1340" class="rule-main"/>
-  <text x="60" y="1362" class="fig-num">Figure 1.<tspan class="fig-title" dx="6">Structural stratification of the epistemic posture.</tspan></text>
-  <text x="60" y="1384" class="fig-caption">The three strata (<tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">doxa</tspan>, <tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">episteme</tspan>, <tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">praxis</tspan>) are traversed by the grain (<tspan class="fig-caption" style="font-style:italic;fill:#1A1A1A">결 · gyeol</tspan>) of epistemic discipline — settled → open → provisional → falsification-condition. Prose counterpart: <tspan class="art-path">docs/NARRATIVE.md</tspan>.</text>
+  <!-- ════════════════════ FIGURE CAPTION (y 1490 – 1520) ════════════════════ -->
+  <line x1="60" y1="1490" x2="1540" y2="1490" class="rule-main"/>
+  <text x="60" y="1509" class="fig-caption"><tspan class="fig-num">Figure 1.</tspan><tspan class="fig-title" dx="6">Structural stratification of the epistemic posture (v1.0 RC).</tspan><tspan dx="6">The three strata — <tspan style="font-style:italic;fill:#1A1A1A">doxa</tspan>, <tspan style="font-style:italic;fill:#1A1A1A">episteme</tspan>, <tspan style="font-style:italic;fill:#1A1A1A">praxis</tspan> — are traversed by the grain (<tspan style="font-style:italic;fill:#1A1A1A">결 · gyeol</tspan>) of epistemic discipline; the v1.0 RC pillar row layers onto the v0.11 components. Prose: <tspan class="art-path">docs/NARRATIVE.md</tspan>.</tspan></text>
 
 </svg>

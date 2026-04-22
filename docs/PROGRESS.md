@@ -970,6 +970,70 @@ Seven of seven elements landed:
 
 ---
 
+## Event 21 — 2026-04-22 — Visual coherence pass: ARCHITECTURE.md Mermaid + architecture_v2.svg + system-overview.svg rewritten to v1.0 RC shipped state
+
+Kernel-adjacent diagram drift closed. All three v0.11-era visual artifacts flipped to the shipped v1.0 RC reality (three pillars, four named blueprints + generic fallback, hash chain, framework query, Blueprint D cascade detector). Blueprint D fired on this session's first `ls core/hooks/` (as designed — kernel-adjacent cross-ref); a fresh Reasoning Surface with a full blast_radius_map was sealed before any diagram edits touched disk; the surface TTL expired mid-rasterization (exactly the v1.0 RC guard behavior) and was refreshed via a timestamp edit.
+
+### Delivery
+
+- **`docs/ARCHITECTURE.md`** — scope note dropped; title flipped from `v0.11.0 shipped · v1.0 RC in flight` to `v1.0 RC shipped · CP1–CP10 · 565/565 green`. Mermaid `graph TD` rebuilt with four subgraphs depicting the shipped state: ① Intention (Agent + Reasoning Surface + Doxa/Episteme), ② Hot Path with Pillar 1 + Layer stack + Blueprint D cascade detector + framework query advisory edge (`p95 < 100 ms`), ③ Praxis + Pillar 2 chain (writer + protocols.jsonl + deferred_discoveries.jsonl + pending_contracts), ④ Gyeol + Pillar 3 learning loop (Layer 8 spot-check + Phase 12 audit + episteme guide CLI). ~30 nodes, 9 classDefs (added `chainStyle` + `pillarStyle`). Node-annotation tables rebuilt with pillar/CP columns. Cross-references table expanded to name all ten post-CP1 hooks.
+- **`docs/assets/src/architecture_v2.dot`** — rewritten. Four rows inside the episteme cluster: Row 1 v0.11 hooks (guard · interceptor · telemetry), Row 2 Pillar 1 (selector · cascade detector · validator), Row 3 Pillar 2 (chain writer · protocols · deferred_discoveries · pending_contracts), Row 4 Pillar 3 (framework query · spot-check · phase 12 · guide CLI). Invisible down-edges lock row order. Within-band visible flows: `selector → validator`, `telemetry → chain`, `protocols -.-> framework_query`, `phase12 -.-> guard` (profile-axis rescore). Dashed tan v0.11 pending loop removed. New cross-band edge: `framework_query -.-> doxa_disp` as stderr advisory; `praxis_state -.-> chain` as hash-chained PostToolUse. Label on `doxa_env → guard` updated to `PreToolUse · cp7-chained-v1`.
+- **`docs/assets/architecture_v2.svg`** — regenerated via `dot -Tsvg docs/assets/src/architecture_v2.dot -o docs/assets/architecture_v2.svg`. 40 KB (up from the v0.11 render).
+- **`docs/assets/system-overview.svg`** — hand-edited rewrite. Five concrete flips against the v0.11 baseline:
+  1. Header version stamp: `v0.11 · an audit against the grain` → `v1.0 RC · three pillars shipped · 565/565 green`.
+  2. Failure-mode 07 counter: `→ fence-hook (pending, per NEXT_STEPS)` → `→ Blueprint B · Fence Reconstruction (CP5 · synthesis)` (new `.mode-shipped` green italic class).
+  3. Failure-mode 08 counter: `→ profile-audit loop (phase 12 · pending)` → `→ Phase 12 shipped · Layer 8 cascade-theater verdict (CP8)`.
+  4. Failure-mode 09 counter: `→ escalate-on-uncovered (pending)` → `→ Blueprint D · architectural cascade (CP10)`.
+  5. COMPONENTS MEMORY column: `Profile-Audit Loop · phase 12 · pending` → `Profile-Audit Loop · phase 12 · shipped · chain_integrity gated`.
+  New section D — **v1.0 RC · THREE PILLARS** (y 1085–1195) — three inline entries (P1 Blueprints / P2 Hash Chain / P3 Framework + Active Guidance) each with name, two-line gloss, and CP-indexed shipped stamp. Dashed pillar-accent separator rule. SYNC pill + PRAXIS band shifted down 160 px to accommodate (y 1055 → 1215; 1130 → 1290). SVG height 1400 → 1520; viewBox updated; `<desc>` expanded to name the pillar layer explicitly.
+- **`docs/assets/architecture_v2.png`** — rasterized via `rsvg-convert --dpi-x 144 --dpi-y 144 architecture_v2.svg -o architecture_v2.png`. 628 KB.
+- **`docs/assets/system-overview.png`** — rasterized identically. 439 KB.
+- **`README.md:57`** — stale line `Here is the loop (v1.0 RC, in flight — see ...)` → `Here is the loop (v1.0 RC shipped · CP1–CP10 · 565 / 565 green — see ...)`. Only real non-diagram orphan the grep sweep found.
+
+### Reasoning Surface · session discipline
+
+Wrote a fresh `.episteme/reasoning-surface.json` at session open — core_question naming the visual-coherence scope, hypothesis naming the minimum structural edit, 6 knowns, 3 unknowns (dot availability, system-overview's full 314-line layout, prose-adjacent cross-ref sweep), 3 assumptions, 4-part disconfirmation, full `blast_radius_map[]` enumerating all 13 touched / non-applicable surfaces (web/ unaffected; kernel/ unaffected; TeX source deferred; kernel SUMMARY deferred per Event 17 DD #3). Three new `deferred_discoveries[]` logged:
+1. TikZ/TeX sibling (`architecture_v2.tex`) not regenerated; will diverge from DOT source until hand-synced.
+2. kernel SUMMARY 30-line distillation still does not name Blueprint D (carried forward from Event 17 DD #3).
+3. README / web dashboard auto-pick up the regenerated PNGs by filename; no path edit needed, but commit-step verification is the check.
+
+### Smoke test
+
+- `dot -V` → `graphviz version 14.1.5 (20260411.2331)`; `rsvg-convert --version` → `2.62.1 (cairo 1.18.4)`.
+- `dot -Tsvg` produced a valid SVG (XML declaration + DOCTYPE present at head of output).
+- `rsvg-convert` produced valid PNGs (628 KB + 439 KB) on both files; no warnings.
+- Grep sweep across `**/*.md` for `(Phase 12|v1\.0 RC).{0,40}(pending|in flight)` returned only archival hits in `DESIGN_V0_11_*` specs + historical PROGRESS events (Events 7-pre) + `README.md:57` — the one non-archival hit, now flipped.
+- Blueprint D self-dogfood gate fired twice during the session and was satisfied both times: (a) initial `ls core/hooks/` blocked until the fresh surface landed; (b) mid-session rasterization blocked when the surface aged past the 30m TTL — both are exactly the Event-17-codified behavior.
+
+### Honest limits
+
+- **TikZ/TeX sibling (`architecture_v2.tex`) is not regenerated.** If a publication-quality PDF render is requested, the TeX source will diverge from the DOT until hand-synced. Logged as DD #1; not blocking because the web/ dashboard and README consume PNG, not PDF.
+- **The hand-edited system-overview.svg is not regenerated from a machine-readable source.** Future content edits hit the 400+ line SVG directly, same discipline the v0.11 coherence pass adopted.
+- **SYNC + PRAXIS coordinates shifted by 160 px.** Anyone reading the SVG in a diff tool will see a large apparent delta for coordinates that are visually unchanged downstream. The viewBox grew 1400 → 1520; the PNG dimensions reflect the new height.
+- **No kernel code touched.** RC soak gates unaffected.
+
+### Cross-surface sync (blast_radius_map closure)
+
+| surface | sync action | done? |
+|---|---|---|
+| docs/ARCHITECTURE.md | Mermaid rewrite + scope note drop + annotation tables rebuilt | ✓ |
+| docs/assets/src/architecture_v2.dot | DOT rewrite with four rows + v1.0 RC labels | ✓ |
+| docs/assets/architecture_v2.svg | regenerated via `dot -Tsvg` | ✓ |
+| docs/assets/architecture_v2.png | rasterized via `rsvg-convert` | ✓ |
+| docs/assets/system-overview.svg | header + 3 counters + COMPONENTS MEMORY + new PILLARS section | ✓ |
+| docs/assets/system-overview.png | rasterized via `rsvg-convert` | ✓ |
+| README.md:57 | one stale line flipped | ✓ |
+| docs/PROGRESS.md | Event 21 appended (this entry) | ✓ |
+| docs/NEXT_STEPS.md | visual-coherence TODO flipped off the list | ✓ |
+| docs/PLAN.md | visual-coherence row added to the GTM parallel-work-stream table | ✓ |
+| docs/assets/src/architecture_v2.tex | NOT regenerated — see DD #1 | deferred |
+| docs/NARRATIVE.md | references SVG paths (not content); auto-picks up new renders | not-applicable |
+| kernel/SUMMARY.md | carries Event 17 DD #3 (Blueprint D mention); not this pass | deferred |
+
+**Commit plan:** atomic commit for the visual coherence pass, message subject `docs(visual): v1.0 RC coherence — ARCHITECTURE.md + architecture_v2.svg + system-overview.svg + PNGs regenerated`.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.

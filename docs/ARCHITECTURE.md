@@ -1,8 +1,8 @@
-# Architecture — The Sovereign Kernel (v0.11.0 shipped · v1.0 RC in flight)
+# Architecture — The Sovereign Kernel (v1.0 RC shipped · CP1–CP10 · 565/565 green)
 
-> Mermaid flowchart. Renders natively on GitHub, Obsidian, and any CommonMark viewer with Mermaid support. Four subgraphs trace the full lifecycle from agent intention to calibrated cognitive evolution.
+> Mermaid flowchart. Renders natively on GitHub, Obsidian, and any CommonMark viewer with Mermaid support. Four subgraphs trace the full lifecycle from agent intention through the three-pillar kernel — Cognitive Blueprints, Append-Only Hash Chain, Framework Synthesis & Active Guidance — into praxis and the learning loop.
 >
-> **Scope note.** The diagram below depicts the **v0.11.0 shipped state** — stateful interceptor, calibration telemetry, episodic/semantic memory, profile-audit loop. The **v1.0 RC** cycle (spec: [`./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md), status *approved (reframed, third pass)* 2026-04-21) layers four additions onto this surface: Pillar 1 (blueprint selector + four named blueprints + generic fallback), Pillar 2 (append-only SHA-256 hash chain across episodic / pending-contracts / framework streams), Pillar 3 (framework synthesis + active guidance query + deferred-discovery log), and Blueprint D (Architectural Cascade & Escalation — the self-maintenance engine). Implementation proceeds across CP1–CP10; the diagram will be regenerated once the new nodes are live. Until then, the shipped v0.11 surface stands and the v1.0 RC additions are described in prose.
+> **State.** This diagram depicts the **v1.0 RC shipped state** (spec: [`./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`](./DESIGN_V1_0_SEMANTIC_GOVERNANCE.md), status *approved (reframed, third pass)* 2026-04-21). All ten RC checkpoints have shipped with paused-review-before-commit discipline; 565/565 tests green at HEAD. See [`./PROGRESS.md`](./PROGRESS.md) Events 7–17.
 
 ---
 
@@ -10,29 +10,39 @@
 graph TD
     subgraph SG1["① The Agentic Mind — Intention"]
         A["Agent\nGenerating intent for a high-impact op"]
-        B["Reasoning Surface\ncore_question · knowns · unknowns\nassumptions · disconfirmation"]
-        D["Doxa\nFluent hallucination\nnone / n/a / tbd / 해당 없음\n< 15 chars · missing fields · lazy inputs"]
-        E["Episteme\nJustified true belief\nconcrete knowns · named unknowns\ndisconfirmation ≥ 15 chars · no placeholders"]
+        B["Reasoning Surface\ncore_question · domain · hypothesis\nknowns · unknowns · assumptions\ndisconfirmation · (+ BP-D fields on cascade ops)"]
+        D["Doxa\nFluent hallucination\nnone / n/a / tbd · placeholders\n< 15 chars · missing fields · fluent-vacuous"]
+        E["Episteme\nJustified true belief\nconcrete knowns · named unknowns\ndisconfirmation ≥ 15 chars · verification_trace"]
     end
 
-    subgraph SG2["② The Sovereign Kernel — Interception"]
-        F["Stateful Interceptor\ncore/hooks/reasoning_surface_guard.py\nnormalises cmd text · deep-scans agent-written files\ncross-call stateful memory · catches subprocess bypass shapes"]
+    subgraph SG2["② The Sovereign Kernel — Hot Path · p95 < 100 ms"]
+        F["Scenario Detector + Blueprint Selector\ncore/hooks/_scenario_detector.py\nAxiomatic · Fence · Consequence Chain\nBlueprint D · generic fallback"]
+        FD["Cascade Detector\ncore/hooks/_cascade_detector.py\n4 triggers · self-escalation · sensitive-path\nrefactor+cross-ref · generated-artifact"]
+        FQ["Framework Query · Pillar 3\ncore/hooks/_guidance.py\n~/.episteme/framework/protocols.jsonl\none advisory per op · never blocks"]
+        L2["Layer 2 · classify\n_specificity.py\ntautological / unknown / absence"]
+        L3["Layer 3 · grounding\n_grounding.py\nentity extract + project grep · FP-averse"]
+        L4["Layer 4 · verification_trace\n_verification_trace.py\ncommand · dashboard · test · window"]
+        BPV["Blueprint Validator\n_blueprint_d.py · field contracts\n6-field BP-D check · Fence 5-field"]
         G["Hard Block · exit 2\nExecution denied\nAgent forced to re-author surface"]
         H["PASS · exit 0\nPrecondition satisfied\nExecution admitted to Praxis"]
     end
 
-    subgraph SG3["③ Praxis & Reality — Execution"]
-        I["Tool Execution\ngit push · bash script.sh · npm publish\nterraform apply · DB migrations · lockfile edits"]
-        J["Observed Outcome\ncore/hooks/calibration_telemetry.py\nexit_code 0 or non-zero · stderr captured"]
+    subgraph SG3["③ Praxis + Hash Chain — Pillar 2"]
+        I["Tool Execution\ngit push · bash · npm publish\nterraform apply · DB migrations"]
+        J["Observed Outcome\n_calibration_telemetry.py\nexit_code · stderr · duration"]
+        CH["Chain Writer\n_chain.py · cp7-chained-v1 envelope\nSHA-256 · prev_hash linkage · fcntl.flock"]
+        PR["protocols.jsonl\nPillar 3 synthesis records\nFence · CP5 first producer"]
+        DD["deferred_discoveries.jsonl\nBlueprint D adjacent-gap log\nhash-chained at PreToolUse"]
+        PC["pending_contracts\nLayer 6 write · 72h grace\n_pending_contracts.py"]
     end
 
-    subgraph SG4["④ 결 · Gyeol — Cognitive Texture & Evolution"]
-        K["Prediction Record\ncorrelation_id stamped at PASS\n~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl"]
-        L["Outcome Record\ncorrelation_id · exit_code · stderr\n~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl"]
-        M["episteme evolve friction\nsrc/episteme/cli.py · _evolve_friction\npairs prediction ↔ outcome by correlation_id\nranks under-named unknowns · flags exit_code ≠ 0"]
-        N["결 · Gyeol\nRefined cognitive grain\nfriction hotspots · calibrated profile axes\nlast_elicited timestamps advanced"]
-        O["Operator Profile\ncore/memory/global/operator_profile.md\nconfidence rescored · axis values updated"]
-        P["kernel/CONSTITUTION.md\nFour principles recalibrated\nfailure-mode counters sharpened"]
+    subgraph SG4["④ 결 · Gyeol — Learning Loop · Pillar 3 + Phase 12"]
+        SC["Layer 8 · spot-check sampling\n_spot_check.py · 10% → 5% at 30d\nBP-D resolutions 2× · episteme review CLI"]
+        PH12["Phase 12 Audit\n_profile_audit.py\nchain_integrity gated · per-stream verdicts\nfriction-weighted axis rescoring"]
+        N["결 · Gyeol\nRefined cognitive grain\nfriction hotspots · calibrated axes"]
+        O["Operator Profile\nkernel/OPERATOR_PROFILE_SCHEMA.md\n6 process + 9 cognitive-style axes"]
+        P["kernel/CONSTITUTION.md\nFour principles\nnine failure-mode counters"]
+        GD["episteme guide CLI\nSessionStart digest\nN protocols · M deferred pending"]
     end
 
     A --> B
@@ -40,20 +50,34 @@ graph TD
     B --> E
     D --> F
     E --> F
-    F --> G
-    F --> H
+    F --> FD
+    F --> FQ
+    FQ -.->|"stderr advisory\nnever blocks"| H
+    F --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> BPV
+    FD --> BPV
+    BPV --> G
+    BPV --> H
     G -.->|"cognitive retry"| A
     H --> I
     I --> J
-    E -.->|"correlation_id stamped at PASS"| K
-    J --> L
-    K --> M
-    L --> M
-    M --> N
+    H -->|"pending contract"| PC
+    J --> CH
+    CH --> PR
+    CH --> DD
+    PR --> SC
+    DD --> SC
+    SC --> PH12
+    PH12 --> N
     N --> O
     N --> P
     O -.->|"posture loop closed"| A
     P -.->|"posture loop closed"| A
+    PR -.->|"next-cycle query"| FQ
+    DD -.->|"deferred surface"| GD
+    GD -.->|"active guidance"| A
 
     classDef doxaStyle fill:#c0392b,stroke:#922b21,color:#fff
     classDef episteStyle fill:#1e8449,stroke:#145a32,color:#fff
@@ -61,14 +85,18 @@ graph TD
     classDef praxisStyle fill:#2ecc71,stroke:#27ae60,color:#000
     classDef gyeolStyle fill:#1a5276,stroke:#154360,color:#fff
     classDef kernelStyle fill:#6c3483,stroke:#512e5f,color:#fff
+    classDef chainStyle fill:#2471a3,stroke:#1a5276,color:#fff
+    classDef pillarStyle fill:#884ea0,stroke:#6c3483,color:#fff
     classDef neutralStyle fill:#2c3e50,stroke:#1a252f,color:#fff
 
     class D,G doxaStyle
     class E episteStyle
     class H,I passStyle
     class J praxisStyle
-    class K,L,M,N,O,P gyeolStyle
-    class F kernelStyle
+    class N,O,P gyeolStyle
+    class F,FD,BPV,L2,L3,L4 kernelStyle
+    class FQ,SC,PH12,GD pillarStyle
+    class CH,PR,DD,PC chainStyle
     class A,B neutralStyle
 ```
 
@@ -80,38 +108,47 @@ graph TD
 
 | Node | Role | Key constraint |
 |------|------|----------------|
-| **Agent** | LLM generating a tool-call intent for a high-impact op | Any `git push`, `npm publish`, `terraform apply`, DB migration, or lockfile edit triggers the guard |
-| **Reasoning Surface** | Structured precondition: `core_question`, `knowns`, `unknowns`, `assumptions`, `disconfirmation` | Defined in `kernel/REASONING_SURFACE.md` |
-| **Doxa** | Default LLM output — fluent but unvalidated | Fails if any field is a lazy placeholder (`none`, `n/a`, `tbd`, `해당 없음`) or < 15 chars |
-| **Episteme** | Validated surface — concrete, falsifiable | All four fields filled, no placeholders, `disconfirmation` ≥ 15 chars |
+| **Agent** | LLM generating a tool-call intent for a high-impact op | Any `git push`, `npm publish`, `terraform apply`, DB migration, lockfile edit, or architectural cascade triggers the guard |
+| **Reasoning Surface** | Structured precondition: `core_question`, `domain`, `hypothesis`, `knowns`, `unknowns`, `assumptions`, `disconfirmation`. Cascade ops additionally require Blueprint D's six fields (`flaw_classification`, `posture_selected`, `patch_vs_refactor_evaluation`, `blast_radius_map`, `sync_plan`, `deferred_discoveries`) | Defined in `kernel/REASONING_SURFACE.md` |
+| **Doxa** | Default LLM output — fluent but unvalidated | Fails on lazy placeholders (`none`, `n/a`, `tbd`), `< 15 chars`, fluent-vacuous patterns |
+| **Episteme** | Validated surface — concrete, falsifiable, grounded, verifiable | All required fields filled, no placeholders, `disconfirmation ≥ 15 chars`, `verification_trace` attached on high-impact ops |
 
-### ② The Sovereign Kernel — Interception
+### ② The Sovereign Kernel — Hot Path
 
-| Node | Implementation | Mechanism |
-|------|---------------|-----------|
-| **Stateful Interceptor** | `core/hooks/reasoning_surface_guard.py` (614 lines) | Normalises command text before pattern-matching (catches `subprocess.run(['git','push'])` and `os.system('git push')` bypass shapes); performs deep-scan of recently agent-written files to defeat variable-indirection bypasses; maintains cross-call memory |
-| **Hard Block** | exit 2 | PreToolUse hook returns non-zero; Claude Code denies execution and presents the block message; agent must re-author surface |
-| **PASS** | exit 0 | Surface validated; execution proceeds to Praxis; `correlation_id` stamped into the prediction record at this boundary |
+| Node | Implementation | Pillar | CP |
+|------|---------------|--------|----|
+| **Scenario Detector + Blueprint Selector** | `core/hooks/_scenario_detector.py` · `core/blueprints/*.yaml` | 1 | CP2 |
+| **Cascade Detector** | `core/hooks/_cascade_detector.py` — four triggers (self-escalation, sensitive-path, refactor-lexicon + cross-ref ≥ 2, generated-artifact). Kernel-state-file exemption learned from live dogfood | 1 (Blueprint D) | CP10 |
+| **Framework Query** | `core/hooks/_guidance.py` — reads `~/.episteme/framework/protocols.jsonl`, renders one stderr advisory per op; never blocking | 3 | CP9 |
+| **Layer 2 · classify** | `core/hooks/_specificity.py` — syntactic `tautological` / `unknown` / `absence` classifier, blueprint-aware | — | CP1/CP3 |
+| **Layer 3 · grounding** | `core/hooks/_grounding.py` — regex entity extraction + project grep, FP-averse gate | — | CP4 |
+| **Layer 4 · verification_trace** | `core/hooks/_verification_trace.py` — command · dashboard · test · window schema; blocking on generic high-impact, advisory on A/C/D stubs | — | CP6 |
+| **Blueprint Validator** | `core/hooks/_blueprint_d.py` (six-field check) · `_fence_reconstruction` (five-field check). Cascade theater + `other` admit with stderr hint | 1 | CP5/CP10 |
+| **Hard Block / PASS** | `exit 2` denies; `exit 0` stamps `correlation_id`, admits to Praxis | — | — |
 
-Advisory mode (warn-don't-block) is opt-in per-project: `touch .episteme/advisory-surface`.
+Advisory mode opt-in per-project: `touch .episteme/advisory-surface`.
 
-### ③ Praxis & Reality — Execution
-
-| Node | Implementation |
-|------|---------------|
-| **Tool Execution** | The actual shell command admitted to the runtime — `git push`, `bash script.sh`, `npm publish`, `terraform apply`, DB migrations, lockfile edits |
-| **Observed Outcome** | `core/hooks/calibration_telemetry.py` fires as a PostToolUse hook; captures `exit_code`, `stderr`, and duration; writes the outcome record with the same `correlation_id` used in the prediction record |
-
-### ④ 결 · Gyeol — Cognitive Texture & Evolution
+### ③ Praxis + Hash Chain — Pillar 2
 
 | Node | Implementation | Detail |
 |------|---------------|--------|
-| **Prediction Record** | `~/.episteme/telemetry/YYYY-MM-DD-audit.jsonl` | Written by `reasoning_surface_guard.py` at PASS; contains `correlation_id`, surface snapshot, timestamp |
-| **Outcome Record** | Same JSONL file | Written by `calibration_telemetry.py` PostToolUse; contains same `correlation_id`, `exit_code`, `stderr` |
-| **episteme evolve friction** | `src/episteme/cli.py` · `_evolve_friction()` | Pairs prediction ↔ outcome records by `correlation_id`; identifies unknowns the operator repeatedly under-names; flags `exit_code ≠ 0` for surface fields that failed to anticipate failure |
-| **결 · Gyeol** | Derived calibration signal | Refined cognitive grain: per-field friction scores, operator-profile axis drift signals, failure-mode firing frequencies |
-| **Operator Profile** | `core/memory/global/operator_profile.md` | Axis values updated; `last_elicited` timestamps advanced; `confidence` fields rescored from `inferred` → `elicited` where evidence accumulates |
-| **CONSTITUTION.md** | `kernel/CONSTITUTION.md` | Four principles and nine failure-mode counters recalibrated against observed friction — the kernel document that governs all future Agent mind states |
+| **Tool Execution** | Admitted shell command — `git push`, `npm publish`, `terraform apply`, DB migrations, kernel-adjacent edits |
+| **Observed Outcome** | `core/hooks/calibration_telemetry.py` PostToolUse — `exit_code`, `stderr`, duration; `correlation_id` echoed from PASS |
+| **Chain Writer** | `core/hooks/_chain.py` — `cp7-chained-v1` envelope (`schema_version`, `ts`, `prev_hash`, `payload`, `entry_hash`); SHA-256 linkage; `fcntl.flock` exclusive; genesis sentinel `sha256:GENESIS` |
+| **`protocols.jsonl`** | `~/.episteme/framework/protocols.jsonl` — Pillar 3 synthesis records; Fence Reconstruction is the first producer (CP5); Axiomatic + Blueprint D write here in v1.0.1 |
+| **`deferred_discoveries.jsonl`** | `~/.episteme/framework/deferred_discoveries.jsonl` — Blueprint D adjacent-gap log; every Blueprint D firing's `deferred_discoveries[]` entries hash-chained at PreToolUse (CP10) |
+| **`pending_contracts`** | `core/hooks/_pending_contracts.py` — Layer 6 write; 72h grace archive; idempotent re-write (CP7) |
+
+### ④ 결 · Gyeol — Learning Loop
+
+| Node | Implementation | Detail |
+|------|---------------|--------|
+| **Layer 8 · spot-check sampling** | `core/hooks/_spot_check.py` — 10% → 5% at 30 days; blueprint-fired ops at 2×; Blueprint D resolutions at 2× with a `cascade-theater vs real sync` verdict; `episteme review` CLI (CP8) |
+| **Phase 12 Audit** | `src/episteme/_profile_audit.py` — `chain_integrity` precondition per stream (episodic + protocols + deferred_discoveries + pending contracts); friction-weighted axis rescoring |
+| **결 · Gyeol** | Derived calibration signal — per-field friction, axis drift, failure-mode frequencies |
+| **Operator Profile** | `kernel/OPERATOR_PROFILE_SCHEMA.md` — 6 process axes + 9 cognitive-style axes; per-axis metadata |
+| **CONSTITUTION.md** | `kernel/CONSTITUTION.md` — four principles; nine failure-mode counters recalibrated from observed friction |
+| **`episteme guide` CLI** | `src/episteme/cli.py` — `guide [--context] [--since] [--deferred] [--json]`; SessionStart digest banner: `N protocols since last session · M deferred discoveries pending` (CP9) |
 
 ---
 
@@ -121,31 +158,53 @@ Advisory mode (warn-don't-block) is opt-in per-project: `touch .episteme/advisor
 |--------|---------|
 | Red | Doxa — unvalidated output, or Hard Block — execution denied |
 | Green | Episteme / Praxis — validated surface or admitted execution |
-| Blue | Gyeol — calibration telemetry and cognitive evolution |
-| Purple | Sovereign Kernel — the stateful interceptor |
+| Purple (dark) | Sovereign Kernel — selectors, layers, validators |
+| Purple (light) | Pillar 3 — framework query, spot-check, phase 12, active guidance |
+| Blue (dark) | Pillar 2 — chain writer, protocols stream, deferred-discoveries stream, pending contracts |
+| Blue (medium) | Gyeol — operator profile, constitution, learning feedback |
 | Dark grey | Neutral infrastructure — Agent and Reasoning Surface |
 
 ---
 
-## The feedforward contract
+## The feedforward contract (v1.0 RC)
 
 ```
-Preconditions  →  core_question + knowns + unknowns + disconfirmation (all concrete)
-Postconditions →  Observed Outcome paired with Prediction by correlation_id
-Invariants     →  kernel/CONSTITUTION.md — cannot be suspended per-cycle
+Preconditions  →  Reasoning Surface (core_question + knowns + unknowns +
+                  disconfirmation + verification_trace; Blueprint D adds
+                  the six cascade fields when the cascade detector fires)
+Hot path       →  Scenario Detector → Blueprint Selector → Framework Query
+                  (advisory) → Layer 2 → Layer 3 → Layer 4 → Blueprint
+                  Validator. p95 < 100 ms. BYOS — skill- / tool- / MCP-
+                  agnostic.
+Chain          →  PASS stamps correlation_id; PostToolUse writes Observed
+                  Outcome; Pillar 2 chain envelopes land under
+                  ~/.episteme/framework/; any break fails-closed on
+                  session boot.
+Postconditions →  Layer 8 spot-check (10% → 5%); Phase 12 audit with
+                  chain_integrity precondition.
+Feedback       →  Pillar 3 protocols query on the next matching op;
+                  episteme guide surfaces active guidance; SessionStart
+                  digest reports synthesis + deferred counts.
+Invariants     →  kernel/CONSTITUTION.md — cannot be suspended per-cycle.
 ```
 
-Nothing executes until preconditions hold. Nothing evolves until postconditions are verified. The kernel's four principles are invariants — not guidelines. This is Design by Contract (Bertrand Meyer) applied to agent cognition.
+Nothing executes until preconditions hold. Nothing evolves until postconditions are verified. Nothing is trusted after a chain break. The kernel's four principles are invariants — not guidelines. Design by Contract (Bertrand Meyer) applied to agent cognition, with three pillars layered on top: Blueprints force causal-consequence modeling per action; the Chain gives tamper-evident memory; Framework Synthesis + Active Guidance extracts context-fit protocols and pushes them back at the next decision.
 
 ---
 
 ## Cross-references
 
-- Stateful Interceptor: `core/hooks/reasoning_surface_guard.py`
-- Calibration Telemetry: `core/hooks/calibration_telemetry.py`
-- CLI friction analysis: `src/episteme/cli.py` · `_evolve_friction()`
-- Operator Profile schema: `kernel/OPERATOR_PROFILE_SCHEMA.md`
+- Hot-path hooks: `core/hooks/reasoning_surface_guard.py` · `_scenario_detector.py` · `_specificity.py` · `_grounding.py` · `_verification_trace.py` · `_cascade_detector.py` · `_blueprint_d.py`
+- Pillar 2 substrate: `core/hooks/_chain.py` · `_pending_contracts.py` · `_framework.py`
+- Pillar 3 substrate: `core/hooks/_framework.py` (protocols + deferred_discoveries streams) · `core/hooks/_guidance.py` · `core/hooks/_context_signature.py`
+- Calibration telemetry: `core/hooks/calibration_telemetry.py`
+- Spot-check: `core/hooks/_spot_check.py` · `episteme review` CLI
+- Phase 12 audit: `src/episteme/_profile_audit.py`
+- Active guidance CLI: `src/episteme/cli.py` · `episteme guide`
+- Operator profile schema: `kernel/OPERATOR_PROFILE_SCHEMA.md`
 - Kernel constitution: `kernel/CONSTITUTION.md`
 - Failure modes: `kernel/FAILURE_MODES.md`
 - Reasoning Surface protocol: `kernel/REASONING_SURFACE.md`
+- Memory architecture: `kernel/MEMORY_ARCHITECTURE.md`
 - Narrative spine (doxa / episteme / praxis / 결): `docs/NARRATIVE.md`
+- v1.0 RC spec: `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`
