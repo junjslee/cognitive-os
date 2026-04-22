@@ -964,8 +964,57 @@ def _write_prediction(
     _write_telemetry(record)
 
 
-def _surface_template() -> str:
+def _advisory_footer() -> str:
+    """Phase A · v1.0.1 — render an operator-posture advisory block from
+    derived knobs. Silent when no knobs are set.
+
+    Closes the Q1 "knobs computed but not consumed" gap for two axes:
+
+    - ``preferred_lens_order`` (Munger latticework — cognitive.dominant_lens
+      verbatim from the operator profile) becomes a Frame-stage hint the
+      operator sees when they are about to author a surface, so the lens
+      discipline is visible at the exact moment the Reasoning Surface is
+      being composed.
+    - ``explanation_form`` (cognitive.explanation_depth) becomes a framing
+      hint about the kind of Knowns / Assumptions prose the operator
+      prefers (e.g. causal-chain over pattern-analogy).
+
+    Advisory-only — never changes the hook's exit code or the block/pass
+    decision. The footer only appears inside the block/advisory message
+    shown to the operator after Layer 1-4 has ALREADY determined the
+    surface is incomplete or missing.
+
+    Kernel anchor: `kernel/OPERATOR_PROFILE_SCHEMA.md` § 5 (derived knobs);
+    `docs/PROGRESS.md` Event 25 (Phase A scope).
+    """
+    lines: list[str] = []
+
+    lens_order = _load_derived_knob("preferred_lens_order", None)
+    if isinstance(lens_order, list) and lens_order:
+        cleaned = [str(x) for x in lens_order if isinstance(x, str) and x]
+        if cleaned:
+            lines.append(
+                "Operator lens order (apply to Unknowns / Disconfirmation): "
+                + " → ".join(cleaned[:5])
+            )
+
+    explanation = _load_derived_knob("explanation_form", None)
+    if isinstance(explanation, str) and explanation:
+        lines.append(
+            f"Explanation depth: {explanation} — prefer mechanisms over "
+            f"pattern analogies in Knowns / Assumptions."
+        )
+
+    if not lines:
+        return ""
     return (
+        "\n--- Operator posture (from derived knobs) ---\n"
+        + "\n".join(lines) + "\n"
+    )
+
+
+def _surface_template() -> str:
+    base = (
         "Write .episteme/reasoning-surface.json with:\n"
         "{\n"
         '  "timestamp": "<ISO-8601 UTC>",\n'
@@ -977,6 +1026,7 @@ def _surface_template() -> str:
         "}\n"
         "Lazy values (none, n/a, tbd, 해당 없음, 없음, ...) are rejected."
     )
+    return base + _advisory_footer()
 
 
 def main() -> int:
