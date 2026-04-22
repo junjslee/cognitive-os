@@ -463,6 +463,20 @@ level 1 (association), Pearl is the sharpest available lens.
 | Intervention (do-operator)            | "small reversible action closes a feedback loop"            |
 | Counterfactual reasoning              | "disconfirmation — what evidence would prove this wrong"    |
 
+**v1.0 RC implementation note — honest translation.** The kernel does not
+construct causal graphs or run do-calculus at the hook layer. Level 3
+(counterfactual) is enforced via pattern-match proxies that are testable
+inside the 100 ms hot-path budget: the Blueprint D cascade detector
+(cross-surface-ref diff + refactor/rename lexicon + generated-artifact
+symbol-reference check + self-escalation trigger), the Fence
+Reconstruction `removal_consequence_prediction` + `rollback_path` smoke
+test, and the Layer 4 `verification_trace` with `threshold_observable`.
+These are *proxies for* counterfactual reasoning, not direct causal
+verification. Direct causal-graph construction is out of RC scope; the
+proxy set is the RC-shaped approximation. If a future blueprint requires
+structural causal modeling beyond what patterns can catch, that is a
+governance event, not an implementation tweak.
+
 ---
 
 ## Bounded rationality
