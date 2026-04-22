@@ -599,6 +599,101 @@ Four forms:
 
 ---
 
+## Event 16 — 2026-04-21 — CP9 shipped: Pillar 3 active guidance surface + `episteme guide` CLI
+
+The payoff for CP5. The first synthesis output written by Fence Reconstruction at CP5, chained at CP7, sampled at CP8 — CP9 is where it becomes **visible to the operator at the next matching decision**. Without this module Pillar 3 is write-only memory with zero retrieval value. Tests: **528/528 passing** (+26 on top of the 502 CP8 baseline; zero regressions).
+
+### Query pipeline (`core/hooks/_guidance.py`)
+
+On every admitted op that reaches the Layer 2 → Layer 3 transition:
+
+1. **Build candidate signature.** `_context_signature.build(cwd, blueprint_name, op_class)` produces the conservative six-field dict.
+2. **Load project-scoped protocols.** `_framework.list_protocols(project_name=candidate.project_name)` via a verified chain walk. Warm cache keyed on `(cwd, protocols_path_mtime)` — invalidates on file change.
+3. **Build vapor-verdict filter.** Walk CP8's `spot_check_queue.jsonl` once; collect `{correlation_id : latest_surface_validity}`; skip any protocol whose cid maps to `"vapor"`. This closes the Doxa-reinforcement vector — an operator's own signal of "this protocol was garbage" suppresses it from future guidance immediately.
+4. **Rank.** For each candidate protocol, `field_overlap(candidate, stored)` returns 0..6. Filter to `overlap >= min_overlap` (default 4/6 per CP9 plan; per-project override at `<cwd>/.episteme/guidance_min_overlap`, clamped to [0, 6]).
+5. **Sort.** `(overlap desc, ts desc)` — newer synthesis wins ties.
+6. **Return top.** `GuidanceMatch(protocol_payload, overlap, synthesized_at, correlation_id)` or `None`.
+
+### Advisory format (one stderr write per op)
+
+Two physical lines:
+
+```
+[episteme guide] <ts-date> · <blueprint> · overlap=<N>/6 · cid=<12-char-prefix>
+  Protocol: <synthesized_protocol, truncated at 180 chars>
+```
+
+Silent when the query returns `None`. The 12-char `cid` prefix (first 12 chars of the source protocol's correlation_id) lets the operator grep `~/.episteme/framework/protocols.jsonl` for the full record without bloating the advisory. Bounded body length prevents runaway stderr output from overgrown protocol text.
+
+### Hot-path placement
+
+In `reasoning_surface_guard.py::main()`, **after** scenario detection (`blueprint_name = _detect_scenario(...)`) and **before** Layer 3 blueprint enforcement (`_layer3_ground_blueprint_fields`). Per spec § Pillar 3. The advisory fires whether or not Layer 3+ subsequently rejects the op — the operator sees prior-synthesis guidance on blocked ops too, which is useful (they see what prior context-matched protocols had learned even when the current surface gets refused).
+
+The scenario-detection call is extracted into its own try/except so a guidance-query failure can't mask a scenario-detection failure. Both report stderr fallback messages with honest `Layers 1-4 still enforced` guarantees.
+
+### Project scope (CP9 conservative default)
+
+`list_protocols(project_name=candidate.project_name)` filters at the framework read layer. Protocols synthesized in project A **do not surface** in project B, even if they'd hit 4/6 overlap on the remaining fields. Rationale: tacit operator knowledge is project-specific; cross-project matches are suspicious. Post-soak v1.0.1 revisits if real cross-project signal accumulates.
+
+### Verdict filter (CP9 plan Q1 — shipped at CP9, not deferred)
+
+A protocol surfaces as guidance at most once if its first verdict is `useful`/`vague`/`overfit`. On `vapor`, it's suppressed from all subsequent guidance queries. Small code addition (~15 lines); closes the most obvious Doxa-reinforcement path.
+
+The filter degrades OPEN on spot-check read errors — better to guide too much than to hide prior synthesis because the spot-check chain is unavailable. Same graceful-degrade posture as CP7 chain verification.
+
+### Min-overlap override (CP9 plan Q2)
+
+Per-project file at `<cwd>/.episteme/guidance_min_overlap` — single integer line, clamped to [0, 6]. Parses silently; malformed file falls back to default. Consistent with CP8's `spot_check_rate` override pattern.
+
+Ship default = 4/6 as a conservative anchor. Soak-period tuning informs v1.0.1's default revision.
+
+### SessionStart digest (CP9 plan Q6 — "N since last / T total" format)
+
+`core/hooks/session_context.py` extended with:
+
+- `_framework_digest_line()` — emits `"framework: N protocols synthesized since last session (T total), M deferred discoveries pending"`. Silent when both N and M are zero.
+- `_last_session_ts()` / `_write_last_session_ts(ts)` — reads/writes `~/.episteme/state/last_session.json` (`{"last_session_ts": "..."}`).
+- At the END of `main()`, writes the current ts so the NEXT SessionStart's "since last" window starts here.
+
+First session (no marker file) treats `since_last = total`. Subsequent sessions walk protocols and count `ts > last_session_ts`.
+
+### `episteme guide` CLI (CP9 plan Q4 — strict ISO-8601 at RC)
+
+Four forms at RC (read-path only; write path lands v1.0.1):
+
+- `episteme guide` — dumps all verified protocols, newest first. Shows context_signature, synthesized_protocol, correlation_id.
+- `episteme guide --context <keyword>` — case-insensitive substring filter against `synthesized_protocol` and context_signature dict values.
+- `episteme guide --since <ISO-DATE>` — strict ISO-8601 (`2026-04-21` or `2026-04-21T12:00:00Z`). Non-ISO input rejected with exit 2. Friendly forms (`7d ago`, `last week`) deferred to v1.0.1 per plan Q4.
+- `episteme guide --deferred` — pending `deferred_discoveries` entries (CP10 populates; CP9 ships the read path).
+- `episteme guide --json` — structured output for scripting.
+
+### Honest CP9 limits (tested explicitly, not latent)
+
+- **Zero protocols on disk means zero advisories in practice.** CP5's synthesis writer has not fired on a real exit-zero PostToolUse yet (the CP5 dogfood tripped its own selector). CP9 ships the fire mechanism; the first real guidance advisory fires when the first real Fence synthesis lands. Test coverage exercises the full query+advisory pipeline on synthetic protocols.
+- **No per-record-since-break filter in CP9.** A chain break in `protocols.jsonl` silences guidance entirely for that stream (iter_records stops at break). That's conservative — better to withhold advice than surface possibly-tampered advice. v1.0.1's per-record "unverifiable due to chain break" filter extends this granularity.
+- **Verdict filter only reads the latest verdict per correlation_id.** If an operator revised a `vapor` verdict to `useful` via `episteme review --revise`, the protocol re-appears in guidance. That's the intended revision semantics — but it means verdict history doesn't cumulatively weigh against a protocol.
+- **Cross-project suppression is absolute in CP9.** No knob to surface cross-project protocols even when highly matched. A v1.0.1 `--cross-project` flag or a per-project opt-in file could loosen this after soak.
+- **Advisory format is stderr-only.** No structured channel (JSON over some MCP surface) for programmatic agent consumption. The stderr channel matches Claude Code's advisory-context rendering today.
+- **Warm cache is process-local.** Long-running processes see fresh data on file change (mtime invalidation), but concurrent processes each maintain their own cache. Acceptable at RC — single-operator workflows dominate.
+
+### What did NOT happen
+
+- No Blueprint D selector / cascade detector (CP10).
+- No v1.0.1 authoring path (`episteme guide --revise`, `--retire`).
+- No per-record chain-break filter for Phase 12 audit.
+- No friendly date grammar for `--since`.
+- No programmatic JSON advisory channel for agent consumption (stderr only).
+
+### Honest open questions carrying into CP10
+
+- Whether CP10's Blueprint D `deferred_discoveries[]` entries surfaced via `episteme guide --deferred` need a different ranking than reverse-chronological (e.g., by `flaw_classification` frequency, or by aging). Spec § Blueprint D suggests Phase 12 audits deferred-discovery aging; CP10 + Phase 12 extensions can inform.
+- Whether the four Blueprint D selector triggers (cross-surface-ref diff / refactor lexicon / self-escalation / generated-artifact symbol reference) fire on the right cross-section of real cascades. First honest probe: CP10 self-dogfood — the kernel editing itself must fire Blueprint D at least once.
+- Whether CP9's guidance advisory budget (one per op) should relax to multiple when several protocols match strongly. CP9 ships single-advisory; if soak shows operators missing useful secondary matches, v1.0.1 revisits.
+
+**Commit plan:** one atomic commit for CP9, message subject `feat(v1.0-rc): CP9 Pillar 3 active guidance surface + episteme guide CLI + SessionStart framework digest`.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.

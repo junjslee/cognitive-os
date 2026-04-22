@@ -39,6 +39,76 @@ def _spot_check_line() -> str | None:
     )
 
 
+def _last_session_path() -> Path:
+    import os
+    home = os.environ.get("EPISTEME_HOME") or str(Path.home() / ".episteme")
+    return Path(home) / "state" / "last_session.json"
+
+
+def _read_last_session_ts() -> str | None:
+    """Return the recorded last-session ts, or None on first run."""
+    path = _last_session_path()
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    ts = data.get("last_session_ts") if isinstance(data, dict) else None
+    return ts if isinstance(ts, str) and ts else None
+
+
+def _write_last_session_ts(ts: str) -> None:
+    """Best-effort write. Silent on IO failure — the digest line is
+    advisory, not load-bearing."""
+    path = _last_session_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"last_session_ts": ts}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
+def _framework_digest_line() -> str | None:
+    """CP9 · 'N protocols synthesized since last session (T total),
+    M deferred discoveries pending'. Silent when both counts are zero.
+
+    'Since last session' reads from ``~/.episteme/state/last_session.json``;
+    main() updates that file at the end of this hook."""
+    _hooks_dir = Path(__file__).resolve().parent
+    if str(_hooks_dir) not in sys.path:
+        sys.path.insert(0, str(_hooks_dir))
+    try:
+        import _framework  # type: ignore  # pyright: ignore[reportMissingImports]
+        all_protocols = _framework.list_protocols()
+        deferred = _framework.list_deferred_discoveries(status="pending")
+    except Exception:
+        return None
+    total = len(all_protocols)
+    pending_deferred = len(deferred)
+    last_ts = _read_last_session_ts()
+    if last_ts is None:
+        # First session — everything is "new" by definition.
+        since_last = total
+    else:
+        since_last = sum(
+            1 for env in all_protocols
+            if isinstance(env, dict) and str(env.get("ts") or "") > last_ts
+        )
+    if total == 0 and pending_deferred == 0:
+        return None
+    protocol_noun = "protocol" if since_last == 1 else "protocols"
+    deferred_noun = "discovery" if pending_deferred == 1 else "discoveries"
+    return (
+        f"framework: {since_last} {protocol_noun} synthesized since "
+        f"last session ({total} total), {pending_deferred} deferred "
+        f"{deferred_noun} pending"
+    )
+
+
 def run(args: list[str]) -> str:
     r = subprocess.run(args, capture_output=True, text=True)
     return r.stdout.strip() if r.returncode == 0 else ""
@@ -181,6 +251,14 @@ def main() -> int:
     if spot_line:
         lines.append(spot_line)
 
+    # CP9 · Pillar 3 framework digest — protocols synthesized since
+    # the last session + pending deferred-discovery count. Silent on
+    # zero. The "since last" window is maintained via
+    # ~/.episteme/state/last_session.json which we update below.
+    framework_line = _framework_digest_line()
+    if framework_line:
+        lines.append(framework_line)
+
     # NEXT_STEPS.md if present
     ns = Path("docs/NEXT_STEPS.md")
     if ns.exists():
@@ -193,6 +271,10 @@ def main() -> int:
         print(f"\n{separator}")
         print("\n".join(lines))
         print(separator)
+
+    # CP9 · update the last-session marker so the NEXT SessionStart's
+    # "since last" window starts here.
+    _write_last_session_ts(datetime.now(timezone.utc).isoformat())
 
     return 0
 

@@ -82,6 +82,10 @@ from _context_signature import (  # noqa: E402  # pyright: ignore[reportMissingI
 from _pending_contracts import (  # noqa: E402  # pyright: ignore[reportMissingImports]
     write_contract as _write_pending_contract,
 )
+from _guidance import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    query as _guidance_query,
+    format_advisory as _guidance_format_advisory,
+)
 import _fence_synthesis  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 
@@ -1033,11 +1037,36 @@ def main() -> int:
                 sys.stderr.write(f"[episteme advisory] {l2_detail}\n")
 
             if status == "ok":
-                blueprint_name = "generic"
                 try:
                     blueprint_name = _detect_scenario(
                         payload, surface_text=None, project_context={}
                     ) or "generic"
+                except Exception as exc:  # graceful degrade — keep default
+                    sys.stderr.write(
+                        f"[episteme] scenario detection fallback: "
+                        f"{exc.__class__.__name__}\n"
+                    )
+
+                # CP9 · Pillar 3 active guidance — one stderr advisory
+                # per op. Fires AFTER scenario detection and BEFORE
+                # Layer 3's blueprint enforcement per spec. Advisory
+                # only — never blocking. Silent on zero match.
+                try:
+                    _candidate_sig = _build_context_signature(
+                        cwd, blueprint_name=blueprint_name, op_class=label,
+                    )
+                    _match = _guidance_query(_candidate_sig, cwd=cwd)
+                    if _match is not None:
+                        sys.stderr.write(
+                            _guidance_format_advisory(_match) + "\n"
+                        )
+                except Exception as exc:  # graceful degrade
+                    sys.stderr.write(
+                        f"[episteme] Pillar 3 guidance fallback: "
+                        f"{exc.__class__.__name__}; Layers 1-4 still enforced.\n"
+                    )
+
+                try:
                     l3_verdict, l3_detail = _layer3_ground_blueprint_fields(
                         layer2_surface, blueprint_name, cwd
                     )

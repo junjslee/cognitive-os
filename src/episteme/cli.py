@@ -3874,6 +3874,131 @@ def _chain_dispatch(args) -> int:
     return 2
 
 
+def _guide_dispatch(args) -> int:
+    """Dispatch CP9 `episteme guide` — read-path for framework
+    protocols and pending deferred_discoveries. Authoring / revision
+    lands in v1.0.1."""
+    import sys as _sys
+
+    hooks_dir = REPO_ROOT / "core" / "hooks"
+    if str(hooks_dir) not in _sys.path:
+        _sys.path.insert(0, str(hooks_dir))
+    try:
+        import _framework  # type: ignore  # pyright: ignore[reportMissingImports]
+    except ImportError as exc:
+        print(f"[episteme guide] error loading framework module: {exc}", file=sys.stderr)
+        return 2
+
+    since = getattr(args, "guide_since", None)
+    context = getattr(args, "guide_context", None)
+    deferred = getattr(args, "guide_deferred", False)
+    want_json = getattr(args, "guide_json", False)
+
+    if since is not None:
+        try:
+            # Strict ISO-8601 parse per CP9 plan Q4. Accepts both
+            # date-only and datetime forms.
+            datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            print(
+                f"[episteme guide] --since must be strict ISO-8601 "
+                f"(got {since!r})",
+                file=sys.stderr,
+            )
+            return 2
+
+    def _ts_passes(envelope: dict) -> bool:
+        if since is None:
+            return True
+        ts = str(envelope.get("ts") or "")
+        return ts >= since
+
+    def _context_passes(payload: dict) -> bool:
+        if context is None:
+            return True
+        needle = context.lower()
+        protocol = str(payload.get("synthesized_protocol") or "").lower()
+        if needle in protocol:
+            return True
+        sig = payload.get("context_signature")
+        if isinstance(sig, dict):
+            for v in sig.values():
+                if isinstance(v, str) and needle in v.lower():
+                    return True
+        return False
+
+    if deferred:
+        envelopes = _framework.list_deferred_discoveries(status="pending")
+        out_items = []
+        for env in envelopes:
+            if not isinstance(env, dict):
+                continue
+            payload = env.get("payload")
+            if not isinstance(payload, dict):
+                continue
+            if not _ts_passes(env):
+                continue
+            if not _context_passes(payload):
+                continue
+            out_items.append({"ts": env.get("ts"), "payload": payload})
+        if want_json:
+            print(json.dumps(out_items, indent=2, ensure_ascii=False))
+            return 0
+        if not out_items:
+            print("(no pending deferred discoveries)")
+            return 0
+        for i, item in enumerate(out_items, 1):
+            p = item["payload"]
+            print(f"Deferred discovery {i}/{len(out_items)}  logged={item['ts']}")
+            print(f"  flaw_classification: {p.get('flaw_classification', '?')}")
+            print(f"  description: {p.get('description', '?')}")
+            print(f"  observable: {p.get('observable', '?')}")
+            print(f"  log_only_rationale: {p.get('log_only_rationale', '?')}")
+            print()
+        return 0
+
+    # Default path — list protocols.
+    envelopes = _framework.list_protocols()
+    out_items = []
+    for env in envelopes:
+        if not isinstance(env, dict):
+            continue
+        payload = env.get("payload")
+        if not isinstance(payload, dict):
+            continue
+        if not _ts_passes(env):
+            continue
+        if not _context_passes(payload):
+            continue
+        out_items.append({"ts": env.get("ts"), "payload": payload})
+    # Newest first.
+    out_items.sort(key=lambda x: str(x.get("ts") or ""), reverse=True)
+
+    if want_json:
+        print(json.dumps(out_items, indent=2, ensure_ascii=False))
+        return 0
+    if not out_items:
+        print("(no protocols match)")
+        return 0
+    total = len(out_items)
+    for i, item in enumerate(out_items, 1):
+        p = item["payload"]
+        sig = p.get("context_signature") or {}
+        print(f"Protocol {i}/{total}  synthesized={item['ts']}  "
+              f"blueprint={p.get('blueprint', '?')}")
+        if isinstance(sig, dict):
+            sig_str = "  ".join(
+                f"{k}={v!r}" for k, v in sig.items()
+            )
+            print(f"  context: {sig_str}")
+        protocol_text = str(p.get("synthesized_protocol") or "").strip()
+        print(f"  synthesized_protocol: {protocol_text}")
+        cid = p.get("correlation_id", "?")
+        print(f"  correlation_id: {cid}")
+        print()
+    return 0
+
+
 def _review_dispatch(args) -> int:
     """Dispatch CP8 `episteme review` — list / stats / interactive."""
     import sys as _sys
@@ -4406,6 +4531,28 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stream to upgrade (only `protocols` has legacy records to upgrade at CP7)",
     )
 
+    # CP9 — Pillar 3 active guidance query.
+    guide_cmd = sub.add_parser(
+        "guide",
+        help="List synthesized framework protocols (and pending deferred discoveries with --deferred)",
+    )
+    guide_cmd.add_argument(
+        "--context", dest="guide_context", default=None,
+        help="Substring filter on synthesized_protocol and context_signature fields (case-insensitive)",
+    )
+    guide_cmd.add_argument(
+        "--since", dest="guide_since", default=None,
+        help="Show only entries with ts >= <date> (strict ISO-8601, e.g. 2026-04-21 or 2026-04-21T12:00:00Z)",
+    )
+    guide_cmd.add_argument(
+        "--deferred", dest="guide_deferred", action="store_true",
+        help="List pending deferred_discoveries entries instead of protocols",
+    )
+    guide_cmd.add_argument(
+        "--json", dest="guide_json", action="store_true",
+        help="Emit structured JSON output for scripting",
+    )
+
     # CP8 — Layer 8 spot-check review.
     review_cmd = sub.add_parser(
         "review",
@@ -4828,6 +4975,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         return _chain_dispatch(args)
     if args.command == "review":
         return _review_dispatch(args)
+    if args.command == "guide":
+        return _guide_dispatch(args)
     if args.command == "kernel":
         if args.kernel_action == "verify":
             return _kernel_verify()

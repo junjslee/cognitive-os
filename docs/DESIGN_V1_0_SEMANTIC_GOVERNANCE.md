@@ -286,13 +286,24 @@ Pillar 3 is the extraction and guidance loop. When a synthesis-capable blueprint
 2. **Framework update.** The `synthesized_protocol` is committed to `~/.episteme/framework/protocols.jsonl` — append-only, hash-chained per Pillar 2, indexed by `context_signature` and `guidance_trigger`. The framework is not a cache; it is the durable artifact of synthesis across the operator's working history.
 3. **Active guidance.** On future PreToolUse events, the kernel canonicalizes the incoming op's context signature and queries the framework. Matching protocols are surfaced to the operator (and the agent) as stderr advisory *before* blueprint enforcement runs — informing the decision without blocking it. At SessionStart, protocols synthesized since the last session are presented in a digest.
 
-**Substrate — what ships in v1.0 RC.**
+**Substrate — what ships in v1.0 RC (CP7 + CP9).**
 
-- `core/hooks/_framework.py` — read/write access to `~/.episteme/framework/protocols.jsonl`. Hash-chained using the same mechanism as Pillar 2 (shared implementation; single code path for SHA-256 `prev_hash` / `entry_hash` / chain-head verification).
-- `core/hooks/_context_signature.py` — canonicalization of `(project_fingerprint, operator_profile_axes, op_class, environment)` into a signature string suitable for exact-or-substring query. Regex + entity hashing, same FP-averse discipline as Layer 3.
-- **Query at PreToolUse** — after scenario detection, before blueprint enforcement, query the framework by the incoming op's context signature. Matches emit one stderr advisory line per match: *"Framework · context-match protocol: `<synthesized_protocol>` (synthesized <date> from `<source-conflict-summary>`)"*. Advisory only — never blocking. Cost budget: absorbed into the scenario detector's 5 ms slot.
-- **SessionStart digest** — *"N protocols synthesized since last session. Review with `episteme guide --since last`."* Zero hot-path cost.
-- **`episteme guide` CLI** — v1.0 RC ships a minimal version: query by context keyword, list matching protocols, show synthesis provenance. Rich interactive query and protocol revision are v1.0.1 deliverables.
+- `core/hooks/_framework.py` — read/write access to `~/.episteme/framework/protocols.jsonl` and `~/.episteme/framework/deferred_discoveries.jsonl`. Hash-chained via the shared CP7 envelope. Two independent streams per CP7 plan Q1 (protocols / deferred_discoveries have orthogonal trust radiuses).
+- `core/hooks/_context_signature.py` — conservative six-field dict (project_name / project_tier / blueprint / op_class / constraint_head / runtime_marker). Profile-axis folding deferred to v1.0.1 per CP7 plan Q3.
+- `core/hooks/_guidance.py` (CP9) — query + verdict-filter + advisory formatter + warm cache.
+- **Query at PreToolUse (CP9).** After scenario detection, before Layer 3 blueprint enforcement. Pipeline: load project-scoped protocols (verified chain walk, cached on `protocols.jsonl` mtime); build the vapor-verdict correlation-id set from CP8's spot-check queue; for each protocol compute `field_overlap` against the current signature; skip protocols whose latest verdict has `surface_validity == "vapor"`; rank remaining by `(overlap desc, ts desc)`; return top match iff `overlap >= min_overlap`. Default threshold: **4/6** (CP9 plan decision — conservative). Per-project override at `<cwd>/.episteme/guidance_min_overlap` (single int, clamped [0, 6]).
+- **Advisory format (CP9 — one stderr write per op).** Two physical lines:
+
+  ```
+  [episteme guide] <ts-date> · <blueprint> · overlap=<N>/6 · cid=<12-char-prefix>
+    Protocol: <synthesized_protocol, truncated at 180 chars>
+  ```
+
+  The `cid` prefix (first 12 chars of the source protocol's `correlation_id`) lets the operator grep the framework file for the full record. Silent when zero protocols meet the threshold — no banner fatigue. Advisory only; never blocks admission.
+- **Verdict filter (CP9).** Protocols whose latest CP8 spot-check verdict has `surface_validity == "vapor"` are skipped at query time — the operator's own signal of "this protocol was garbage" closes the Doxa-reinforcement loop immediately.
+- **Project scope (CP9).** Query is filtered by candidate's `project_name` at the framework read layer — protocols synthesized in project A never surface in project B. Cross-project matches could still hit 4/6 overlap without this filter; tacit operator knowledge from one project is not reliable advice for another absent a stronger signal.
+- **SessionStart digest (CP9).** Banner format: *"framework: N protocols synthesized since last session (T total), M deferred discoveries pending"*. "Since last session" reads `~/.episteme/state/last_session.json`, which the hook writes at the end of its own run. Silent when both N and M are zero.
+- **`episteme guide` CLI (CP9 — read-path only at RC).** `episteme guide` dumps protocols newest-first; `--context <keyword>` substring-filters; `--since <ISO-DATE>` filters by ts (strict ISO-8601 only at RC per plan Q4); `--deferred` lists pending deferred_discoveries; `--json` emits structured output. Write path (revision, retirement) stays v1.0.1 scope.
 
 **Scope — what synthesis-capable blueprints actually write in v1.0 RC.**
 
