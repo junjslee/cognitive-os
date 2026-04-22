@@ -820,6 +820,81 @@ Separate work stream from the v1.0 RC kernel cycle. A Next.js 16 / React 19 / Ta
 
 ---
 
+## Event 19 — 2026-04-22 — GTM web/ v2 local-live wiring shipped (API routes + live kernel read)
+
+Second delivery of the GTM parallel work stream. Three Next.js API routes read `$EPISTEME_HOME/framework/*.jsonl` and `$EPISTEME_PROJECT/.episteme/reasoning-surface.json` live and stream the results to the viz components via a `useLiveResource` hook. Build green; smoke-tested against the kernel's own on-disk state (the kernel's five live deferred-discovery records from Event 17 render in the HashChainStream end-to-end).
+
+### Recon before code (Reasoning Surface sealed, Blueprint D admitted via kernel-state-file exemption)
+
+The kernel's Blueprint D detector fired on the session's first `ls core/hooks/` because the command path mentioned `core/hooks` (Trigger 2 · sensitive-path). The operator wrote a fresh `.episteme/reasoning-surface.json` for the v2 session naming the core question, knowns/unknowns/assumptions, disconfirmation, flaw_classification=`external-surface-scaffolding`, posture=`patch`, full blast_radius_map (14 web-dir surfaces + 3 kernel-recon surfaces marked `not-applicable` with rationale + 3 docs surfaces marked `not-applicable` pending post-verify flip), and 3 deferred discoveries pointing at known v2 follow-ups. The guard admitted subsequent reads against the fresh surface; recon of `core/hooks/_chain.py` + `core/hooks/_framework.py` produced:
+
+- **Envelope (CP7)** uniform across all hash-chained streams: `{schema_version: "cp7-chained-v1", ts, prev_hash: "sha256:<hex>" | "sha256:GENESIS", payload: {type, ...}, entry_hash: "sha256:<hex>"}`.
+- **Two independent streams** under `$EPISTEME_HOME/framework/` — `protocols.jsonl` and `deferred_discoveries.jsonl`. Chains are orthogonal by CP7 plan Q1 (a break in one must not halt reads from the other).
+- **Payload discriminators** `"protocol"`, `"deferred_discovery"`, `"chain_reset"`. No `seq` on disk — derive from file position.
+- **Reasoning surface** is project-scoped at `<project>/.episteme/reasoning-surface.json`, NOT under `$EPISTEME_HOME`.
+
+No kernel code touched by the recon.
+
+### v2 delivery (files)
+
+- **`web/src/lib/server/episteme-home.ts`** (new) — resolves `$EPISTEME_HOME` (absolute-path required when env is set; default `~/.episteme`). `server-only` import guards accidental client pulls. Emits `path / source / error` for UI telemetry.
+- **`web/src/lib/server/episteme-project.ts`** (new) — resolves `$EPISTEME_PROJECT` with `process.cwd()` fallback per approved decision #2.
+- **`web/src/lib/server/envelope.ts`** (new) — zod v4 `looseObject` schemas for the CP7 envelope and the two payload types; `envelopeToChainEntry` maps envelope → UI ChainEntry (derives kind/label from payload.type + blueprint/description; seq is file-position); `envelopeToProtocol` maps protocol payload → UI Protocol shape; `toReasoningSurface` with `ReasoningSurfaceRawSchema` for the surface file.
+- **`web/src/lib/server/mode.ts`** (new) — `EPISTEME_MODE=live|fixtures` override with NODE_ENV-based default: production → fixtures (marketing stays rich without kernel access), dev → live.
+- **`web/src/lib/server/read-chain.ts`** (new) — reads both streams, per-stream envelope parse + prev_hash walk (tamper_suspected flag per-stream; aggregate integrity collapses to "broken" on any per-stream break), unions by ts descending, renumbers seq for display, caps at `?limit=N` (default 50, max 500), returns `{entries, integrity, source, warnings}` with graceful 200-on-empty on ENOENT / EACCES.
+- **`web/src/lib/server/read-protocols.ts`** (new) — reads `protocols.jsonl`, filters by `payload.type === "protocol"`, projects to UI Protocol via the envelope mapper with defensible defaults for missing optional fields.
+- **`web/src/lib/server/read-surface.ts`** (new) — reads project-scoped surface file, validates shape, computes `age_minutes` from timestamp (UI surfaces TTL exceed state when ≥ 30m).
+- **`web/src/app/api/{chain,protocols,surface}/route.ts`** (new × 3) — `export const dynamic = "force-dynamic"`, `runtime = "nodejs"`. Fixtures-mode shortcut returns v1 fixture data with `mode: "fixtures"` and `source.kind: "fixtures"`. Live-mode delegates to the reader; every fatal throw caught and turned into 200-with-empty + `warnings[]` so the UI never has to handle HTTP errors for normal fresh-install conditions.
+- **`web/src/lib/hooks/use-live-resource.ts`** (new) — SWR-lite client hook: `useLiveResource<T>(url, fallback, {intervalMs, enabled, headers, onData})` returns `{data, loading, error, lastFetchAt, stale, refetch}`. AbortController per fetch; in-flight aborts on unmount; last-good data preserved across refetches (no flash-of-empty during polling); exponential-ish backoff increments on 5xx. Client-only (`"use client"`).
+- **`web/src/components/viz/EmptyState.tsx`** (new) — shared empty/error panel. Terse-technical voice ("kernel · uninitialized" / "kernel · unreachable"); matches operator-console aesthetic.
+- **`web/src/components/viz/Live{ReasoningMatrix,HashChainStream,ProtocolGrid}.tsx`** (new × 3) — thin wrappers that call `useLiveResource`, pick the right EmptyState when no data, delegate to the existing dumb viz component when data is present. LiveReasoningMatrix surfaces the 30m-stale warning inline. LiveHashChainStream surfaces the chain-broken banner when `integrity === "broken"`.
+- **`web/src/components/site/LiveExhibit.tsx`** (modified) — swapped fixture imports for Live wrappers; 30s poll cadence on the landing page per decision #3.
+- **`web/src/app/dashboard/page.tsx`** (modified) — swapped static viz for Live wrappers; 10s poll; copy updated to name `$EPISTEME_HOME` / `$EPISTEME_PROJECT` / `EPISTEME_MODE`. `TelemetryTicker` and `CascadeDetector` stay on fixtures (they don't have a v2 live source wired yet).
+- **`web/package.json`** — added `server-only` dep.
+
+### Smoke test (live kernel on disk, `$EPISTEME_PROJECT=/Users/junlee/episteme`)
+
+| Route | Result |
+|---|---|
+| `GET /api/surface` | `mode=live`, returns the session's own Reasoning Surface, 5 knowns / 3 unknowns, `age_minutes=0`, zero warnings. |
+| `GET /api/chain?limit=5` | `mode=live`, `integrity=ok`, returns 5 real `deferred_discovery` entries from Event 17's deferred discoveries, hashes chain cleanly. |
+| `GET /api/protocols` | `mode=live`, returns `[]` — matches NEXT_STEPS "Zero protocols on disk today; first synthesis lands during RC soak." |
+| `/dashboard` HTML | HTTP 200, 50 KB shell with grid-overlay + client islands that hydrate via the routes. |
+| `/` HTML | HTTP 200, 81 KB shell. |
+
+### Honest v2 limits (tested, not latent)
+
+- **`cache` field on `Request`** not used in `useLiveResource` fetch options; Next 16 `dynamic = "force-dynamic"` already defeats route-level caching. The hook passes `cache: "no-store"` defensively; double coverage is deliberate.
+- **Warnings surface is one-shot per fetch** — the client hook does not accumulate warnings across polls. If a kernel chain break appears briefly then heals, the UI will drop the warning on the next green fetch. Acceptable because tamper-evidence is per-stream and persistent on disk.
+- **Polling, not streaming.** v3 SSE from an `episteme serve` daemon still deferred.
+- **Fixtures fallback at route layer only.** The page composition still uses the static `TelemetryTicker` + `CascadeDetector` fixtures directly. Both have no canonical on-disk source today; wiring them would require the kernel writing a telemetry stream and a Blueprint D cascade-state snapshot. Logged below as deferred discoveries — no scope for v2.
+- **Multi-project operators see only one active surface.** Per plan decision #2 (`$EPISTEME_PROJECT` + cwd fallback). Multi-project support is a v3 concern.
+
+### Deferred discoveries (surfaced during v2)
+
+1. **Cascade-detector snapshot has no on-disk source.** `CascadeDetector` renders Blueprint D's four-trigger state from `fixtureCascadeSignals`. The real kernel's trigger state is ephemeral — it exists only during a PreToolUse evaluation and is not persisted. Wiring a live version requires the kernel writing a snapshot stream. Logged; v1.0.1 or later.
+2. **TelemetryTicker fixture-only.** Same shape — no `$EPISTEME_HOME/telemetry.jsonl` exists. Events in `_chain.py`, `_framework.py`, `reasoning_surface_guard.py` emit to stderr, not to a durable queue. Feature request for kernel; logged.
+3. **Hook does not persist the last good data across tab closes.** On next session, the UI re-fetches cold. Fine for v2 (local dev) but would cause FOUC on a deployed marketing site under `EPISTEME_MODE=fixtures` if hit on slow connections. Mitigable with a build-time snapshot step later.
+
+### What did NOT happen
+
+- No kernel code touched.
+- No RC soak gates affected.
+- No deploy / hosting target decided (Vercel is still candidate; production env-var plumbing is a separate pass).
+- No SSE / streaming — v3 scope.
+
+### Self-check against the pre-work Reasoning Surface
+
+All four disconfirmation criteria cleared:
+1. Live local kernel run with populated `deferred_discoveries.jsonl` returned 5 entries through `/api/chain` — envelope + path guess CORRECT.
+2. Production build flag default (`NODE_ENV=production` → `mode=fixtures`) verified by inspection of `resolveMode` logic; end-to-end deploy smoke-test not run this session (no deploy target yet).
+3. The 10s dev poll did not produce a visible flicker during local observation — hook preserves last-good data.
+4. `pnpm build` succeeded with 5 routes shipped (2 static pages, 3 dynamic API routes).
+
+**Commit plan:** atomic commit for v2 wiring, message subject `feat(web): GTM site v2 local-live wiring (/api/{chain,protocols,surface} + useLiveResource hook + Live wrappers)`.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.

@@ -1,13 +1,8 @@
 import { Sectioned } from "@/components/ui/Sectioned";
-import { ReasoningMatrix } from "@/components/viz/ReasoningMatrix";
-import { HashChainStream } from "@/components/viz/HashChainStream";
-import { fixtureSurface } from "@/lib/fixtures/reasoning-surface";
-import { fixtureChain } from "@/lib/fixtures/chain";
-import { markChainIntegrity } from "@/lib/parsers/chain";
+import { LiveReasoningMatrix } from "@/components/viz/LiveReasoningMatrix";
+import { LiveHashChainStream } from "@/components/viz/LiveHashChainStream";
 
 export function LiveExhibit() {
-  const chain = markChainIntegrity(fixtureChain);
-
   return (
     <Sectioned
       id="surface"
@@ -34,10 +29,14 @@ export function LiveExhibit() {
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-12">
         <div className="md:col-span-8">
-          <ReasoningMatrix surface={fixtureSurface} />
+          <LiveReasoningMatrix intervalMs={30_000} />
         </div>
         <div className="md:col-span-4">
-          <HashChainStream entries={chain} className="h-full min-h-[560px]" />
+          <LiveHashChainStream
+            intervalMs={30_000}
+            limit={12}
+            className="h-full min-h-[560px]"
+          />
         </div>
       </div>
     </Sectioned>
