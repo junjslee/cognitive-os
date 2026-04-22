@@ -437,13 +437,17 @@ class TestPillar3SynthesisEndToEnd(unittest.TestCase):
                     if ln.strip()
                 ]
                 self.assertEqual(len(lines), 1)
-                protocol = json.loads(lines[0])
-                self.assertEqual(
-                    protocol["format_version"], "cp5-pre-chain"
+                # CP7 — protocols now land as hash-chained envelopes.
+                # Assert envelope shape + payload shape.
+                envelope = json.loads(lines[0])
+                self.assertEqual(envelope["schema_version"], "cp7-chained-v1")
+                self.assertEqual(envelope["prev_hash"], "sha256:GENESIS")
+                self.assertTrue(
+                    envelope["entry_hash"].startswith("sha256:")
                 )
+                protocol = envelope["payload"]
+                self.assertEqual(protocol["type"], "protocol")
                 self.assertEqual(protocol["blueprint"], "fence_reconstruction")
-                self.assertIsNone(protocol["chain"]["prev_hash"])
-                self.assertIsNone(protocol["chain"]["entry_hash"])
                 self.assertTrue(protocol["synthesized_protocol"])
                 self.assertTrue(protocol["context_signature"])
                 self.assertEqual(

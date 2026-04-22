@@ -230,13 +230,30 @@ Full realization of Axiomatic Judgment, Consequence Chain, and Blueprint D's ret
 
 Layer 6's current design records pending contracts to `~/.episteme/state/pending_contracts.jsonl`. The file is mutable. An agent (or anyone with write access to the state directory) can edit past records to retroactively look like it predicted outcomes it actually missed. The prior honest-threat-model did not name this class. This pillar closes it.
 
-**Mechanism.** Every episodic-tier record and every pending-contract record carries:
+**Mechanism (CP7 implementation).** Every chained record is wrapped in an envelope:
 
-- `prev_hash` — SHA-256 of the previous entry's full serialized content
-- `entry_hash` — SHA-256 of this entry's content (including `prev_hash`)
-- Chain-head at `~/.episteme/state/chain_head.json`. In git-tracked projects, chain-head rotation commits provide a second tamper-evidence layer.
+```json
+{
+  "schema_version": "cp7-chained-v1",
+  "ts":             "<ISO-8601 UTC, microseconds>",
+  "prev_hash":      "sha256:<hex>" | "sha256:GENESIS",
+  "payload":        {"type": "...", ...business fields...},
+  "entry_hash":     "sha256:<hex>"
+}
+```
 
-**Scope — v1.0 RC.** Episodic tier + pending contracts only. Explicitly out of scope: `derived_knobs.json` mutations, profile-axis changes, global memory files. The kernel proves the mechanism at the lowest-blast-radius surface first; expansion is a later governance decision.
+- ``entry_hash`` = SHA-256 over ``prev_hash || "|" || ts || "|" || canonical_json(payload)``. Canonicalization: ``json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)``. Sort-keys guarantees byte-identical hash input regardless of dict insertion order.
+- Genesis records use the sentinel string ``"sha256:GENESIS"`` rather than ``null`` so chain walkers have a uniform compare-loop (always compare a computed hash to a received string; no null-special-casing).
+- Chain-head at the tail of each stream file — no separate `chain_head.json`. In git-tracked projects, a post-soak v1.0.1 item may commit the head hash as a second tamper-evidence layer; RC scope ends at the file-level chain.
+
+**Scope — v1.0 RC (CP7).** Four independent chains:
+
+- `~/.episteme/framework/protocols.jsonl` (Pillar 3 protocol records)
+- `~/.episteme/framework/deferred_discoveries.jsonl` (Blueprint D adjacent-gap log)
+- `~/.episteme/state/pending_contracts.jsonl` (Layer 6 write side)
+- `~/.episteme/memory/episodic/YYYY-MM-DD.jsonl` (pre-existing; CP7 does not retroactively migrate episodic tier)
+
+Protocols and deferred-discoveries are **two separate streams** by design (CP7 plan Q1) — their trust radiuses are orthogonal and a chain break in one must not halt reads from the other. Explicitly out of scope: `derived_knobs.json` mutations, profile-axis changes, global memory files.
 
 **Properties this gives:**
 
@@ -244,10 +261,14 @@ Layer 6's current design records pending contracts to `~/.episteme/state/pending
 - Phase 12 audit gains a **precondition**: chain verifies, or audit refuses to proceed on the tampered range.
 - L4 → L6 composition strengthens measurably. A faked `verification_trace` cannot be quietly repaired later — the original record's hash is frozen into its successor.
 
-**Chain-reset protocol.** Legitimate state loss is real (disk failure, workstation rebuild). The kernel distinguishes:
+**Chain-reset protocol (CP7).** Legitimate state loss is real (disk failure, workstation rebuild, intentional `rm -rf ~/.episteme/framework/`). The kernel distinguishes:
 
-- *Chain absent* (no `chain_head.json` or zero-entry log) — new install or legitimate reset. Genesis proceeds cleanly.
-- *Chain broken* (hash mismatch mid-chain) — governance event. Operator is notified at SessionStart; audit refuses to proceed on the broken range until the operator issues a signed `chain_reset` event (itself chained into the new genesis).
+- *Chain absent* (no stream file or empty stream file) — first write proceeds with ``sha256:GENESIS`` as the prev_hash; no operator intervention needed.
+- *Chain broken* (``verify_chain`` returns ``intact=False, break_index=i``) — governance event. Phase 12's audit output reports ``chain_integrity: {stream_name: {intact: false, break_index: i, reason: ...}}``; per-stream isolation ensures the broken stream does not halt unaffected streams. Recovery requires the operator to run ``episteme chain reset --stream <name> --reason "<text>" --confirm "I ACKNOWLEDGE CHAIN RESET"``, which (a) archives the broken file to ``<stream>.broken-<ts>.jsonl``, (b) writes a fresh chain starting with a ``chain_reset`` genesis record capturing the reason + operator confirmation + the previous head hash for forensics.
+
+**Never auto-reset.** Automatic chain reset on detected break would be the largest evasion surface on the whole pillar — an agent could mutate a record and count on the kernel to silently re-genesis around it. CP7 intentionally requires explicit operator confirmation.
+
+**Retroactive CP5 upgrade (CP7).** CP5 shipped `~/.episteme/framework/protocols.jsonl` records with `format_version: "cp5-pre-chain"` + null chain fields. CP7 walks the file deterministically (preserving each record's original `written_at` timestamp as the envelope `ts`), re-wraps payloads in the chained envelope, bumps `format_version` → `cp7-chained-v1` at the envelope level, backs up to `<path>.upgrade-<ts>.bak`, and atomic-replaces. Triggered lazily on first CP7 write, eagerly at Phase 12 SessionStart, and manually via ``episteme chain upgrade --stream protocols``. Idempotent — re-run is a no-op. Mixed-state files (partial upgrade) abort with `UpgradeError`; the operator resolves manually. **Determinism is the test:** the walker's re-computed hashes match byte-for-byte across re-runs, which is the structural proof that the same audit over the same records would produce the same chain verdict on any workstation.
 
 **Hash choice.** SHA-256. The kernel is not defending against computational adversaries; it is defending against trivial tampering. Schema is versioned so a later upgrade to SHA-3 is a format bump, not a rewrite.
 

@@ -43,6 +43,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -234,7 +235,16 @@ def delete_pending_marker(correlation: str) -> None:
 # ---------------------------------------------------------------------------
 
 def _build_protocol(marker: dict, exit_code: int | None) -> dict:
-    """Construct the protocol entry from a pending marker + exit_code."""
+    """Construct the CP7 protocol PAYLOAD from a pending marker +
+    exit_code.
+
+    **CP7 shape change.** Pre-CP7 this returned a CP5 record carrying
+    ``format_version: "cp5-pre-chain"`` + null chain fields. After
+    CP7 the chain layer is owned by ``_chain.append`` — the payload
+    carries only business fields + ``type: "protocol"`` discriminator.
+    CP5 in-the-wild records get retroactively wrapped via
+    ``_framework.upgrade_cp5_prechain``.
+    """
     surface = marker.get("surface", {}) if isinstance(marker.get("surface"), dict) else {}
     constraint = str(surface.get("constraint_identified", ""))
     origin = str(surface.get("origin_evidence", ""))
@@ -251,8 +261,8 @@ def _build_protocol(marker: dict, exit_code: int | None) -> dict:
         f"available and was not triggered."
     )
     return {
+        "type": "protocol",
         "version": 1,
-        "format_version": CP5_FORMAT_VERSION,
         "blueprint": "fence_reconstruction",
         "synthesized_at": datetime.now(timezone.utc).isoformat(),
         "correlation_id": marker.get("correlation_id", ""),
@@ -273,10 +283,6 @@ def _build_protocol(marker: dict, exit_code: int | None) -> dict:
             "cwd": str(marker.get("cwd", "")),
             "command_redacted": marker.get("command_redacted", ""),
         },
-        "chain": {
-            "prev_hash": None,
-            "entry_hash": None,
-        },
     }
 
 
@@ -290,28 +296,36 @@ def _short(text: str, limit: int = 160) -> str:
     return flat
 
 
-def _append_protocol(path: Path, protocol: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(protocol, ensure_ascii=False) + "\n")
-
-
 def finalize_on_success(correlation: str, exit_code: int | None) -> dict | None:
-    """Read the pending marker, if exit_code == 0 append a protocol
-    entry to the framework, and delete the marker in all cases.
+    """Read the pending marker, if exit_code == 0 write a hash-chained
+    protocol record, and delete the marker in all cases.
 
-    Returns the written protocol dict (for tests / observability) or
-    None when no synthesis was produced (marker absent, exit_code != 0,
-    or IO error).
+    **CP7 change.** The write path now goes through
+    ``_framework.write_protocol`` which wraps the payload in the
+    shared chain envelope. Returns the envelope (not the raw
+    payload) so tests can assert on envelope-level fields like
+    ``entry_hash``; callers accessing ``synthesized_protocol`` /
+    ``correlation_id`` still find them at ``envelope["payload"][...]``.
     """
     marker = read_pending_marker(correlation)
     if marker is None:
         return None
     try:
         if exit_code == 0:
-            protocol = _build_protocol(marker, exit_code)
-            _append_protocol(_framework_path(), protocol)
-            return protocol
+            payload = _build_protocol(marker, exit_code)
+            # Lazy import to avoid forcing _framework load on hooks
+            # that don't write synthesis.
+            _hooks_dir = Path(__file__).resolve().parent
+            if str(_hooks_dir) not in sys.path:
+                sys.path.insert(0, str(_hooks_dir))
+            try:
+                from _framework import (  # type: ignore  # pyright: ignore[reportMissingImports]
+                    write_protocol as _write_protocol,
+                )
+            except ImportError:
+                return None
+            envelope = _write_protocol(payload)
+            return envelope
         return None
     except OSError:
         return None

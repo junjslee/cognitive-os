@@ -3790,6 +3790,90 @@ def _surface_log(limit: int = 50, blocked_only: bool = False) -> int:
     return 0
 
 
+def _chain_dispatch(args) -> int:
+    """Dispatch CP7 `episteme chain` subcommands — verify / reset / upgrade.
+
+    Loads the hook modules lazily from ``core/hooks/`` so the CLI does
+    not require the hooks on the import path at startup (they're only
+    on the Claude Code runtime path).
+    """
+    import sys as _sys
+
+    hooks_dir = REPO_ROOT / "core" / "hooks"
+    if str(hooks_dir) not in _sys.path:
+        _sys.path.insert(0, str(hooks_dir))
+
+    try:
+        import _framework  # type: ignore  # pyright: ignore[reportMissingImports]
+        import _pending_contracts  # type: ignore  # pyright: ignore[reportMissingImports]
+        import _chain as _chain_mod  # type: ignore  # pyright: ignore[reportMissingImports]
+    except ImportError as exc:
+        print(f"[episteme chain] error loading chain modules: {exc}", file=sys.stderr)
+        return 2
+
+    action = getattr(args, "chain_action", None)
+
+    if action == "verify":
+        fw = _framework.verify_chains()
+        pc = _pending_contracts.verify_chain()
+        pc_arch = _pending_contracts.verify_archive()
+        all_intact = True
+        for stream_name, verdict in (
+            ("protocols", fw.get("protocols")),
+            ("deferred_discoveries", fw.get("deferred_discoveries")),
+            ("pending_contracts", pc),
+            ("pending_contracts_archive", pc_arch),
+        ):
+            if verdict is None:
+                continue
+            status = "INTACT" if verdict.intact else "BROKEN"
+            if not verdict.intact:
+                all_intact = False
+            print(
+                f"  {stream_name:32s} {status:8s} "
+                f"entries={verdict.total_entries}"
+                + (f"  break_index={verdict.break_index}" if verdict.break_index is not None else "")
+                + (f"  reason={verdict.reason}" if verdict.reason else "")
+            )
+        return 0 if all_intact else 1
+
+    if action == "reset":
+        stream = args.stream
+        stream_path = {
+            "protocols": Path.home() / ".episteme" / "framework" / "protocols.jsonl",
+            "deferred_discoveries": Path.home() / ".episteme" / "framework" / "deferred_discoveries.jsonl",
+            "pending_contracts": Path.home() / ".episteme" / "state" / "pending_contracts.jsonl",
+        }[stream]
+        previous_head = None
+        prior = _chain_mod.verify_chain(stream_path)
+        if prior.head_hash:
+            previous_head = prior.head_hash
+        result = _chain_mod.reset_stream(
+            stream_path,
+            reason=args.reason,
+            operator_confirmation=args.confirm,
+            previous_head=previous_head,
+        )
+        print(f"[episteme chain reset] status={result.status}")
+        if result.archived_path:
+            print(f"  archived_to: {result.archived_path}")
+        print(f"  new_genesis: {result.new_genesis_hash}")
+        return 0
+
+    if action == "upgrade":
+        # Only `protocols` has legacy cp5-pre-chain records at CP7.
+        result = _framework.upgrade_cp5_prechain()
+        print(f"[episteme chain upgrade] status={result.status}")
+        print(f"  entries_processed={result.entries_processed}")
+        if result.backup_path:
+            print(f"  backup_path={result.backup_path}")
+        print(f"  {result.message}")
+        return 0
+
+    print(f"[episteme chain] unknown action: {action}", file=sys.stderr)
+    return 2
+
+
 def _audit(fix: bool = False) -> int:
     """Reasoning audit: verify the current project session has addressed cognitive unknowns."""
 
@@ -4144,6 +4228,50 @@ def build_parser() -> argparse.ArgumentParser:
     log_cmd.add_argument(
         "--blocked", action="store_true",
         help="Show only blocked operations",
+    )
+
+    # CP7 — Pillar 2 hash-chain management.
+    chain_cmd = sub.add_parser(
+        "chain",
+        help="Pillar 2 hash-chain operations (verify / reset / upgrade)",
+    )
+    chain_sub = chain_cmd.add_subparsers(dest="chain_action", required=True)
+
+    chain_sub.add_parser(
+        "verify",
+        help="Verify all CP7 chains (framework protocols + deferred_discoveries + pending_contracts)",
+    )
+
+    c_reset = chain_sub.add_parser(
+        "reset",
+        help="Archive a broken chain and start a fresh one (operator escape hatch for legitimate state loss)",
+    )
+    c_reset.add_argument(
+        "--stream",
+        required=True,
+        choices=["protocols", "deferred_discoveries", "pending_contracts"],
+        help="Which chain stream to reset",
+    )
+    c_reset.add_argument(
+        "--reason",
+        required=True,
+        help="Short reason for the reset (goes into the chain_reset genesis record)",
+    )
+    c_reset.add_argument(
+        "--confirm",
+        required=True,
+        help="Operator confirmation string (e.g. 'I ACKNOWLEDGE CHAIN RESET')",
+    )
+
+    c_upgrade = chain_sub.add_parser(
+        "upgrade",
+        help="Retroactively wrap legacy cp5-pre-chain records in the cp7-chained-v1 envelope",
+    )
+    c_upgrade.add_argument(
+        "--stream",
+        default="protocols",
+        choices=["protocols"],
+        help="Stream to upgrade (only `protocols` has legacy records to upgrade at CP7)",
     )
 
     start = sub.add_parser("start", help="Start the preferred agent surface")
@@ -4538,6 +4666,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         )
     if args.command == "audit":
         return _audit(fix=getattr(args, "fix", False))
+    if args.command == "chain":
+        return _chain_dispatch(args)
     if args.command == "kernel":
         if args.kernel_action == "verify":
             return _kernel_verify()

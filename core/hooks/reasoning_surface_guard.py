@@ -76,6 +76,12 @@ from _verification_trace import (  # noqa: E402  # pyright: ignore[reportMissing
     validate_trace as _validate_trace,
     smoke_test_rollback_path as _smoke_test_rollback,
 )
+from _context_signature import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    build as _build_context_signature,
+)
+from _pending_contracts import (  # noqa: E402  # pyright: ignore[reportMissingImports]
+    write_contract as _write_pending_contract,
+)
 import _fence_synthesis  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 
@@ -721,6 +727,44 @@ def _layer4_fence_smoke_test(
     )
 
 
+def _maybe_write_pending_contract(
+    surface: dict,
+    payload: dict,
+    cwd: Path,
+    label: str,
+    blueprint_name: str,
+) -> None:
+    """CP7: write a hash-chained pending_contract when the surface's
+    ``verification_trace`` carries ``window_seconds``. No-op when
+    absent. Exception-safe — the caller traps any failure so
+    contract bookkeeping never blocks an admitted op."""
+    trace_raw = surface.get("verification_trace")
+    if not isinstance(trace_raw, dict):
+        return
+    window = trace_raw.get("window_seconds")
+    if not isinstance(window, int) or isinstance(window, bool) or window <= 0:
+        return
+
+    cmd = _bash_command(payload) if _tool_name(payload) == "Bash" else ""
+    ts = datetime.now(timezone.utc).isoformat()
+    correlation = _correlation_id(payload, cmd, ts)
+    signature = _build_context_signature(
+        cwd, blueprint_name=blueprint_name, op_class=label,
+    )
+    surface_prov = {
+        "core_question": str(surface.get("core_question") or "").strip(),
+        "disconfirmation": str(surface.get("disconfirmation") or "").strip(),
+    }
+    _write_pending_contract(
+        correlation_id=correlation,
+        op_label=label,
+        blueprint=blueprint_name,
+        context_signature=signature.as_dict(),
+        verification_trace=trace_raw,
+        surface_provenance=surface_prov,
+    )
+
+
 def _layer4_generic_validate(
     surface: dict,
     blueprint_name: str,
@@ -1086,6 +1130,14 @@ def main() -> int:
                 # the generic blueprint — closing the three fluent-
                 # vacuous examples from spec § "Why this exists" that
                 # honestly passed Layers 2+3.
+                #
+                # CP7 extension: when Layer 4 passes AND the trace
+                # carries `window_seconds`, the guard also writes a
+                # hash-chained pending_contract to
+                # ~/.episteme/state/pending_contracts.jsonl so Phase 12
+                # can correlate the trace against bash-history telemetry
+                # at SessionStart. Fence has its own synchronous smoke
+                # test and does NOT use the pending-contracts stream.
                 if status == "ok" and blueprint_name != "fence_reconstruction":
                     try:
                         _bp = _load_registry().get(blueprint_name)
@@ -1112,6 +1164,21 @@ def main() -> int:
                         if l4g_verdict == "reject":
                             status = "incomplete"
                             detail = l4g_detail
+                        elif l4g_verdict == "pass":
+                            # CP7: hash-chained Layer 6 pending-contract
+                            # write when window_seconds is declared.
+                            try:
+                                _maybe_write_pending_contract(
+                                    layer2_surface, payload, cwd,
+                                    label, blueprint_name,
+                                )
+                            except Exception:
+                                # Contract bookkeeping failure must not
+                                # block an admitted op. Layers 1-4 have
+                                # already validated; the missing L6
+                                # record just means Phase 12 can't
+                                # correlate this op retroactively.
+                                pass
 
     if status == "ok":
         _write_audit(tool_name, label, cwd, status, "passed", mode)

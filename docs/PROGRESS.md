@@ -425,6 +425,105 @@ DD #17 closed. Tracking moved to a completion note below; the stale-in-backlog e
 
 ---
 
+## Event 14 — 2026-04-21 — CP7 shipped: Pillar 2 hash chain + Pillar 3 substrate + retroactive upgrade walker
+
+The tamper-evidence substrate. Four new hook modules land the CP7 contract: `_chain.py` / `_context_signature.py` / `_pending_contracts.py` / `_framework.py`. Fence synthesis writer switched to the chained envelope. Phase 12 audit gains a `chain_integrity` field (additive; per-stream isolation). Three `episteme chain` CLI subcommands ship — `verify`, `reset`, `upgrade`. Tests: **469/469 passing** (+40 on top of the 429 CP6 baseline; zero regressions).
+
+### The envelope schema (pinned)
+
+Every chained record wraps in:
+
+```json
+{
+  "schema_version": "cp7-chained-v1",
+  "ts":             "<ISO-8601 UTC, microseconds>",
+  "prev_hash":      "sha256:<hex>" | "sha256:GENESIS",
+  "payload":        {"type": "...", ...business fields...},
+  "entry_hash":     "sha256:<hex>"
+}
+```
+
+- `entry_hash = SHA-256(prev_hash || "|" || ts || "|" || canonical_json(payload))`. Canonicalization: `json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)`. Byte-identical hash input regardless of dict insertion order — the determinism property the retroactive upgrade depends on.
+- Genesis uses the sentinel string `"sha256:GENESIS"` rather than `null` (CP7 plan Q5) so the walker's compare-loop is uniform (always compare a computed hash string to a received hash string; no null-special-casing).
+- Pipe separators (`"|"`) between prev_hash / ts / payload-bytes prevent ambiguity attacks where a payload tail could be confused with a ts prefix.
+
+### Per-stream isolation — two-file framework split
+
+`~/.episteme/framework/protocols.jsonl` and `~/.episteme/framework/deferred_discoveries.jsonl` ship as **independent chains** (CP7 plan Q1). Rationale: lifetime coupling is wrong. A protocol is load-bearing cognitive guidance; a deferred-discovery is an architectural-debt entry. Mixing them on one chain would mean a chain break in debt-logging halts guidance queries — wrong semantics. Verified in tests: `test_write_deferred_discovery_separate_chain` asserts the deferred stream's first record uses GENESIS regardless of protocol writes.
+
+Phase 12 audit's `chain_integrity` summary reports **per-stream** verdicts. A break in protocols.jsonl does NOT invalidate axis verdicts derived from episodic tier. Integration test `test_audit_reports_break_when_chain_tampered` exercises this exactly.
+
+### Context signature — conservative six-field dict
+
+Per CP7 plan Q3, the canonical signature covers:
+
+```
+project_name, project_tier, blueprint, op_class, constraint_head, runtime_marker
+```
+
+Profile-axis folding (risk_tolerance, dominant_lens, etc.) deferred to CP9. Rationale: over-specifying brittles every prior protocol match against axis tweaks; under-specifying collapses toward Doxa at match time. CP7 ships the stable substrate; CP9 tunes against real guidance traffic. `project_tier` detection reuses Layer 3's fingerprint warm cache — no new project-tree walks. `runtime_marker = "governed"` when `AGENTS.md` OR `.claude/` is present.
+
+### Retroactive upgrade — the determinism test
+
+CP5 wrote `~/.episteme/framework/protocols.jsonl` records with `format_version: "cp5-pre-chain"` + null chain fields. CP7's `upgrade_cp5_prechain`:
+
+1. **Pre-upgrade audit.** Every record must carry `format_version: cp5-pre-chain` + null chain fields + a `written_at` timestamp. ANY deviation aborts with `UpgradeError` naming the offending line. No partial upgrade.
+2. **Backup.** Copy the original to `<path>.upgrade-<ts>.bak` BEFORE any write.
+3. **Walk + rechain.** For each record in file order, compute hashes against the preserved `written_at` timestamps. Payload = CP5 record minus the three chain-layer fields (`format_version`, `prev_hash`, `entry_hash`) + `type: "protocol"` + `legacy_format: "cp5-pre-chain"` for provenance.
+4. **Atomic replace.** Temp + rename.
+5. **Post-verify.** `verify_chain` runs; if not intact, `UpgradeError` with the backup path preserved.
+6. **Idempotence.** Re-invocation on already-upgraded file returns `UpgradeResult(status="already_upgraded")` with no I/O. Mixed-state files (partial upgrade detected) abort with `UpgradeError` — operator resolves manually.
+
+**The determinism gate.** The walker is deterministic iff re-running it produces byte-identical output. Test `test_upgrade_idempotent` captures `bytes_after_first = p.read_bytes()` + `bytes_after_second = p.read_bytes()` around the second run and asserts they are equal. Pass = the walker actually works; fail = the walker has a non-deterministic input somewhere (unsorted dict, non-UTF8-stable byte sequence, timestamp re-generation). This is the structural proof CP7 can claim retroactive upgrade without breaking the chain-integrity property.
+
+**Live-state outcome.** The operator's `~/.episteme/framework/protocols.jsonl` does NOT exist — CP5's synthesis writer never fired on a real exit-zero PostToolUse (CP5's live dogfood tripped its own selector with the loose lexicon and was tightened; no other constraint-removal op has happened since). `episteme chain upgrade --stream protocols` reports `status=missing` honestly. The walker's correctness is proven by the synthetic 3-record test fixture; the live code path is wired and ready for the first real synthesis.
+
+### Guard wiring — pending-contract write on window_seconds
+
+When Layer 4 passes AND the surface's `verification_trace.window_seconds` is a positive int, the guard writes a hash-chained `pending_contract` to `~/.episteme/state/pending_contracts.jsonl` via `_pending_contracts.write_contract`. Phase 12 will correlate at SessionStart against `~/.episteme/telemetry/*-audit.jsonl`'s `command_executed` records (Phase 12 audit correlation itself is v1.0.1). Fence Reconstruction's synchronous rollback smoke test does NOT write to pending_contracts — it's already validated at PreToolUse.
+
+Same-correlation-id double-write: idempotent (byte-identical payload → no-op) or rejected (different payload → `ChainError`). Verified in `test_same_correlation_id_*` tests.
+
+### Fence synthesis — switched to chained envelope
+
+`_fence_synthesis._build_protocol` no longer returns `format_version: cp5-pre-chain` + null chain fields. The CP7 shape is the payload (with `type: "protocol"` discriminator); `_framework.write_protocol` wraps it in the chain envelope. Test `test_reversible_fence_writes_protocol_on_exit_zero` migrated from CP5's inline-JSON assertion to envelope-level assertions (`schema_version == "cp7-chained-v1"`, `prev_hash == "sha256:GENESIS"`, `entry_hash` starts with `sha256:`, `payload.type == "protocol"`).
+
+### CLI subcommands
+
+- `episteme chain verify` — per-stream integrity walk; exit 0 intact, exit 1 broken.
+- `episteme chain reset --stream <protocols|deferred_discoveries|pending_contracts> --reason "<text>" --confirm "<operator confirmation>"` — archives broken file to `<name>.broken-<ts>.jsonl`, writes a `chain_reset` genesis record capturing the reason + confirmation + previous head. Never auto-called — operator-only.
+- `episteme chain upgrade --stream protocols` — explicit trigger for the retroactive upgrade; only `protocols` has legacy records to upgrade at CP7.
+
+### Phase 12 integration — additive, per-stream
+
+`run_audit` output gains `chain_integrity: {protocols: {intact, total_entries, break_index, reason}, deferred_discoveries: ..., pending_contracts: ..., pending_contracts_archive: ...}`. The audit does NOT halt on a break — that's v1.0.1's per-record filter (audit records at/after a break become "unverifiable"). CP7 ships the integrity-check infrastructure only. Per-stream isolation verified in `test_audit_reports_break_when_chain_tampered`: a framework break does NOT change the other streams' verdicts.
+
+### Honest CP7 limits (tested explicitly, not latent)
+
+- **Chain-head signing deferred.** The envelope's tail is the de facto head hash; no separate `chain_head.json`. Committing the head to git in git-tracked projects (second tamper-evidence layer) is a v1.0.1 item; CP7 ships file-level chain only. Attack surface documented honestly: tail-truncation and coordinated rewrite both remain open.
+- **Phase 12 correlates nothing yet.** CP7 writes pending_contracts; Phase 12 reads chain integrity. The actual correlation (did the `verification_trace.command` fire in the telemetry log?) is v1.0.1. Until that lands, pending_contracts accumulate without retrospective verification.
+- **Framework query advisory.** CP7 ships the read side (`list_protocols`, `list_deferred_discoveries`, `field_overlap`) but NOT the PreToolUse guidance query — that's CP9's active-guidance surface.
+- **Context-signature profile-axis folding deferred.** Six fields at CP7; profile axes land at CP9 against real guidance traffic.
+- **No operator-confirmation challenge on CLI.** `episteme chain reset` accepts the confirmation string as an argparse arg. A stronger variant would prompt interactively for confirmation; CP7's choice keeps the CLI scriptable at the cost of accepting a typo'd confirmation at face value.
+
+### What did NOT happen
+
+- No Layer 6 correlation engine (did the trace.command actually fire?). v1.0.1.
+- No PreToolUse framework-query active guidance. CP9.
+- No `episteme guide` CLI. CP9.
+- No Blueprint D cascade detector or deferred-discovery writes from a real Blueprint D firing. CP10.
+- No Layer 8 spot-check sampling. CP8.
+- No chain-head git commit (second tamper-evidence layer). v1.0.1.
+
+### Honest open questions carrying into CP8
+
+- Whether the per-stream isolation of the chain_integrity summary is the right granularity for Phase 12 v1.0.1's per-record filter, or whether a shared "audit trust window" signal is more useful. CP8's spot-check sampling will inform this — the verdict queue is another chained stream.
+- Whether to fold the chain_rotation semantics (used by `_pending_contracts.archive_processed` at rotation time) into a shared primitive usable by future streams, or keep it stream-specific. CP7 leaves it local; revisit if CP8/CP10 need the same pattern.
+
+**Commit plan:** one atomic commit for CP7, message subject `feat(v1.0-rc): CP7 Pillar 2 hash chain + Pillar 3 substrate + retroactive CP5 upgrade`.
+
+---
+
 ## 0.11.0-rc-track — 2026-04-20 — Framing shift + RC-gate fixes + Phase 12 CP1 scaffolding
 
 One long session. Five commits. Repository's narrative posture and engineering posture realigned around the same thesis the code has always been enforcing: **the cognitive framework is the product; the file-system blocker is the uncompromising enforcer, not the pitch.** Engineering fixes close concrete v1.0.0 RC-blockers; Phase 12 foundation lands so Checkpoint 2 (first real cognitive-drift signature) can start from a scaffolded, tested base.

@@ -165,6 +165,17 @@ def run_audit(
         _audit_axis(axis, claims.get(axis), records, lexicon) for axis in ALL_AXES
     ]
 
+    # CP7 precondition — per-stream chain integrity check for Pillar 2
+    # streams (framework protocols / deferred_discoveries / pending
+    # contracts). Additive: the audit does NOT halt on a break. The
+    # output carries `chain_integrity` so downstream readers can see
+    # which dimensions are unverifiable due to tampering. Per-stream
+    # isolation: a framework break does NOT invalidate the episodic-
+    # derived axis verdicts. v1.0.1 extends this to per-record
+    # filtering (audit records at/after a break become "unverifiable");
+    # CP7 ships the integrity-check infrastructure only.
+    chain_integrity = _build_chain_integrity_summary()
+
     return {
         "version": "profile-audit-v1",
         "run_id": run_id,
@@ -172,8 +183,52 @@ def run_audit(
         "episodic_window": f"{since_days}d",
         "lexicon_fingerprint": lexicon_fp,
         "axes": axes,
+        "chain_integrity": chain_integrity,
         "acknowledged": False,
     }
+
+
+def _build_chain_integrity_summary() -> dict[str, Any]:
+    """Walk the framework + pending-contracts chains; return per-stream
+    verdicts. Never raises — chain-verifier IO failure degrades to
+    ``{"stream": {"intact": False, "reason": "<IO error>"}}`` so the
+    audit completes regardless of state-store availability.
+
+    ``_CORE_HOOKS_DIR`` is already on ``sys.path`` at module load
+    (line 65); no additional path manipulation needed here.
+    """
+    out: dict[str, Any] = {}
+    try:
+        import _framework  # type: ignore  # pyright: ignore[reportMissingImports]
+        fw_chains = _framework.verify_chains()
+        for name, verdict in fw_chains.items():
+            out[name] = {
+                "intact": verdict.intact,
+                "total_entries": verdict.total_entries,
+                "break_index": verdict.break_index,
+                "reason": verdict.reason,
+            }
+    except Exception as exc:
+        out["framework"] = {"intact": False, "reason": f"{exc.__class__.__name__}: {exc}"}
+    try:
+        import _pending_contracts  # type: ignore  # pyright: ignore[reportMissingImports]
+        pc_verdict = _pending_contracts.verify_chain()
+        out["pending_contracts"] = {
+            "intact": pc_verdict.intact,
+            "total_entries": pc_verdict.total_entries,
+            "break_index": pc_verdict.break_index,
+            "reason": pc_verdict.reason,
+        }
+        pc_arch = _pending_contracts.verify_archive()
+        out["pending_contracts_archive"] = {
+            "intact": pc_arch.intact,
+            "total_entries": pc_arch.total_entries,
+            "break_index": pc_arch.break_index,
+            "reason": pc_arch.reason,
+        }
+    except Exception as exc:
+        out["pending_contracts"] = {"intact": False, "reason": f"{exc.__class__.__name__}: {exc}"}
+    return out
 
 
 # ---------------------------------------------------------------------------
