@@ -20,6 +20,21 @@ Enforcement is **structural**, not advisory. Prompts can be skipped; a file-syst
 
 ---
 
+## The ABCD architecture — four blueprints, one cortex
+
+`episteme` acts as a **prefrontal cortex for AI agents**: it sits between intent and action, and it refuses to let an action proceed until the reasoning behind it is explicit. Four **Cognitive Blueprints** — each keyed to a specific failure class — decide what "explicit enough" means for a given op:
+
+- **A · Axiomatic Judgment** — resolves conflicts between credible but incompatible sources. Forces the agent to name *why* they disagree and *which feature of the current context* selects between them.
+- **B · Fence Reconstruction** — protects inherited constraints. Before a constraint can be removed, its original purpose must be reconstructed — Chesterton's fence enforced by the file system.
+- **C · Consequence Chain** — decomposes irreversible ops (first-order effect, second-order effect, failure-mode inversion, base-rate reference, margin of safety).
+- **D · Architectural Cascade** — catches refactors and renames that would leave stale references behind. Makes the agent enumerate the full blast radius before it edits.
+
+Every blueprint firing — and every decision it validates — is committed to a **tamper-evident hash chain**. That chain is not a log; it is how the kernel gives you **Active Guidance** later: at the next matching decision, the relevant synthesized protocol is surfaced proactively, before the agent defaults to its training distribution.
+
+The result is a **project-specific thinking framework that compounds**. The agent gets sharper on your codebase every time it resolves a conflict, not because you trained it — because the chain did the remembering.
+
+---
+
 ## The problem · the solution
 
 ### The problem — conflicting sources, averaged answers, no durable know-how
