@@ -16,7 +16,7 @@ from .. import cli as _cli
 # ---------------------------------------------------------------------------
 
 def render_user_claude_md() -> str:
-    names = ["overview", "operator_profile", "workflow_policy", "python_runtime_policy", "cognitive_profile"]
+    names = ["overview", "operator_profile", "workflow_policy", "python_runtime_policy", "cognitive_profile", "agent_feedback"]
     imports = "\n".join(f"@{_cli._resolve_memory_file(name)}" for name in names)
     status, age, elicited = _cli._profile_staleness()
     warning = _cli._render_stale_profile_warning(status, age, elicited)
