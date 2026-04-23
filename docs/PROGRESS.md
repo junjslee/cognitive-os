@@ -1312,7 +1312,19 @@ The single-string-directory shape likely worked at some earlier Claude Code vers
 1. **RC engineering gate is missing an installable-plugin-smoke-test.** `docs/NEXT_STEPS.md` § "Verification for RC gate — engineering" covers `pytest`, `episteme doctor`, `episteme inject`/`sync`, `episteme evolve friction`, `episteme kernel verify` — but NOT `/plugin install`. Adding this gate to the pre-tag checklist is the first line of defense against this exact regression class. Logged to NEXT_STEPS item 9 as a follow-up; not shipped this session.
 2. **Pre-tag version-string consistency check.** The drift `pyproject.toml → 1.0.0-rc1` vs `plugin.json → 0.11.0` vs `marketplace.json → 0.11.0` is the shape of thing a one-line CI grep-assertion would catch. Companion gap to #1; logged same place.
 
-**Commit:** `fix(plugin): correct agents field shape + reconcile version to v1.0.0-rc1 (fixes #1)` — pending operator approval for push + issue comment.
+**Commit:** `fix(plugin): correct agents field shape + reconcile version to v1.0.0-rc1 (fixes #1)` — SHA `0c27d9c`, pushed to origin/master. GitHub auto-closed issue #1 via the `(fixes #1)` keyword; resolution comment posted at `issues/1#issuecomment-4301737916`.
+
+**Post-ship validator sweep.** After the fix landed, ran `claude plugin validate /Users/junlee/episteme` against the installed Claude Code binary (v2.1.118). Plugin manifest validated clean — the reporter's install path is verified end-to-end, not just statically. Marketplace manifest surfaced a second, smaller issue:
+
+```
+❯ root: Unrecognized keys: "$schema", "description"
+```
+
+Root-level `$schema` and `description` keys are not in the current strict `marketplace.json` schema; canonical shape (per working `openai-codex` / `vercel` / `thedotmack` marketplaces) places description under `metadata.description` with companion `metadata.version`. Other user-installed marketplaces (autoresearch, chrome-devtools-plugins) carry the same deprecated root-level keys and install successfully — so the install flow tolerates them, only the strict `claude plugin validate` command rejects. Cleaned up for strict-validator compliance and future-proofing:
+
+- `.claude-plugin/marketplace.json` — removed `$schema` (deprecated), removed root `description` in favor of `metadata.description`, added `metadata.version` ("1.0.0-rc1" companion).
+
+Post-cleanup: both `plugin.json` AND `marketplace.json` validate clean via `claude plugin validate` (exit 0). No user-facing impact on the install flow — this is preventative for the time when Claude Code's install path starts enforcing what `validate` already enforces.
 
 ---
 

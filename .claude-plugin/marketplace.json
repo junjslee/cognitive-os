@@ -1,10 +1,12 @@
 {
-  "$schema": "https://anthropic.com/schemas/marketplace.json",
   "name": "episteme",
-  "description": "The epistemic-posture layer for AI coding agents. Reasoning Surface protocol, named failure-mode counters, operator profile schema, and workflow loop — shipped as skills, agents, and hooks.",
   "owner": {
     "name": "Jun Lee",
     "url": "https://github.com/junjslee"
+  },
+  "metadata": {
+    "description": "The epistemic-posture layer for AI coding agents. Reasoning Surface protocol, named failure-mode counters, operator profile schema, and workflow loop — shipped as skills, agents, and hooks.",
+    "version": "1.0.0-rc1"
   },
   "plugins": [
     {
