@@ -23,7 +23,7 @@
 
 ## TL;DR
 
-Modern AI agents are **incredibly capable** — they write production code, navigate entire repos, plan multi-step workflows. What they lack is **context-awareness**.
+Modern AI agents are **incredibly capable** — they write production code, navigate entire repos, plan multi-step workflows. What they lack is **context-awareness** and a defensive mechanism for **drift from user's intent**.
 
 When two credible sources disagree — *Source A says do it this way, Source B says do it that way* — an auto-regressive engine cannot tell which answer fits **your** project, **your** team's constraints, **your** op-class's history. So it defaults to the statistically average answer: fluent, confident, and fit for no specific context.
 
