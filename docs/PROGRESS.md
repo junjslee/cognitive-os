@@ -67,6 +67,26 @@ No code. No CP1 work. No test runs. The session was pure governance: tag 0.11.0,
 
 ---
 
+## CLI UX pass — 2026-04-22 — init/bootstrap/sync polish + tiered help + COMMANDS.md + ~/.zshrc rename
+
+Soak-safe session on user-facing CLI surface. No kernel, no hooks, no schema, no episodic records touched. Triggered by two operator-reported defects: (1) `episteme init` output was ambiguous when run from a non-kernel project dir (user thought it was a project-init that did nothing); (2) a `~/.zshrc` shell-integration banner ("[episteme] scaffold missing...") was racing the tty prompt and false-positiving on the kernel repo itself.
+
+**Issue fixes.** `_init_memory` (`src/episteme/cli.py:1244`) now prints its scope up front ("Seeding kernel global memory at …, always targets the kernel install, not your current directory"), explains the overwrite-guard rationale, and when CWD ≠ REPO_ROOT appends a hint pointing to `episteme bootstrap`. `~/.zshrc`'s `_episteme_hint` function now short-circuits in the kernel repo (checks `kernel/MANIFEST.sha256`), emits to stderr instead of stdout, references the canonical `episteme bootstrap` instead of a local alias, and the `.zshrc`-load inline call was removed (chpwd alone fires the banner — kills the startup-prompt race).
+
+**Alias rename.** Legacy `a*` aliases (agent-os era: `ainit`, `awt`, `aci`, `adoctor`, `aos`, `cci`) renamed to `e*` (`eboot`, `ewt`, `esync`, `edoctor`, `eos`, `ecl`). Clean break, no shims — machine-local only. `~/.zshrc` blast radius bounded.
+
+**Tiered help.** `build_parser` adds a grouped epilog (`daily` / `setup & admin` / `project tools` / `framework internals`) via `RawDescriptionHelpFormatter`. Argparse's default subparser listing stays intact for discoverability; epilog layers the mental map on top.
+
+**Cheatsheet.** `docs/COMMANDS.md` written — one-page reference with scope tags (global / project / framework), one-line explanations per subcommand, and three quick-start maps (fresh-machine setup, new project, operator-profile edit). Referenced from the epilog.
+
+**First-run nudges.** `_bootstrap_project` and the `sync` dispatcher now close with explicit `Next:` hints. `_init_memory`'s existing post-create hint was relabeled to match the `Next:` convention. Three-command output shape is now harmonized (opening action line → details block → blank line → `Next:` footer).
+
+**Dropped.** Considered renaming `episteme memory promote` (ambiguous verb to new users) but audit of `src/episteme/_memory_promote.py` confirmed "promote" is load-bearing `kernel/MEMORY_ARCHITECTURE.md` vocabulary (episodic → semantic tier). Renaming would introduce CLI/kernel drift. Fence held.
+
+**Soak/Phase B invariance.** `kernel/MANIFEST.sha256` tracks only `kernel/*` files (verified — 10 lines, zero `src/` entries). cli.py edits do not invalidate the manifest and do not touch the v1.0.0-rc1 soak's episodic-record-shape gates. Phase B of NEXT_STEPS (tone-alignment + REFERENCES permeation rider) remains exactly as staged — nothing in this session advances it.
+
+---
+
 ## Event 7 — 2026-04-21 — CP1 code + Blueprint-D self-dogfood cascade sync
 
 First real architectural-cascade op on the episteme repo itself, manually executed to the Blueprint-D contract before the blueprint's code machinery exists (that lands in CP10). This is the Gate-28-equivalent self-dogfood: the kernel's author edits the kernel under Blueprint D's discipline, proving the blueprint is a forcing function the maintainer can live with. If the cascade is wrong, or if any named blast-radius surface was silently skipped, the blueprint fails at the cognitive level regardless of whether CP10 eventually ships green code.
