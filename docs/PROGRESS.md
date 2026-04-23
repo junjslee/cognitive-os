@@ -1279,6 +1279,72 @@ Phase A scope is narrow-by-design and entirely advisory: surface `preferred_lens
 
 ---
 
+## Event 35 — 2026-04-23 — `release-please` CI automation: closes NEXT_STEPS line 212 version-string consistency gap (plus surfaces + fixes pyproject.toml version drift)
+
+**Scope.** CI / distribution-config surface. Four file edits: new `release-please-config.json` + `.release-please-manifest.json` + `.github/workflows/release-please.yml`; `pyproject.toml` version-string reconcile. Zero edits to `core/hooks/`, `kernel/*`, `src/episteme/`, `tests/`, or episodic-record-shape surface. v1.0.0-rc1 soak window unaffected (soak-safe at the time of shipping; Path-A soak reset independently authorized by operator — see Event 36 below).
+
+**Why.** Event 27's hotfix shipped two external-tester bugs in two install attempts (agents-field shape + hooks-duplicate). The post-mortem named the root cause precisely: **the RC engineering gate lacks a pre-tag version-string consistency check**, so drift between `pyproject.toml`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json` keeps happening. NEXT_STEPS line 212 explicitly queues this as a pre-tag-smoke requirement. `release-please` from googleapis is the idiomatic solution — conventional-commits-driven, automated version bumps across multiple files, release-PR workflow, auto-generated CHANGELOG. Adopting it eliminates the manual drift class at the source rather than catching it after the fact.
+
+**Version drift surfaced + fixed on setup.** Before release-please could be configured with a clean baseline, version strings had to be inspected. Finding: `pyproject.toml` held `0.11.0` — stale relative to the tag. Event 27 reconciled `plugin.json` + `marketplace.json` from `0.11.0` → `1.0.0-rc1` to match the git tag but **did not touch `pyproject.toml`**, leaving a silent drift unsurfaced until now. This is exactly the class of bug release-please is designed to prevent: a human-eye reconcile that misses one of N files. Fixed as part of the setup: `pyproject.toml` `project.version` `0.11.0` → `1.0.0-rc1`. All three JSON sources + pyproject now agree at `1.0.0-rc1`, matching the `v1.0.0-rc1` git tag.
+
+**Shipped.**
+
+- `release-please-config.json` (new) — `release-type: "python"` (tracks `pyproject.toml` `project.version`); `changelog-path: "kernel/CHANGELOG.md"`; `extra-files` directive maintains three additional JSON version paths in sync: `.claude-plugin/plugin.json` `.version`, `.claude-plugin/marketplace.json` `.plugins[0].version` (nested array index supported by JSONPath), `.claude-plugin/marketplace.json` `.metadata.version`; `include-v-in-tag: true` (matches existing `v1.0.0-rc1` tag convention); `bump-minor-pre-major: false` + `bump-patch-for-minor-pre-major: false` (preserves explicit control over the 0.x → 1.0 transition that already happened).
+- `.release-please-manifest.json` (new) — baseline `{ ".": "1.0.0-rc1" }` so release-please initializes from the shipped RC tag, not from 0.0.1.
+- `.github/workflows/release-please.yml` (new) — triggers on push to master + workflow_dispatch (manual); uses `googleapis/release-please-action@v4`; `permissions: contents:write + pull-requests:write` (sufficient for the standard flow — no custom PAT required); optional PyPI-publish step scaffolded as commented-out follow-up for when publish credentials + user intent exist.
+- `pyproject.toml` — single-line `project.version` `0.11.0` → `1.0.0-rc1` reconcile.
+
+**How it will work on first post-landing push.**
+
+1. Operator pushes conventional-commits-formatted commits to master (e.g., `feat(web): ...`, `fix(plugin): ...`, `feat!: ...`). Existing commit style already follows this convention — no workflow change needed.
+2. On next push, release-please-action reads the manifest baseline (`1.0.0-rc1`) and scans commits since the last release tag. Computes next version from the commit-type deltas (`fix` → patch, `feat` → minor, `!` or `BREAKING CHANGE` → major).
+3. Opens a release-PR titled `chore(master): release 1.0.0` (or similar) containing: bumped version in `pyproject.toml` + both `.claude-plugin/*.json` files, generated `kernel/CHANGELOG.md` entry aggregating the commit subjects, and a stamped release note.
+4. Operator reviews the PR. Merge → release-please creates the git tag + GitHub release automatically.
+5. No manual version reconcile across three files ever again. The drift class that caused Event 27 is structurally eliminated.
+
+**Verification.** Config files are JSON-valid (parse-clean). Workflow YAML is syntactically well-formed (no `yaml` Python module check in this session, but structure matches the release-please v4 documented shape). Action version pinned (`@v4`) — not `@main` — so upstream changes don't break the workflow silently. First actual release-PR won't generate until the next conventional-commits push (this commit itself qualifies; the next push will kick it off).
+
+**Soak safety.** Pure CI / distribution-config surface. Zero kernel/hook/episodic-record/hash-chain impact. Does not affect cognitive-adoption gate 21–28 measurement because release-please doesn't execute on PreToolUse / PostToolUse — it only fires on GitHub's workflow dispatcher, orthogonal to the guard layer.
+
+**Deferred discoveries / next-session follow-ups.**
+
+1. **First release-PR will likely land on the next push.** Expected title: `chore(master): release <next-version>`. Operator should review the diff before merging — specifically the CHANGELOG generation + any extra-files updates. If anything looks off, close the PR (release-please regenerates it on the next push).
+2. **PyPI publish step scaffolded but commented.** Activating it requires `PYPI_API_TOKEN` secret + explicit operator intent to publish. Episteme isn't currently on PyPI; opting in would expand the install surface from "pip install from git" to "pip install episteme."
+3. **`include-v-in-tag: true` assumed.** The existing `v1.0.0-rc1` tag uses the `v` prefix; release-please will continue the convention. If the operator later prefers tags without the `v`, flip to false and regenerate.
+
+**Commit (to-be):** `feat(ci): release-please automation for version-string consistency` — SHA assigned at commit.
+
+---
+
+## Event 34 — 2026-04-23 — Korean README + `/readme/ko` route (gbrain-ROI distribution work; rtk-ai-inspired multi-locale discipline)
+
+**Scope.** Distribution / GTM / docs-site surface. Two new files: `README.ko.md` (Korean translation of `README.md` marketing surface) + `web/src/app/readme/ko/page.tsx` (sibling route to `/readme` that auto-renders `README.ko.md` via the same remark/rehype pipeline Event 29 shipped). Zero edits to `core/hooks/`, `kernel/*`, `src/episteme/`, `tests/`, governance-surface docs (`docs/PLAN.md` / `DESIGN_V1_0_*.md` / `CONSTITUTION.md` / etc.). v1.0.0-rc1 soak window unaffected.
+
+**Why.** Two converging signals from the 2026-04-23 session. (1) rtk-ai/rtk ships README in en/fr/es/ja/ko/zh; observed as high-ROI distribution-surface discipline — low effort, high signal for non-English-speaking dev communities. (2) Operator is Korean-native and the Korean AI-tools community has high receptivity + propagation for new open-source cognitive-governance tooling. 생각의 틀 is already a load-bearing Korean term inside the English README; a full Korean rendering amplifies the thesis at the marketing surface without pulling anything inward to the governance surface (kernel-tone-discipline preserved by design — only `README.md` family is translated, the kernel/docs governance files stay English-technical as load-bearing LLM-posture control).
+
+**Shipped.**
+
+- `README.ko.md` (new, ~220 lines) — Korean rendering of all major README sections: header block with logo + badges + domain link (bilingual footer adding `· English → README.md` link for round-trip), softened tagline blockquote (preserving `Sovereign Cognitive Kernel` + `생각의 틀` + `posture over prompt` / *프롬프트가 아니라 자세* as load-bearing terms), TL;DR, ABCD 아키텍처, 문제와 해법, 프로토콜 합성과 능동적 가이던스, 나는 이걸 하고 싶은데 → 이렇게 하세요 (goal-action table), 60초 만에 보기, 빠른 시작 (두 옵션), 비교 (vs memory APIs vs agent runtimes), 제로-트러스트 실행 (OWASP mapping), 인간 프롬프트 디버깅, 저장소 레이아웃, CLI 표면, 이 아키텍처의 이유, 아키텍처와 철학 (doxa · episteme · praxis · 결), 커널 파일들, 다음으로 읽을 것, 푸시-준비 체크리스트. Load-bearing English terms kept as parenthetical references on first introduction (`생각의 틀(Thinking Framework)`, `아는 것 (Knowns)`, etc.) so Korean readers cross-reference the governance docs accurately.
+- `web/src/app/readme/ko/page.tsx` (new, 201 lines) — direct mirror of `web/src/app/readme/page.tsx` (Event 29 pipeline) with two surgical swaps: (a) `readReadme()` function renamed `readReadmeKo()` with path target `README.ko.md` instead of `README.md` (both cwd-fallback candidates follow same pattern); (b) metadata block retitled to `"README (한국어) — episteme"` with Korean-language description; (c) `<main>` element gets `lang="ko"` attribute for correct screen-reader + CSS-locale handling. All other wiring — component map, plugin stack, Tailwind theming — identical. Zero new dependencies.
+
+**Approach (mirror Event 29's `/readme` discipline).** Event 29 explicitly rejected `/docs/[...slug]` generalization on audience grounds (LLM-facing control docs should not be marketing-rendered). `/readme/ko` is a narrow single-file exception — same audience as `/readme` (end users + evaluators who can't read English), just in a different locale. The exception-over-generalization rule (Universal-principled rule in `core/memory/global/agent_feedback.md` added earlier this session) fires cleanly: bounded scope (2 locales today, 3-4 max credibly), case-by-case judgment (each locale is its own audience test), positive-system enumeration is the right shape. If future locales earn the treatment (e.g. `README.ja.md` when Japanese dev community picks up traction), each gets its own explicit `/readme/<locale>` route — no premature `/readme/[lang]` dynamic segment.
+
+**Verification.** `pnpm build` green: **6 prerendered routes** static (`/`, `/commands`, `/dashboard`, `/icon.svg`, `/readme`, `/readme/ko`) + 3 dynamic API routes preserved. TypeScript clean. 9/9 static pages generated. No component-tree structural change at the Header / Footer level (Header still doesn't yet advertise the Korean route — operator decision whether to add a locale-switcher link or keep `/readme/ko` discovery-by-explicit-URL-share for now).
+
+**Translation posture (for future pass-throughs).** First Korean draft preserves all load-bearing English terms with Korean parenthetical introductions; Korean prose is natural and dev-community-targeted, not word-for-word literal. Operator is a Korean-native speaker and will be the final reviewer on terminology choices (e.g. whether `생각의 틀` or `사고 프레임워크` reads more naturally in specific sentences — current draft uses the former consistently because it's the thesis-anchor term already in the English README). Any subsequent refinement by the operator is a direct README.ko.md edit that auto-propagates to `/readme/ko` on next build — no pipeline changes needed.
+
+**Soak safety.** Pure marketing-surface text work. Zero kernel/hook/episodic-record/hash-chain impact. `mode.ts` production default still routes the site to bundled fixtures so cognitive-adoption gate 21–28 measurement is unaffected (though note: gate-grading separately blocked by broken episodic writer, Path-A authorized pipeline hotfix per Event 36 below).
+
+**Deferred discoveries.**
+
+1. **Header locale-switcher deferred.** Currently `/readme/ko` is reachable only by direct URL. Adding `en | ko` toggle to the Header (or a per-page locale link at the bottom of `/readme`) is a 15-minute follow-up once operator confirms the Korean draft quality. Non-blocking; external link-shares of `epistemekernel.com/readme/ko` already work.
+2. **`README.ko.md` auto-build staleness check.** Not currently implemented. A CI lint that errors if `README.md` is modified without a matching `README.ko.md` update (or vice versa with explicit acknowledgment) would prevent silent drift. Post-v1.0.1 CI-polish candidate.
+3. **Other locale candidates.** `README.ja.md` (Japanese — large AI-tools community), `README.zh.md` (Chinese). Neither shipping today; both trivially addable following Korean pattern if traffic warrants.
+
+**Commit (to-be):** `feat(web,readme): Korean README + /readme/ko route (Event 34)` — SHA assigned at commit.
+
+---
+
 ## Event 33 — 2026-04-23 — Custom domain live: `epistemekernel.com` wired to Vercel (www-primary, apex 308→www) + layout metadata canonical URL + README header link
 
 **Scope.** Distribution-surface / GTM work. Two edits (`README.md` header link + `web/src/app/layout.tsx` metadata). Zero edits to `core/hooks/`, `core/blueprints/`, `kernel/*`, `src/episteme/`, `tests/`, or any file participating in episodic-record shape / hash-chained streams / hot-path behavior. v1.0.0-rc1 soak window (target close ~2026-04-29) unaffected.

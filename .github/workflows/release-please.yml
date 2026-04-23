@@ -1,0 +1,40 @@
+name: release-please
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          # Uses the default GITHUB_TOKEN with contents:write + pull-requests:write
+          # scopes (granted above). No custom PAT needed for the standard flow —
+          # release-please opens a release PR; merging it creates the git tag and
+          # GitHub release, which bumps pyproject.toml + plugin.json + marketplace.json
+          # to the next version derived from conventional-commits in the window since
+          # the last release.
+
+      # Optional follow-up hooks that fire only on an actual release (not on
+      # release-PR-creation). Left commented until there's a concrete use.
+      #
+      # - name: Publish to PyPI
+      #   if: ${{ steps.release.outputs.release_created }}
+      #   run: |
+      #     pip install build twine
+      #     python -m build
+      #     twine upload dist/*
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
