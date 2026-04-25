@@ -467,3 +467,9 @@ python3 -m py_compile src/episteme/cli.py
 episteme doctor
 git status && git rev-list --left-right --count @{u}...HEAD
 ```
+
+---
+
+## Commercial licensing
+
+For commercial licensing or consulting, [contact me](mailto:junseong.lee652@gmail.com).

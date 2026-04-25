@@ -1279,6 +1279,28 @@ Phase A scope is narrow-by-design and entirely advisory: surface `preferred_lens
 
 ---
 
+## Event 59 — 2026-04-25 — AGPL-3.0 LICENSE staged + migration plan §J swap procedure + commercial-licensing README footer
+
+**Scope.** Pure docs/staging artifact. One new file (`LICENSE.AGPL-3.0` at repo root, staged — NOT the active license), three modified files (`docs/POST_SOAK_MIGRATION_PLAN.md` §G.1 update + new §J, `README.md` commercial-licensing footer, `docs/NEXT_STEPS.md` Resume-here), this Event entry. Active `LICENSE` (MIT) explicitly UNTOUCHED. Zero `core/hooks/`, `core/blueprints/`, `src/episteme/`, `tests/`, `kernel/`-tier touches. Soak-safe by construction.
+
+**Why it matters.** Post-Event-58 review: operator picked **AGPL-3.0-only** over the FSL recommendation in §G.1. Reasoning preserved as audit trail (Pillar 2 ethos): strong copyleft is the cleanest deterrent — most corporations refuse to AGPL their internal codebases (AGPL-3.0 §13's network-use trigger forces source disclosure if episteme is integrated into a hosted service), so AGPL produces the same "deters corporate integration" effect as FSL's non-competing clause but with the additional benefit of being OSI-approved (true OSS, no community-trust cost). Commercial-licensing channel — for organizations that want to use episteme without AGPL obligations — is opened via the README footer (operator-authored: *For commercial licensing or consulting, contact me.*).
+
+**Files in this Event.**
+
+1. **`LICENSE.AGPL-3.0` (new, repo root) — STAGED.** Header marks the file as STAGED-FOR-SWAP-NOT-ACTIVE. Body is the canonical AGPL-3.0 text fetched verbatim from `https://www.gnu.org/licenses/agpl-3.0.txt` (661 lines + project-application notice). The active LICENSE (MIT) stays untouched until the post-soak swap.
+2. **`docs/POST_SOAK_MIGRATION_PLAN.md` §G.1 update + new §J.** §G.1 gains an `Operator decision (Event 59 · 2026-04-25)` paragraph documenting the AGPL choice + reasoning + preservation of the FSL recommendation as audit trail. §J is a new section: J.1 pre-flight (byte-identity diff against canonical AGPL source), J.2 the swap (one atomic commit: `git mv LICENSE → LICENSE.MIT.archived`, edit out staging header, `git mv LICENSE.AGPL-3.0 → LICENSE`, sed-update manifest license fields in `pyproject.toml` + `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json`), J.3 kernel/CHANGELOG MAJOR template, J.4 README banner template, J.5 public announcement guidance, J.6 commit/ship via Event-57 protocol Path A, J.7 post-swap verification (6 checks), J.8 rollback procedure with explicit cost-of-whiplash warning. Operator decision checklist updated: item #2 marked ✅ RESOLVED.
+3. **`README.md` footer addition.** Single-line `## Commercial licensing` section appended after Push-readiness checklist: *For commercial licensing or consulting, [contact me](mailto:junseong.lee652@gmail.com).* Marketing-surface, soak-safe.
+4. **`docs/PROGRESS.md`** (this entry).
+5. **`docs/NEXT_STEPS.md`** Resume-here updated.
+
+**Soak invariants preserved (explicit non-touches).** ❌ NO change to active `LICENSE` file (still MIT during soak). ❌ NO `core/hooks/`. ❌ NO `core/blueprints/`. ❌ NO `src/episteme/`. ❌ NO `tests/`. ❌ NO `kernel/CHANGELOG.md` MAJOR bump (that happens at §J execution post-soak, not now). ❌ NO manifest license-field changes in `pyproject.toml` / `plugin.json` / `marketplace.json` (also §J execution). ✅ Staged AGPL-3.0 text at side path. ✅ §J swap procedure documented for post-soak execution. ✅ README commercial-licensing channel opened.
+
+**Operator gate.** Migration plan's Operator decision checklist item #2 (License path) is now ✅ RESOLVED. The other 4 items (Day-7 routing, history scrub yes/no, sibling-layout, path-coupling audit) still pending — resolved at execution time post-soak.
+
+**Soak status reminder.** v1.0.0 RC fresh 7-day soak active since 2026-04-23T21:23:36Z, target close ~2026-04-30. Day-7 grading proceeds unchanged. License swap (§J) executes post-GA-cut only — never during soak.
+
+---
+
 ## Event 58 — 2026-04-25 — Post-soak migration plan + Product Protection Strategy drafted (`docs/POST_SOAK_MIGRATION_PLAN.md`)
 
 **Scope.** Pure docs/strategy artifact. One new file `docs/POST_SOAK_MIGRATION_PLAN.md` (executable runbook) + this Event entry + `docs/NEXT_STEPS.md` Resume-here line. Zero `core/hooks/`, `core/blueprints/`, `src/episteme/`, `tests/`, `kernel/`-tier touches. Operator EXPLICITLY directed: *"Just draft the plan. Do not touch the hot-path or break the soak."* Soak-safe by construction.

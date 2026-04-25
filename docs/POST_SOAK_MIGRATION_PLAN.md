@@ -340,6 +340,8 @@ The license matrix:
 - **Maximum openness with weak protection:** AGPL-3.0. True OSS. Corps technically can monetize but must publish derivatives under AGPL — most won't accept that obligation, so it deters integration.
 - **Minimum disruption (status quo):** Keep MIT. Accept that the moat is the user-private chain (each operator's accumulated protocols), not the source code. The architecture-as-public-thesis stance is consistent with MIT.
 
+> **Operator decision (Event 59 · 2026-04-25): AGPL-3.0 chosen.** The operator picked AGPL-3.0 over the FSL recommendation. Reasoning: strong copyleft is the cleanest deterrent — most corporations refuse to AGPL their internal codebases (AGPL-3.0's network-use trigger forces source disclosure if episteme is integrated into a hosted service), so AGPL produces the same "deters corp integration" effect as FSL's non-competing clause but with the additional benefit of being OSI-approved (true OSS, no community-trust cost). Commercial-licensing channel — for organizations that want to use episteme without AGPL obligations — is opened via the README footer (`For commercial licensing or consulting, contact me.`). The full FSL recommendation prose above is preserved as audit trail (Pillar 2 ethos: nothing changes silently); the actual choice is AGPL-3.0. The executable swap procedure lives at **§ J** below; the staged AGPL-3.0 license text is at `LICENSE.AGPL-3.0` (repo root) ready for the swap.
+
 ### G.2 · `git filter-repo` history scrub — recommendation: **DO NOT SCRUB**
 
 The case for scrubbing: removes the historical visibility of `PLAN.md` / `NEXT_STEPS.md` / `DESIGN_V1_1` content from public commits. A determined competitor running `git log -p docs/PLAN.md` post-migration would still see every revision of strategic content prior to the migration.
@@ -412,17 +414,230 @@ Day-7 grading proceeds unchanged. Soak clock continues from `2026-04-23T21:23:36
 - `https://fsl.software/` — Functional Source License v1.1 reference (FSL).
 - `https://mariadb.com/bsl11/` — Business Source License v1.1 reference (BSL).
 - `https://www.gnu.org/licenses/agpl-3.0.html` — AGPL-3.0 reference.
+- `LICENSE.AGPL-3.0` (repo root) — staged AGPL-3.0 text prepared in Event 59. Swap procedure in § J below.
+
+---
+
+## Section J · AGPL-3.0 swap procedure (operator-decided · Event 59)
+
+> **EXECUTES POST-SOAK ONLY.** License change is governance-class — bundles the active LICENSE rotation with manifest version-string updates + kernel/CHANGELOG MAJOR bump + public announcement. Do NOT run any command in this section while the v1.0.0-rc1 soak clock is active. Trigger: same as the strategic-doc migration above (Path 2.A GA cut, OR Path 2.B v1.0.1-rc1 cut). Operator may execute § J in the SAME Event as Sections C-D-E (one consolidated post-soak migration commit) OR in a separate follow-on Event — operator preference.
+
+### J.1 · Pre-flight verification (in addition to § A)
+
+```bash
+cd ~/episteme
+
+# 1. Confirm operator's license decision is still AGPL-3.0
+#    If operator has changed their mind, abort and revisit § G.1.
+
+# 2. Verify the staged license text matches canonical AGPL-3.0 byte-for-byte
+diff <(curl -fsSL https://www.gnu.org/licenses/agpl-3.0.txt) \
+     <(tail -n +27 LICENSE.AGPL-3.0)
+# Should output nothing (byte-identity).
+# (`tail -n +27` strips the staging header — adjust line count if the
+#  staging header was edited after Event 59.)
+
+# 3. Verify no recent commits modified LICENSE since Event 59 staging
+git log --oneline -- LICENSE | head -5
+# Most recent commit on LICENSE should be the original MIT addition;
+# any subsequent commit means out-of-band license modification — investigate.
+
+# 4. Verify kernel/CHANGELOG.md is ready for a MAJOR bump entry
+ls kernel/CHANGELOG.md
+```
+
+### J.2 · The swap (one atomic commit)
+
+```bash
+cd ~/episteme
+git checkout -b event-XX-license-swap-mit-to-agpl3 origin/master
+
+# 1. Archive the MIT license under a clear name
+git mv LICENSE LICENSE.MIT.archived
+
+# 2. Promote the staged AGPL-3.0 file to active LICENSE
+#    NOTE: edit the staged file FIRST to remove the staging header
+#    (lines 1-26 of LICENSE.AGPL-3.0 — the box-drawn STAGED notice).
+#    The active LICENSE must contain ONLY the AGPL-3.0 text starting at
+#    "                    GNU AFFERO GENERAL PUBLIC LICENSE".
+sed -i '' '1,/^================================================================================$/d' LICENSE.AGPL-3.0  # macOS sed; remove header through the closing separator
+sed -i '' '1,/^$/d' LICENSE.AGPL-3.0                                                                                  # remove blank line after the header
+git mv LICENSE.AGPL-3.0 LICENSE
+
+# 3. Update manifest license fields — MIT → AGPL-3.0
+sed -i '' 's/license = "MIT"/license = "AGPL-3.0-only"/' pyproject.toml
+sed -i '' 's/"license": "MIT"/"license": "AGPL-3.0-only"/' .claude-plugin/plugin.json
+sed -i '' 's/"license": "MIT"/"license": "AGPL-3.0-only"/' .claude-plugin/marketplace.json
+
+# 4. Verify manifest fields were updated
+grep -E '"license"|^license' pyproject.toml .claude-plugin/plugin.json .claude-plugin/marketplace.json
+
+# 5. Add the kernel/CHANGELOG MAJOR entry (Evolution Contract requirement)
+#    Operator authors the entry inline OR uses the template below.
+```
+
+### J.3 · `kernel/CHANGELOG.md` MAJOR entry (template — operator edits)
+
+Append to `kernel/CHANGELOG.md` above the most recent version entry:
+
+```markdown
+## [vX.Y.Z] — YYYY-MM-DD — License switch · MIT → AGPL-3.0-only
+
+**Governance-class change.** The kernel and all distribution artifacts
+(`pyproject.toml`, `.claude-plugin/plugin.json`,
+`.claude-plugin/marketplace.json`, public-facing `LICENSE`) switch from
+MIT to AGPL-3.0-only effective this version.
+
+**Why.** The kernel's value increasingly accrues to operators
+who integrate it into hosted services (the Pillar 3 active-guidance
+loop, the chain's tamper-evident provenance, Phase 12's calibration
+loop — all become more valuable as they accumulate operator-private
+data over time). Under MIT, a corporation could clone the kernel,
+embed it into a closed-source hosted product, and ship without sharing
+modifications back. AGPL-3.0's network-use disclosure trigger (§ 13)
+forces source-availability for any hosted-service integration.
+Individual developers and OSS projects retain full freedom; the
+license operates as a deterrent against integration-without-disclosure.
+
+**What changes for downstream users.**
+
+- **Pre-this-version clones (under MIT)** keep MIT for that snapshot —
+  MIT does not retroactively convert. Forks at older commits stay MIT.
+- **From this version onward** (any code redistributed or hosted as a
+  service) must comply with AGPL-3.0 § 13 disclosure. The reference
+  implementation's `web/` surface satisfies § 13 by linking
+  commit-permalinked source on every page footer + responding to
+  `/source` route with the deployed source archive.
+- **Commercial licensing** (internal corporate use, embedded in
+  closed-source products) is available — see README footer for contact.
+- **No code change** beyond LICENSE and manifest license fields. No
+  kernel-architecture commitments are altered by this version.
+
+**Audit trail.** Operator decision documented at:
+- `docs/POST_SOAK_MIGRATION_PLAN.md` § G.1 (FSL recommendation +
+  AGPL-3.0 operator-choice rationale; preserves both as audit trail)
+- `docs/POST_SOAK_MIGRATION_PLAN.md` § J (this swap procedure)
+- `docs/PROGRESS.md` Event 59 (staging) + Event XX (swap execution)
+```
+
+### J.4 · README license-switch announcement note
+
+Add a banner near the top of `README.md` (above the TL;DR) that runs for
+~30 days after the swap, then can be removed in a routine docs Event:
+
+```markdown
+> **License changed `MIT → AGPL-3.0-only` on YYYY-MM-DD.** Pre-vX.Y.Z
+> clones keep MIT for that snapshot. From vX.Y.Z onward: AGPL-3.0
+> applies (network-use disclosure per § 13). Commercial licensing
+> available for organizations that prefer non-AGPL terms — see the
+> [Commercial licensing](#commercial-licensing) footer.
+```
+
+### J.5 · Public announcement (operator-discretionary)
+
+The license change is significant enough to warrant a public note beyond
+the CHANGELOG entry. Recommended channels:
+
+- GitHub Release notes for the version that ships under AGPL-3.0
+  (separate `## License change` section before the standard release
+  notes content)
+- Project social channels (Twitter/X, LinkedIn, devrel platforms)
+  if operator has those — not required, but increases the signal
+  reach to potential downstream forks
+- A blog post on `epistemekernel.com` or operator's personal site
+  explaining WHY (the Section G.1 reasoning, in operator's voice)
+
+Operator authors the announcement copy at execution time — voice and
+positioning are operator-decisional, not template-able.
+
+### J.6 · Commit + ship
+
+```bash
+cd ~/episteme
+git add -A
+git commit -m "chore(license): MIT → AGPL-3.0-only (Event XX · governance-class)"
+git push -u origin event-XX-license-swap-mit-to-agpl3
+gh pr create --title "chore(license): MIT → AGPL-3.0-only (governance-class)" \
+  --body "Switches active license MIT → AGPL-3.0-only per docs/POST_SOAK_MIGRATION_PLAN.md § J. Pre-vX.Y.Z clones keep MIT for that snapshot; from this version onward AGPL-3.0 applies. Commercial licensing channel via README footer. See kernel/CHANGELOG entry for full rationale."
+# Operator merges via GitHub UI with --merge strategy (Event-57 protocol Path A)
+```
+
+### J.7 · Post-swap verification
+
+```bash
+cd ~/episteme
+
+# 1. LICENSE is now AGPL-3.0 (head should match canonical AGPL preamble)
+head -5 LICENSE
+# Expect:
+#                     GNU AFFERO GENERAL PUBLIC LICENSE
+#                        Version 3, 19 November 2007
+#  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+
+# 2. LICENSE.MIT.archived exists (audit trail)
+ls -la LICENSE.MIT.archived
+head -3 LICENSE.MIT.archived
+# Expect: MIT License header
+
+# 3. LICENSE.AGPL-3.0 staged file is gone (renamed to LICENSE)
+ls LICENSE.AGPL-3.0 2>&1
+# Expect: No such file or directory
+
+# 4. Manifest license fields all show AGPL-3.0-only
+grep -E 'license' pyproject.toml .claude-plugin/plugin.json .claude-plugin/marketplace.json
+
+# 5. CHANGELOG entry visible at top
+head -30 kernel/CHANGELOG.md
+
+# 6. README banner visible
+head -25 README.md
+```
+
+If any of the six fails: rollback per § J.8.
+
+### J.8 · Rollback (if swap surfaces issues post-merge)
+
+License rollback is destructive in business terms (downstream users may
+have already cloned under AGPL) but technically straightforward:
+
+```bash
+cd ~/episteme
+git checkout master
+git pull --ff-only origin master
+git checkout -b event-XX-license-rollback origin/master
+
+git mv LICENSE LICENSE.AGPL-3.0
+git mv LICENSE.MIT.archived LICENSE
+
+# Revert manifest license fields
+sed -i '' 's/license = "AGPL-3.0-only"/license = "MIT"/' pyproject.toml
+sed -i '' 's/"license": "AGPL-3.0-only"/"license": "MIT"/' .claude-plugin/plugin.json
+sed -i '' 's/"license": "AGPL-3.0-only"/"license": "MIT"/' .claude-plugin/marketplace.json
+
+# Revert kernel/CHANGELOG entry — manually edit out the AGPL section,
+# add a `License rollback` MAJOR entry naming the date and rationale.
+
+git add -A
+git commit -m "chore(license): rollback AGPL-3.0 → MIT (Event XX)"
+# Open PR, announce on the same channels that announced the original switch.
+```
+
+If rollback is needed: announce more carefully than the original switch.
+Whiplash on license decisions damages community trust more than the
+original switch did. A rollback should explain WHY the change didn't
+hold (e.g., "downstream forks blocked critical contributions; AGPL
+turned out to be a contributor-deterrent in practice").
 
 ---
 
 ## Operator decision checklist (resolve before executing)
 
-Answer each before running Section C:
+Answer each before running Section C (or § J):
 
 1. **Day-7 routing.** Is Day-7 grading complete? Path 2.A (GA cut) or Path 2.B (v1.0.1-rc1 cut) confirmed? Migration runs in either; do not run during the soak window.
-2. **License path.** FSL v1.1 (recommended) · BSL · AGPL-3.0 · keep MIT? Decision affects the LICENSE file edit Event after migration.
+2. **License path.** ✅ RESOLVED in Event 59 — **AGPL-3.0-only**. Staged at `LICENSE.AGPL-3.0` (repo root). Swap procedure at § J. Operator may execute § J in the same Event as Sections C-D-E (one consolidated post-soak migration commit) OR as a separate follow-on Event.
 3. **History scrub.** Recommended: leave history alone. Operator override possible but strongly advised against. Decision must be made before executing Section C — bundle the scrub with the migration commit if chosen, not later.
 4. **Sibling-layout assumption.** Migration assumes `~/episteme/` and `~/episteme-private/` are siblings on the operator's filesystem. Single-machine MacBook-Air-2 usage today is fine; multi-machine usage requires a follow-up plan (path-resolution via env var or git-submodule alternative).
 5. **Path-coupling audit.** Section A step 6 — any tool/code that hardcodes a path to one of the 9 migrating files needs a separate decision (read-only is fine via symlink; write needs path update).
 
-Once these five are resolved, Section C is mechanical. Operator runs the commands; migration completes in ~10 minutes.
+Once these five are resolved, Section C is mechanical. Operator runs the commands; migration completes in ~10 minutes. § J runs separately or bundled per operator preference.
