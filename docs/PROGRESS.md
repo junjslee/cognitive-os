@@ -1279,6 +1279,31 @@ Phase A scope is narrow-by-design and entirely advisory: surface `preferred_lens
 
 ---
 
+## Event 56 — 2026-04-25 — Operator approval of v1.1 spec (first pass): `drafted (vision)` → `approved (reframed, first pass)` with 3 Cognitive Arms framing + D11 Operator Fatigue Guardrails added
+
+**Scope.** Same docs-only blast radius as Event 55 — pure approval-pass artifact during active v1.0.0-rc1 soak. Zero `core/hooks/`, `core/blueprints/`, `src/episteme/`, `tests/`, `kernel/CONSTITUTION`-tier touches. Status flip + approval-record paragraph + naming-framing lock-in + D11 add + Primary Technical Risk callout + Operator review checklist marked RESOLVED with the six operator answers preserved inline. Soak invariants intact.
+
+**Why it matters.** The Event-55 vision draft proposed the v1.1 architecture; Event 56 is the operator's first-pass approval. The v1.0 spec required three reframes before approval; v1.1 lands on first pass with six load-bearing decisions that refine the proposed mechanisms without retracting any of them.
+
+**The six operator decisions, as committed to the design doc.**
+
+1. **Naming locked: `3 Cognitive Arms` (Arm A · Arm B · Arm C), NOT Pillar 4-6.** *Pillars are the unchanging structural foundation (v1.0); these new additions are the fluid, active engines operating on top of them.* Section headers in `docs/DESIGN_V1_1_REASONING_ENGINE.md` renamed accordingly; the Pillars/Arms distinction made explicit in the cognitive-arc section: Pillars stand still; Arms reach.
+2. **Verification windows: staggered (30d · 60d · 90d).** *Protocol decay is visible within 30 days, but achieving true convergence for a significant model promotion requires at least a 90-day accumulation.* Vision-draft proposal confirmed; no change to the proposed gates.
+3. **Cognitive Arm C ships one measurable v1.1 step: CP-MODEL-01 cross-protocol consistency check.** *Simply declaring a vision will turn v1.1 into nothing more than "Doxa" (hollow rhetoric). Even if we only implement a single logic — one that detects and rejects contradictions between protocols — it will fundamentally elevate the entire system.* Vision-draft proposal confirmed; CP-MODEL-01 is a v1.1 deliverable, not a v1.2 deferral.
+4. **D11 · Operator Fatigue Guardrails added** to the Goodhart-counter family (D1-D10 → D1-D11). *Since developers must manually approve Macro CPs or model promotions, there's a risk they'll blindly click 'Yes' if they're overwhelmed by notifications. We need a mechanism that triggers a warning if the approval time is unnaturally short (e.g., approving in under a second), as this signals a lack of proper review.* D11 integrated into Threat Model row #5 (operator-attention bottleneck) as the named countermeasure + into the consolidated Goodhart counters paragraph. The 1-second figure is provisional — operator-tunable at CP-MODEL-02 implementation time against observed approval-time distributions.
+5. **Cross-tool parity: Claude Code first per BYOS — NOT a v1.1 GA gate.** *The core philosophy of episteme is BYOS (Bring Your Own Skill). Proving flawless functionality must come first; we shouldn't create a bottleneck by trying to support every tool from the start.* Multi-adapter parity becomes a v1.2 milestone candidate.
+6. **Primary technical risk acknowledged: Zero-LLM Entity Extraction precision/recall** (Cognitive Arm B Step 1). *The synthesis has no logical holes. However, the biggest implementation hurdle will be just how precisely the `Zero-LLM Entity Extraction` can actually extract nodes.* Integrated as a Primary Technical Risk callout inside Cognitive Arm B Step 1, naming false-positive (cluster proposals chase noise) and false-negative (patterns get buried) failure modes; monitored closely from CP-CLUSTER-01 onward as a CP-acceptance gate.
+
+**Provenance discipline (Pillar 2 ethos).** The Operator review checklist section at the bottom of `docs/DESIGN_V1_1_REASONING_ENGINE.md` was rewritten as `Operator review checklist · RESOLVED` with the six original questions preserved verbatim and the six operator answers preserved verbatim below each. Future readers can audit *which questions were asked, what was answered, what shape the approval took* — not just *that the approval happened*. This is the same provenance pattern v1.0's `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` uses for its three reframes.
+
+**Files touched.** `docs/DESIGN_V1_1_REASONING_ENGINE.md` (status + approval record + naming pass + D11 + Primary Technical Risk callout + checklist resolved), `docs/PROGRESS.md` (this Event entry), `docs/NEXT_STEPS.md` (Resume-here), `docs/PLAN.md` (forward-pointer status update), `docs/ROADMAP_POST_V1.md` (anchor section status reflect).
+
+**Operator-specified commit message.** `docs(vision): operator approved v1.1 spec with 3 Cognitive Arms and D11 fatigue guard`. No AI-attribution trailer per universal rule. Commit lands additively on `event-55-v1-1-reasoning-engine-vision` branch (no force-push, no PR ceremony per standing instruction).
+
+**Soak status reminder.** v1.0.0 RC fresh 7-day soak active since 2026-04-23T21:23:36Z, target close ~2026-04-30. Day-7 grading at `~/.episteme/framework/`-derived counts proceeds unchanged. v1.1 CP work begins ONLY after the v1.0 GA cut completes AND the soak window's gates resolve favorably per `docs/POST_SOAK_TRIAGE.md`. This Event is the v1.1 architectural lock-in, not the v1.1 implementation kickoff.
+
+---
+
 ## Event 55 — 2026-04-25 — v1.1+ architectural vision drafted (`docs/DESIGN_V1_1_REASONING_ENGINE.md`): three structural epiphanies synthesized into the Proactive Reasoning Engine roadmap
 
 **Scope.** Pure docs/vision artifact during active v1.0.0-rc1 soak. Zero `core/hooks/`, `core/blueprints/`, `src/episteme/`, `kernel/` touches. New design document + 4 cross-reference updates. Soak-safe by construction.
