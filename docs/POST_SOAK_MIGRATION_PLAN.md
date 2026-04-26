@@ -630,14 +630,414 @@ turned out to be a contributor-deterrent in practice").
 
 ---
 
+## Section K · Reference Anchor Expansion (v1.1 prep · operator-decided Event 60)
+
+> **EXECUTES POST-SOAK ONLY.** Editing `kernel/REFERENCES.md` is governance-class
+> per Principle I (`kernel/CONSTITUTION.md`) — *introducing a new load-bearing
+> borrowed concept into kernel wording without a corresponding `kernel/REFERENCES.md`
+> entry violates Principle I.* The reverse is also true: adding a REFERENCES entry
+> commits the kernel to a load-bearing concept and must be approved with the same
+> care as the wording itself. Do NOT run any command in this section while the
+> v1.0.0-rc1 soak clock is active. Trigger: same as the strategic-doc migration
+> above (Path 2.A GA cut, OR Path 2.B v1.0.1-rc1 cut).
+
+### K.1 · Pre-flight verification (in addition to § A)
+
+```bash
+cd ~/episteme
+
+# 1. Confirm operator's review-resolved decisions are still standing.
+#    If operator has changed mind on any of the four anchors (Peirce, Engelbart,
+#    Bender, Heidegger) OR re-considered Girard, abort and revisit § G.1's
+#    Operator decision paragraph + this section's K.4.
+
+# 2. Soak window verified closed (Path 2.A or 2.B per § A pre-flight #1).
+
+# 3. Audit existing kernel/REFERENCES.md for citation-overlap with the four
+#    new anchors (deferred-discovery from Event 60 surface):
+grep -niE "Peirce|Engelbart|Bender|Heidegger|abductive|stochastic.parrot|das.man|augmenting" kernel/REFERENCES.md
+# If any match: operator decides whether the existing entry is sufficient,
+# needs strengthening, or should be removed in favor of the K.2 entries.
+
+# 4. Audit existing kernel/FAILURE_MODES.md mode 10 (`framework-as-Doxa`) for
+#    whether it should also gain a citation pointer to Bender + Heidegger
+#    (deferred-discovery from Event 60 surface):
+grep -nA5 "mode 10\|framework-as-Doxa\|framework_as_Doxa" kernel/FAILURE_MODES.md
+# Operator decides at execution: REFERENCES-only OR REFERENCES + mode-10-citation.
+
+# 5. Audit DESIGN_V1_1_REASONING_ENGINE.md for the integration sites K.3 names:
+grep -nE "Cognitive Arm A|Cognitive Arm B|Cognitive Arm C|abduct|bootstrap|Doxa" docs/DESIGN_V1_1_REASONING_ENGINE.md
+# Confirms the K.3 sites still exist post-any-other-edits since Event 56.
+```
+
+### K.2 · The four anchor entries — exact text for `kernel/REFERENCES.md`
+
+Operator copies the four blocks below into `kernel/REFERENCES.md` at the
+location the existing references file uses (alphabetical OR thematic groupings;
+see deferred-discovery #1 — operator picks at execution). Entries are written in
+the same style as the existing references file: source citation → concept term →
+how the kernel operationalizes it → cross-reference to specific spec locations.
+
+#### K.2.A · Peirce — Abductive Reasoning (anchors Cognitive Arm B)
+
+```markdown
+### Charles Sanders Peirce — Abductive Reasoning
+
+**Source.** Peirce, C. S. *Pragmatism as the Logic of Abduction* (Harvard
+Lectures on Pragmatism, 1903). Modern philosophy-of-science reformulation:
+Lipton, P. *Inference to the Best Explanation* (Routledge, 1991, 2nd ed. 2004).
+
+**Concept.** Abduction is the third inferential mode (alongside deduction and
+induction): the cognitive operation that *generates a hypothesis to explain
+surprising observations* — the leap from scattered evidence to "the best
+explanation that, if true, would account for what was observed." Peirce
+defined abduction precisely as a separate mode of inference because neither
+deduction (which derives consequences from premises) nor induction (which
+generalizes from cases) can account for the act of *hypothesis formation
+itself*.
+
+**Where the kernel operationalizes it.** Cognitive Arm B (Causal Synthesis)
+Step 2 — the LLM-driven Reflective Session — is structurally an abductive
+inference. The kernel composes a structured prompt over a deferred-discoveries
+cluster and asks: *"What is the SINGLE root-cause architectural flaw these N
+entries point at, if any?"* This is the abductive leap from scattered
+observations to a hypothesized root cause.
+
+**Why this matters for D7.** Abduction is the *weakest* of the three
+inferential modes. Peirce himself named this — abductive conclusions are
+provisional and require independent verification. The kernel's D7 counter
+(`per-entry independent verification on closure`) is the load-bearing
+counterweight: the abductive Macro-CP hypothesis must be tested against
+per-entry post-resolution evidence; a wrong root-cause shows up as M < N
+closures-with-evidence rather than a silent macro-failure. The Peirce citation
+makes the design's honesty about Arm B's weakest joint structurally visible.
+
+**Cross-references.** `docs/DESIGN_V1_1_REASONING_ENGINE.md` § Cognitive Arm B
+(Mechanism Step 2 + Goodhart resistance D7).
+```
+
+#### K.2.B · Engelbart — Augmenting Human Intellect (anchors Pillar 3 + Cognitive Arms A/C, with critical alignment)
+
+```markdown
+### Douglas Engelbart — Augmenting Human Intellect / Bootstrapping
+
+**Source.** Engelbart, D. C. *Augmenting Human Intellect: A Conceptual
+Framework* (Stanford Research Institute, AFOSR-3223, October 1962).
+
+**Concept.** Intelligence Augmentation (IA) — the design stance that treats
+computers as tools that *extend* human cognitive capability rather than
+replace it. Engelbart's specific load-bearing mechanism is *bootstrapping*:
+the recursive improvement loop where the tool that improves the tool
+improves the tool, with humans and tools co-evolving over time. The 1962
+framework imagines a continuous capability uplift through deliberate
+tool-self-improvement.
+
+**Where the kernel operationalizes it.** Pillar 3 (Framework Synthesis &
+Active Guidance) is structurally an Engelbartian bootstrap loop: synthesized
+protocols at decision N inform decision N+1; the framework refines itself
+across operator-history. Cognitive Arms A (Temporal Integrity) and C
+(Self-Consistency Convergence) extend the bootstrapping mechanism to the
+kernel's own knowledge artifacts (protocols decay; protocols promote to
+models; models derive disconfirmations).
+
+**Critical alignment — episteme accepts the mechanism, rejects the optimism.**
+Engelbart's 1962 framing assumed that augmentation is structurally beneficial.
+The kernel's posture is post-Kahneman and post-deskilling: IA *without
+structural constraints* produces operator deskilling — the human reasoning
+capacity erodes when the tool's outputs are accepted uncritically. Episteme
+installs the bootstrap loop *with* the constraints Engelbart's framework
+lacks:
+
+- **D3** (re-elicitation never auto-edits the framework — operator gates
+  every promotion).
+- **D11** (Operator Fatigue Guardrails — sub-second approval times flag as
+  `attention_bottleneck` drift, counter to compliance-theater).
+- **D2** (retrospective-only computation — the agent never sees the audit
+  signature at decision time, so bootstrapping cannot Goodhart-optimize).
+
+The citation positions episteme as *IA-aligned with constraints* rather than
+naive-IA. The mechanism is shared with Engelbart; the optimism is not.
+
+**Cross-references.** `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md` § Pillar 3
+(Framework Synthesis & Active Guidance); `docs/DESIGN_V1_1_REASONING_ENGINE.md`
+§ Cognitive Arm A (Temporal Integrity) + § Cognitive Arm C (Self-Consistency
+Convergence).
+```
+
+#### K.2.C · Bender et al. — Stochastic Parrots (ML anchor for anti-Doxa posture)
+
+```markdown
+### Bender, Gebru, McMillan-Major, Mitchell — Stochastic Parrots
+
+**Source.** Bender, E. M., Gebru, T., McMillan-Major, A., & Mitchell, M.
+*On the Dangers of Stochastic Parrots: Can Language Models Be Too Big?*
+Proceedings of the 2021 ACM Conference on Fairness, Accountability, and
+Transparency (FAccT '21), pp. 610–623. DOI: 10.1145/3442188.3445922.
+
+**Concept.** Large language models predict the *statistically most likely
+next token* given context, not context-fit truth. The "stochastic parrot"
+metaphor names this directly: the model produces fluent, grammatically
+correct, contextually-plausible output without any model of meaning or
+verification against world-state. The paper's load-bearing critique: scale
+alone does not produce understanding; bigger parrots are still parrots.
+
+**Where the kernel operationalizes it.** The Reasoning Surface's structural
+validation (≥ 15 character minimums on each field, lazy-token blocklist,
+falsifiable Disconfirmation requirement, Knowns-Unknowns-Assumptions
+separation) operates as a forcing function against the parrot's default
+behavior. The model cannot satisfy the surface by emitting statistically-
+fluent platitudes — the fields demand *specifics* (named observables, named
+unknowns, named assumptions) that grep against the project tree (Layer 3
+grounding). The validation does not make the model intelligent; it makes the
+parrot's default behavior *insufficient* for the kernel to admit the op.
+
+**Where the failure mode lives.** `kernel/FAILURE_MODES.md` mode 10
+(`framework-as-Doxa`) names the risk that the kernel's accumulated framework
+itself becomes the parrot — synthesized protocols crystallize past
+statistical-central answers as future advice. Pillar 3's active-guidance
+loop is exactly this risk; Cognitive Arm A (Temporal Integrity, Protocol
+Decay) is the structural counter.
+
+**Cross-references.** `kernel/FAILURE_MODES.md` mode 10; `kernel/REASONING_SURFACE.md`
+(structural-validation contract); `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`
+preamble (the "fluent-vacuous" framing).
+```
+
+#### K.2.D · Heidegger — Das Man (philosophical-ontological anchor for anti-Doxa posture)
+
+```markdown
+### Martin Heidegger — Das Man (the They)
+
+**Source.** Heidegger, M. *Sein und Zeit* (Niemeyer, 1927); English: *Being
+and Time*, trans. Macquarrie & Robinson (Harper, 1962). Specifically the
+analysis of *Das Man* (the They / the anonymous They) in Division One,
+Chapter IV (§§ 25–27).
+
+**Concept.** *Das Man* names the existential-ontological structure by which
+individual accountability dissolves into the average: *"one says,"* *"one
+does,"* *"everyone agrees that..."* The "anonymous They" is not any specific
+person — it is the structural mechanism by which inauthentic existence
+defers responsibility to a statistical-conformity center. Heidegger's
+analysis: Dasein (the being-that-can-question-being) tends toward *fallenness*
+into Das Man as the path of least resistance; authentic existence requires
+*resoluteness* — the act of taking individual responsibility for a specific
+question, against the pull of the averaging They.
+
+**Where the kernel operationalizes it.** LLM majority-voting is *Das Man at
+scale*: the model speaks "as one says it" — the statistically-central answer
+across training data — rather than as the specific context demands. The
+Reasoning Surface's *Core Question* field is the structural counterforce:
+the agent must declare *the one question this action is actually trying to
+answer*, breaking from the averaging mode and assuming responsibility for a
+specific, falsifiable claim. The Core Question is Heidegger's resoluteness
+operationalized as a file-system contract.
+
+**Why both Bender and Heidegger.** Bender et al. anchor the *empirical-
+mechanistic* face of the critique (LLMs predict statistically-central
+tokens). Heidegger anchors the *philosophical-ontological* root (averaging
+is how accountability dissolves, regardless of substrate). The kernel needs
+both depths: Bender names what the substrate does; Heidegger names *why
+that matters* for the operator's authentic existence as a thinker.
+
+**Cross-references.** `kernel/FAILURE_MODES.md` mode 10 (parallel root with
+Bender); `kernel/REASONING_SURFACE.md` (Core Question field as resoluteness
+contract); `docs/COGNITIVE_SYSTEM_PLAYBOOK.md` § 1 (Doxa framing).
+```
+
+### K.3 · Kernel-wording integration snippets — exact text for spec body insertions
+
+Operator copies these into the named locations in
+`docs/DESIGN_V1_1_REASONING_ENGINE.md` and `docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`
+when § K executes. Each snippet is one paragraph or sentence that names the
+anchor inline so the kernel-wording carries the load-bearing citation.
+
+#### K.3.A · Cognitive Arm B § Goodhart resistance (after current D7 paragraph)
+
+Append to the D7 paragraph in `docs/DESIGN_V1_1_REASONING_ENGINE.md`
+§ Cognitive Arm B § Goodhart resistance:
+
+> The cognitive type of the Reflective Session is *abductive* in Peirce's
+> sense (1903) — the leap from scattered observations to the hypothesis
+> that, if true, would best explain them. Abduction is the weakest of the
+> three inferential modes; Peirce himself named this. D7 is the kernel's
+> structural answer to the abductive weakness — per-entry independent
+> verification surfaces wrong-hypothesis closures as M < N evidence-confirmed,
+> rather than letting the abductive leap pass uninspected.
+
+#### K.3.B · Pillar 3 description (in DESIGN_V1_0_SEMANTIC_GOVERNANCE.md)
+
+Append a paragraph to the Pillar 3 introduction in
+`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`:
+
+> Pillar 3's bootstrap loop is *Engelbartian* in mechanism (1962): tool-
+> human co-evolution where synthesized protocols at decision N inform
+> decision N+1, with capability uplifting recursively across operator-
+> history. The kernel accepts Engelbart's mechanism but rejects his 1962
+> optimism — IA without structural constraints produces deskilling. The
+> bootstrap loop here ships *with* the constraints Engelbart's framework
+> lacked: D3 (re-elicitation never auto-edits), D11 (operator fatigue
+> guardrails), D2 (retrospective-only computation).
+
+#### K.3.C · Cognitive Arms A + C (in DESIGN_V1_1_REASONING_ENGINE.md)
+
+Add a one-line annotation to each of Cognitive Arm A and Cognitive Arm C
+introductions in `docs/DESIGN_V1_1_REASONING_ENGINE.md`:
+
+For Arm A introduction:
+
+> The arm extends Engelbart's bootstrap loop (1962) into the kernel's
+> own knowledge artifacts — protocols become falsifiable across time,
+> not just across cases.
+
+For Arm C introduction:
+
+> The arm carries the Engelbartian bootstrap mechanism toward an
+> asymptote of self-consistency — protocols promote to models, models
+> derive disconfirmations, the kernel's own self-model refines under its
+> own discipline. The 1962 optimism stays rejected: every model inherits
+> decay (D9), every promotion is operator-gated (D3), every auto-derived
+> disconfirmation is operator-overridable (D10).
+
+#### K.3.D · Anti-Doxa preamble (in DESIGN_V1_0_SEMANTIC_GOVERNANCE.md)
+
+Append a paragraph to the *Why this exists* section in
+`docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md`:
+
+> The anti-Doxa posture has two anchors. *Empirically*: Bender et al.'s
+> Stochastic Parrots critique (FAccT 2021) — LLMs predict the
+> statistically-central next token, not context-fit truth. *Philosophically-
+> ontologically*: Heidegger's analysis of Das Man (Being and Time, 1927) —
+> the "anonymous They" as the structural mechanism by which individual
+> accountability dissolves into averaging. The kernel installs both depths
+> as forcing functions: the Reasoning Surface's structural validation
+> rejects the parrot's fluent-vacuous output (Bender), and the Core
+> Question field forces the agent to break from Das Man and assume
+> responsibility for the specific question this action addresses
+> (Heidegger).
+
+#### K.3.E · `framework-as-Doxa` mode 10 (in `kernel/FAILURE_MODES.md` — operator decision)
+
+OPTIONAL parallel update — operator decides at execution whether mode 10's
+entry should also gain a citation pointer to Bender + Heidegger, OR whether
+the REFERENCES.md entries are sufficient cross-reference. If operator chooses
+to add: append after mode 10's existing description:
+
+> The failure mode's empirical mechanism is named in Bender et al.
+> (Stochastic Parrots, 2021); its ontological-existential root is named
+> in Heidegger's Das Man analysis (Being and Time, 1927). Cognitive Arm A
+> (Temporal Integrity, Protocol Decay) is the kernel's structural counter:
+> the framework cannot become the parrot if its protocols are themselves
+> falsifiable across time.
+
+### K.4 · Girard rejection — audit trail (Pillar 2 ethos: rejected candidates also recorded)
+
+Operator considered and rejected René Girard's *mimetic theory* (Mensonge
+romantique et vérité romanesque, 1961) as an anti-Doxa anchor during the
+Event 60 review pass. The rejection rationale, preserved here as audit trail:
+
+- **Mimetic stretch.** Girard's mimesis is *interpersonal desire transmission*
+  — a theory of cultural anthropology built on imitation as the structure of
+  human wanting. LLM token-prediction is *statistical conformity to training-
+  data distributions*. The two share the surface word "mimesis" but the
+  underlying cognitive structures differ. Citing Girard for the anti-Doxa
+  posture would be metaphorically powerful but academically loose.
+
+- **Tighter alternatives chosen.** Bender et al. directly anchors the ML-
+  empirical mechanism (statistical averaging). Heidegger's Das Man directly
+  anchors the philosophical-ontological structure (anonymous accountability
+  dissolution). Both are tighter fits than Girard's mimesis; both together
+  cover the empirical and ontological depths Girard would have only
+  metaphorically gestured at.
+
+- **Reference-quality consistency.** Episteme's existing references
+  (Kahneman / Munger / Dalio / Popper / Boyd / Meyer) are all *direct*
+  anchors to specific kernel mechanisms. Adding Girard as the only
+  metaphorical citation would lower the average citation precision and
+  invite the same loose-citation pattern in future spec work.
+
+The rejection is final for v1.1 prep. If a future Event surfaces a tighter
+operationalization of Girardian mimesis to a specific kernel mechanism (e.g.,
+a new failure mode that genuinely involves interpersonal desire transmission
+rather than statistical conformity), Girard can be reconsidered. Until that
+specific operationalization is named, Girard stays out.
+
+### K.5 · Commit + ship
+
+```bash
+cd ~/episteme
+git checkout -b event-XX-references-anchor-expansion origin/master  # use real Event number at execution time
+
+# 1. Edit kernel/REFERENCES.md — paste the four K.2 blocks at the operator's
+#    chosen location (alphabetical OR thematic grouping per deferred-discovery #1).
+
+# 2. Edit kernel/CHANGELOG.md — append a MAJOR or MINOR bump entry per the
+#    Evolution Contract (governance-class: new load-bearing concepts entering
+#    kernel wording). Title: "References expanded · Peirce + Engelbart + Bender + Heidegger".
+
+# 3. Edit docs/DESIGN_V1_1_REASONING_ENGINE.md — paste the K.3.A snippet into
+#    Cognitive Arm B § Goodhart resistance, and the K.3.C snippets into
+#    Cognitive Arms A + C introductions. Bump the design doc status to
+#    `approved (reframed, second pass)` per its own approval-versioning convention,
+#    with an Approval Record paragraph documenting the Event-60-resolved decision.
+
+# 4. Edit docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md — paste K.3.B into Pillar 3,
+#    K.3.D into the Why-this-exists preamble.
+
+# 5. (OPERATOR DECISION at execution) Edit kernel/FAILURE_MODES.md — paste K.3.E
+#    into mode 10 description, OR skip if operator chooses REFERENCES-only scope.
+
+# 6. Verify scope — confirm kernel/CHANGELOG.md MAJOR or MINOR bump, REFERENCES,
+#    DESIGN_V1_0, DESIGN_V1_1 all updated coherently. Operator confirms.
+
+git add -A
+git commit -m "kernel(references): expand REFERENCES with Peirce + Engelbart + Bender + Heidegger; integrate kernel wording (Event XX)"
+git push -u origin event-XX-references-anchor-expansion
+gh pr create --title "kernel(references): Peirce + Engelbart + Bender + Heidegger anchors" \
+  --body "Adds four reference anchors to kernel/REFERENCES.md per Event 60 review-resolved decisions. Wording integrated into Pillar 3 + Cognitive Arms A/B/C specs. Girard rejection preserved as audit trail in docs/POST_SOAK_MIGRATION_PLAN.md § K.4. CHANGELOG MAJOR/MINOR bump per Evolution Contract."
+# Operator merges via GitHub UI with --merge strategy (Event-57 protocol Path A).
+```
+
+### K.6 · Post-execution verification
+
+```bash
+cd ~/episteme
+
+# 1. All four anchors land in REFERENCES
+grep -cE "Peirce|Engelbart|Bender|Heidegger" kernel/REFERENCES.md
+# Expect: 4 or more (each anchor's block contains the surname multiple times).
+
+# 2. Spec wording integrations land
+grep -E "Peirce|abductive" docs/DESIGN_V1_1_REASONING_ENGINE.md
+grep -E "Engelbart|bootstrap" docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md docs/DESIGN_V1_1_REASONING_ENGINE.md
+grep -E "Bender|Stochastic Parrot" docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md
+grep -E "Heidegger|Das Man" docs/DESIGN_V1_0_SEMANTIC_GOVERNANCE.md
+
+# 3. CHANGELOG entry visible at top
+head -30 kernel/CHANGELOG.md
+
+# 4. (If chosen) FAILURE_MODES mode 10 carries the citation pointer
+grep -A10 "framework-as-Doxa" kernel/FAILURE_MODES.md
+
+# 5. Girard NOT introduced as a kernel reference (rejection preserved in K.4)
+grep -i "girard\|mimetic" kernel/REFERENCES.md
+# Expect: nothing in kernel/REFERENCES.md.
+# (Girard appears only in docs/POST_SOAK_MIGRATION_PLAN.md § K.4 audit trail.)
+```
+
+If any check fails: rollback per the same pattern as § J.8 (non-destructive
+git revert, no force-push).
+
+---
+
 ## Operator decision checklist (resolve before executing)
 
-Answer each before running Section C (or § J):
+Answer each before running Section C (or § J / § K):
 
 1. **Day-7 routing.** Is Day-7 grading complete? Path 2.A (GA cut) or Path 2.B (v1.0.1-rc1 cut) confirmed? Migration runs in either; do not run during the soak window.
 2. **License path.** ✅ RESOLVED in Event 59 — **AGPL-3.0-only**. Staged at `LICENSE.AGPL-3.0` (repo root). Swap procedure at § J. Operator may execute § J in the same Event as Sections C-D-E (one consolidated post-soak migration commit) OR as a separate follow-on Event.
 3. **History scrub.** Recommended: leave history alone. Operator override possible but strongly advised against. Decision must be made before executing Section C — bundle the scrub with the migration commit if chosen, not later.
 4. **Sibling-layout assumption.** Migration assumes `~/episteme/` and `~/episteme-private/` are siblings on the operator's filesystem. Single-machine MacBook-Air-2 usage today is fine; multi-machine usage requires a follow-up plan (path-resolution via env var or git-submodule alternative).
 5. **Path-coupling audit.** Section A step 6 — any tool/code that hardcodes a path to one of the 9 migrating files needs a separate decision (read-only is fine via symlink; write needs path update).
+6. **Reference anchor expansion.** ✅ RESOLVED in Event 60 — **ADD Peirce + Engelbart + Bender + Heidegger; REJECT Girard.** Staged at § K above with exact `kernel/REFERENCES.md` insertion text + spec-body wording integration snippets. Operator may execute § K in the same Event as Sections C-D-E + § J (one consolidated post-soak governance commit) OR as a separate follow-on Event.
 
-Once these five are resolved, Section C is mechanical. Operator runs the commands; migration completes in ~10 minutes. § J runs separately or bundled per operator preference.
+Once these six are resolved, Section C is mechanical. Operator runs the commands; migration completes in ~10 minutes. § J and § K run separately or bundled per operator preference.
