@@ -283,6 +283,42 @@ git push origin --delete event-NN-shortname
 
 ---
 
+## Doc classification policy (public vs. private)
+
+Before creating or moving any doc under `docs/`, classify it. The repo splits `docs/` across two visibility tiers; getting the classification right is load-bearing for both competitive position and ecosystem credibility.
+
+**PUBLIC tier (commit to repo):**
+
+- Architecture / spec / contract docs — `DESIGN_V*`, `ARCHITECTURE.md`, `LAYER_MODEL.md`, `EVOLUTION_CONTRACT.md`, `MEMORY_CONTRACT.md`, `SUBSTRATE_BRIDGE.md`. These are the credibility surface; AGPL-3.0 § 13 protects against closed-source extraction.
+- Kernel docs (`kernel/*`) — canonical philosophy, reasoning protocol, failure-mode taxonomy, references.
+- User references — `HOOKS.md`, `COMMANDS.md`, `SETUP.md`, `CUSTOMIZATION.md`, `DEMOS.md`, `HARNESSES.md`, `SYNC_AND_MEMORY.md`, `SKILLS_AND_PERSONAS.md`, `ANTHROPIC_MANAGED_AGENTS_BRIDGE.md`.
+- GTM surface — `README.md` (and translations), `INSTALL.md`, `llms.txt`, `.claude-plugin/README.md`, `OPEN_SOURCE_YOUR_PROFILE.md`.
+
+**PRIVATE tier (symlink to `~/episteme-private/docs/<name>`, gitignore the symlink):**
+
+- Operational state — *"where I am, what I'm doing, what I'm fighting"*: `PLAN.md`, `PROGRESS.md`, `NEXT_STEPS.md`, `*_TRIAGE.md`, `*_CALIBRATION.md`, `PREPARED_PATCHES.md`.
+- Positioning narrative — *"how I market"*: `POSTURE.md`, `NARRATIVE.md`, `COGNITIVE_SYSTEM_PLAYBOOK.md`.
+- Historical decision logs (`DECISION_STORY.md`-class once filled with content).
+- Anything that documents the operator's *how I work* or *how I market*.
+
+**Default when uncertain: privatize.** Reverting privatization is cheap (republish from private staging); reverting a leak requires `git filter-repo` + force-push + public explanation, with strictly worse optics.
+
+**Classification test.** Could a competitor read this doc and (a) replicate my workflow, (b) anticipate my next move, (c) copy my positioning playbook, (d) find an unfixed weakness to exploit? Any "yes" → PRIVATE.
+
+**Privatize mechanism (4 steps):**
+
+1. `cp docs/<name>.md ~/episteme-private/docs/<name>.md`
+2. `diff -q docs/<name>.md ~/episteme-private/docs/<name>.md` (verify byte-identical)
+3. `git rm docs/<name>.md`
+4. `ln -s ../../episteme-private/docs/<name>.md docs/<name>.md`
+5. Append `docs/<name>.md` to `.gitignore` under a dated Event section.
+
+**Cross-ref repair discipline (when privatizing).** Run `git grep -nE '<filename>'` across all tracked files. Repair links in PUBLIC-tier docs (visitor-facing 404s); leave operational/descriptive references that function correctly in user projects (harnesses, skills, agent definitions); never edit `kernel/CHANGELOG.md` historical entries (revisionism).
+
+**For new docs (creation, not move).** Same classification gate before the first write. If the doc would describe operational state, positioning, or strategic decision rationale, create it directly in `~/episteme-private/docs/` and symlink in; do not commit a public version first.
+
+---
+
 ## Scaling by delegation
 
 Subagents live in `core/agents/` and install into `~/.claude/agents/`.
