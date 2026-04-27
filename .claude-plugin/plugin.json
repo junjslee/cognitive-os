@@ -8,7 +8,8 @@
   },
   "homepage": "https://github.com/junjslee/episteme",
   "repository": "https://github.com/junjslee/episteme",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
+  "icon": "./docs/assets/logo-dragon-silhouette-64.svg",
   "keywords": [
     "episteme",
     "epistemic-posture",
