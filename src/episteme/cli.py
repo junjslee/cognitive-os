@@ -3034,6 +3034,104 @@ def _profile_audit_cli(*, since: str, write: bool, as_json: bool) -> int:
     return 0
 
 
+def _profile_history_cli(args) -> int:
+    """CLI entry for `episteme history axis` (Cognitive Arm A · Item 1 / Event 82).
+
+    Three modes dispatched by args:
+    - `axis --list`: enumerate axes that have at least one history entry.
+    - `axis <name> --record --from "..." --to "..." --reason "..."`: record a change.
+    - `axis <name>`: walk + render the chronological trajectory for the axis.
+    """
+    from episteme import _profile_history as ph_mod
+
+    history_action = getattr(args, "history_action", None)
+    if history_action != "axis":
+        print(
+            f"unknown history action: {history_action!r} "
+            "(expected: axis)",
+            file=sys.stderr,
+        )
+        return 2
+
+    if getattr(args, "list_axes", False):
+        axes = ph_mod.list_axes_with_history()
+        if not axes:
+            print("No profile axes have recorded history yet.")
+            return 0
+        print(f"Profile axes with recorded history ({len(axes)}):")
+        for axis in sorted(axes):
+            history = ph_mod.walk_axis_history(axis)
+            print(f"  {axis:30s}  {len(history)} entr{'y' if len(history) == 1 else 'ies'}")
+        return 0
+
+    axis_name = getattr(args, "axis_name", None)
+    if not axis_name:
+        print(
+            "axis_name is required (or pass --list to enumerate axes with history).",
+            file=sys.stderr,
+        )
+        return 2
+
+    record = getattr(args, "record", False)
+    if record:
+        old_value = getattr(args, "from_value", None)
+        new_value = getattr(args, "to_value", None)
+        reason = getattr(args, "reason", None)
+        evidence_refs = getattr(args, "evidence_refs", None) or []
+
+        if not old_value or not new_value or not reason:
+            print(
+                "--record requires --from, --to, and --reason "
+                "(min 15 chars; lazy tokens like 'n/a' / 'tbd' rejected).",
+                file=sys.stderr,
+            )
+            return 2
+        try:
+            envelope = ph_mod.record_change(
+                axis_name,
+                old_value=old_value,
+                new_value=new_value,
+                reason=reason,
+                evidence_refs=evidence_refs,
+            )
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(f"Recorded axis change for {axis_name}.")
+        print(f"  entry_hash: {envelope['entry_hash']}")
+        print(f"  recorder:   {envelope['payload'].get('recorder', 'unknown')}")
+        if evidence_refs:
+            print(f"  evidence:   {', '.join(evidence_refs)}")
+        return 0
+
+    # Default: walk + render
+    try:
+        history = ph_mod.walk_axis_history(axis_name)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    if not history:
+        print(f"No recorded history for axis {axis_name!r}.")
+        print("  Record a change with: "
+              f"`episteme history axis {axis_name} --record --from \"...\" --to \"...\" --reason \"...\"`")
+        return 0
+    print(f"Trajectory for {axis_name} ({len(history)} entr{'y' if len(history) == 1 else 'ies'}):")
+    print()
+    for envelope in history:
+        payload = envelope.get("payload", {})
+        print(f"  recorded_at: {payload.get('recorded_at', '?')}")
+        print(f"  recorder:    {payload.get('recorder', '?')}")
+        print(f"  old_value:   {payload.get('old_value', '?')}")
+        print(f"  new_value:   {payload.get('new_value', '?')}")
+        print(f"  reason:      {payload.get('reason', '?')}")
+        evidence = payload.get("evidence_refs") or []
+        if evidence:
+            print(f"  evidence:    {', '.join(evidence)}")
+        print(f"  entry_hash:  {envelope.get('entry_hash', '?')}")
+        print()
+    return 0
+
+
 def _profile_audit_ack_cli(args) -> int:
     """CLI entry for `episteme profile audit ack` (CP-AUDIT-ACK-01 / Event 78).
 
@@ -3971,6 +4069,13 @@ def _chain_dispatch(args) -> int:
             ack_verdict = _ack_mod.verify_chain()
         except Exception:  # noqa: BLE001 — degrade gracefully
             ack_verdict = None
+        # CP-TEMPORAL-INTEGRITY-EXPANSION-01 Item 1 / Event 82 — include
+        # the profile-history stream in the chain-verify enumeration.
+        try:
+            from episteme import _profile_history as _ph_mod
+            history_verdict = _ph_mod.verify_chain()
+        except Exception:  # noqa: BLE001 — degrade gracefully
+            history_verdict = None
         all_intact = True
         for stream_name, verdict in (
             ("protocols", fw.get("protocols")),
@@ -3978,6 +4083,7 @@ def _chain_dispatch(args) -> int:
             ("pending_contracts", pc),
             ("pending_contracts_archive", pc_arch),
             ("profile_audit_acks", ack_verdict),
+            ("profile_history", history_verdict),
         ):
             if verdict is None:
                 continue
@@ -4829,6 +4935,57 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stream to upgrade (only `protocols` has legacy records to upgrade at CP7)",
     )
 
+    # CP-TEMPORAL-INTEGRITY-EXPANSION-01 Item 1 + Item 5 / Event 82 — unified
+    # `episteme history` CLI; Cognitive Arm A first slice covers `axis`
+    # subcommand. Future Events add `protocol` and `surface` subcommands.
+    history_cmd = sub.add_parser(
+        "history",
+        help="Walk the supersede-with-history record streams (Cognitive Arm A)",
+    )
+    history_sub = history_cmd.add_subparsers(dest="history_action", required=True)
+    p_h_axis = history_sub.add_parser(
+        "axis",
+        help="Walk profile axis change history (or --record / --list)",
+    )
+    p_h_axis.add_argument(
+        "axis_name",
+        nargs="?",
+        help="One of the 16 declared operator-profile axes (omit when using --list)",
+    )
+    p_h_axis.add_argument(
+        "--list",
+        dest="list_axes",
+        action="store_true",
+        help="List all axes that have recorded history",
+    )
+    p_h_axis.add_argument(
+        "--record",
+        action="store_true",
+        help="Record a new axis change entry (requires --from / --to / --reason)",
+    )
+    p_h_axis.add_argument(
+        "--from",
+        dest="from_value",
+        help="Prior value (free-form string; e.g., 'inferred:loss-averse@2026-04-13')",
+    )
+    p_h_axis.add_argument(
+        "--to",
+        dest="to_value",
+        help="New value (free-form string; e.g., 'elicited:loss-averse@2026-04-27 with lived-behavior')",
+    )
+    p_h_axis.add_argument(
+        "--reason",
+        help="Substantive reason for the change (min 15 chars; lazy tokens 'n/a' / 'tbd' / etc. rejected)",
+    )
+    p_h_axis.add_argument(
+        "--evidence-refs",
+        dest="evidence_refs",
+        nargs="*",
+        default=[],
+        metavar="REF",
+        help="Optional event/episode references (e.g. 'Event 65' 'Event 66')",
+    )
+
     # CP-CHAIN-RECOVERY-PROTOCOL-01 / Event 80 — unified recovery surface
     # covering reset (functional), selective (stub), migrate (stub).
     c_recover = chain_sub.add_parser(
@@ -5144,6 +5301,8 @@ def main(argv: Iterable[str] | None = None) -> int:
                 force=args.force,
             )
         return 0
+    if args.command == "history":
+        return _profile_history_cli(args)
     if args.command == "profile":
         if args.profile_action == "show":
             return _profile_show()
