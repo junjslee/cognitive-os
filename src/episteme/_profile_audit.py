@@ -2006,9 +2006,10 @@ def read_latest_audit(reflective_dir: Path | None = None) -> dict[str, Any] | No
 def surface_drift_line(record: dict[str, Any] | None) -> str | None:
     """Produce the one-line SessionStart surfacing string, or None.
 
-    Silent when the record is absent, acknowledged, or contains no
-    drift. Matches the `profile-audit: ...` shape documented in the
-    spec §SessionStart surfacing.
+    Silent when the record is absent, acknowledged, ack-store-acked
+    (CP-AUDIT-ACK-01 / Event 78), or contains no drift. Matches the
+    `profile-audit: ...` shape documented in the spec §SessionStart
+    surfacing.
     """
     if not record:
         return None
@@ -2021,6 +2022,19 @@ def surface_drift_line(record: dict[str, Any] | None) -> str | None:
     if not drifts:
         return None
     run_id = record.get("run_id", "unknown")
+    # CP-AUDIT-ACK-01 / Event 78: also suppress if the run_id is acked
+    # in the hash-chained ack-store. Library callers (non-hot-path)
+    # import the ack module directly.
+    try:
+        from episteme import _profile_audit_ack as _ack_mod
+        if _ack_mod.is_acked(run_id):
+            return None
+    except Exception:
+        # Degrade gracefully — if the ack module is unavailable
+        # (test isolation, broken install), fall through to the
+        # in-record `acknowledged` check above and the standard
+        # surfacing logic below.
+        pass
     if len(drifts) == 1:
         a = drifts[0]
         return (

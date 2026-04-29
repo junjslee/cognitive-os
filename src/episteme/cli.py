@@ -3034,6 +3034,79 @@ def _profile_audit_cli(*, since: str, write: bool, as_json: bool) -> int:
     return 0
 
 
+def _profile_audit_ack_cli(args) -> int:
+    """CLI entry for `episteme profile audit ack` (CP-AUDIT-ACK-01 / Event 78).
+
+    Three modes dispatched by args:
+    - `--list`: enumerate outstanding (un-acked) audit IDs with drift.
+    - `--revoke <audit-id> --rationale "..."`: revoke a prior ack
+      (audit-trail preserved; revoke appends a new chain entry).
+    - `<audit-id> --rationale "..."`: ack the audit ID with rationale.
+
+    Library: src/episteme/_profile_audit_ack.py (hash-chained ack-store
+    at ~/.episteme/state/profile_audit_acks.jsonl).
+    """
+    from episteme import _profile_audit_ack as ack_mod
+
+    if getattr(args, "list_outstanding", False):
+        outstanding = ack_mod.list_outstanding_audits()
+        if not outstanding:
+            print("No outstanding (un-acked) profile-audit drift records.")
+            return 0
+        print(f"Outstanding profile-audit drift records ({len(outstanding)}):")
+        print()
+        for entry in outstanding:
+            run_id = entry.get("run_id", "?")
+            run_ts = entry.get("run_ts", "?")
+            axes = entry.get("drift_axes") or []
+            axes_str = ", ".join(axes) if axes else "(no drift axes named)"
+            print(f"  {run_id}")
+            print(f"    run_ts:      {run_ts}")
+            print(f"    drift_axes:  {axes_str}")
+            print(f"    ack via:     episteme profile audit ack {run_id} --rationale \"...\"")
+            print()
+        return 0
+
+    audit_id = getattr(args, "audit_id", None)
+    rationale = getattr(args, "rationale", None)
+    revoke = getattr(args, "revoke", False)
+    evidence_refs = getattr(args, "evidence_refs", None) or []
+
+    if not audit_id:
+        print(
+            "audit_id is required (or pass --list to enumerate outstanding records).",
+            file=sys.stderr,
+        )
+        return 2
+    if not rationale:
+        print(
+            "--rationale is required (min 15 chars; lazy tokens like 'n/a' / 'tbd' rejected).",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        if revoke:
+            envelope = ack_mod.write_revoke(audit_id, rationale)
+            print(f"Revoked ack for {audit_id}.")
+        else:
+            envelope = ack_mod.write_ack(
+                audit_id,
+                rationale,
+                evidence_refs=evidence_refs,
+            )
+            print(f"Acked {audit_id}.")
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"  entry_hash: {envelope['entry_hash']}")
+    print(f"  acker:      {envelope['payload'].get('acker', 'unknown')}")
+    if evidence_refs:
+        print(f"  evidence:   {', '.join(evidence_refs)}")
+    return 0
+
+
 def _profile_show() -> int:
     scores_path = GENERATED_PROFILE_DIR / "workstyle_scores.json"
     profile_path = GENERATED_PROFILE_DIR / "workstyle_profile.json"
@@ -3890,12 +3963,21 @@ def _chain_dispatch(args) -> int:
         fw = _framework.verify_chains()
         pc = _pending_contracts.verify_chain()
         pc_arch = _pending_contracts.verify_archive()
+        # CP-AUDIT-ACK-01 / Event 78: include the profile-audit ack-store
+        # in the chain-verify enumeration so its integrity is checked
+        # alongside the framework + pending-contracts streams.
+        try:
+            from episteme import _profile_audit_ack as _ack_mod
+            ack_verdict = _ack_mod.verify_chain()
+        except Exception:  # noqa: BLE001 — degrade gracefully
+            ack_verdict = None
         all_intact = True
         for stream_name, verdict in (
             ("protocols", fw.get("protocols")),
             ("deferred_discoveries", fw.get("deferred_discoveries")),
             ("pending_contracts", pc),
             ("pending_contracts_archive", pc_arch),
+            ("profile_audit_acks", ack_verdict),
         ):
             if verdict is None:
                 continue
@@ -4521,6 +4603,41 @@ def build_parser() -> argparse.ArgumentParser:
         help="Emit the full audit record as JSON instead of human-readable Markdown (stable format)",
     )
 
+    # Nested ack subcommand under `profile audit ack`. CP-AUDIT-ACK-01 / Event 78.
+    audit_sub = p_audit.add_subparsers(dest="audit_action", required=False)
+    p_ack = audit_sub.add_parser(
+        "ack",
+        help="Acknowledge / list / revoke profile-audit drift findings",
+    )
+    p_ack.add_argument(
+        "audit_id",
+        nargs="?",
+        help="Audit run-id to acknowledge (audit-YYYYMMDD-HHMMSS-NNNN); omit when using --list",
+    )
+    p_ack.add_argument(
+        "--rationale",
+        help="Substantive reason for the ack (min 15 chars; lazy tokens 'n/a' / 'tbd' / etc. rejected)",
+    )
+    p_ack.add_argument(
+        "--list",
+        dest="list_outstanding",
+        action="store_true",
+        help="List outstanding (un-acked) profile-audit drift records",
+    )
+    p_ack.add_argument(
+        "--revoke",
+        action="store_true",
+        help="Revoke a prior ack (audit-trail preserved; revoke appends a new chain entry, never deletes)",
+    )
+    p_ack.add_argument(
+        "--evidence-refs",
+        dest="evidence_refs",
+        nargs="*",
+        default=[],
+        metavar="REF",
+        help="Optional event/episode references supporting the ack (e.g. 'Event 65' 'Event 66')",
+    )
+
     cognition_cmd = sub.add_parser("cognition", help="Deterministic cognitive/philosophy profiling")
     cognition_sub = cognition_cmd.add_subparsers(dest="cognition_action", required=True)
     c_survey = cognition_sub.add_parser("survey", help="Interactive cognitive-style survey")
@@ -4932,6 +5049,8 @@ def main(argv: Iterable[str] | None = None) -> int:
         if args.profile_action == "show":
             return _profile_show()
         if args.profile_action == "audit":
+            if getattr(args, "audit_action", None) == "ack":
+                return _profile_audit_ack_cli(args)
             return _profile_audit_cli(
                 since=args.since,
                 write=args.write,
