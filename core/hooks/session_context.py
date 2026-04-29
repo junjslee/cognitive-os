@@ -147,6 +147,47 @@ def run(args: list[str]) -> str:
     return r.stdout.strip() if r.returncode == 0 else ""
 
 
+def _is_acked_in_store(run_id: str) -> bool:
+    """Inline ack-store check (CP-AUDIT-ACK-01 / Event 78). Walks
+    ~/.episteme/state/profile_audit_acks.jsonl in order; latest-state-
+    per-audit_id wins. Returns True iff the latest entry for ``run_id``
+    is a `profile_audit_ack` (and not subsequently revoked).
+
+    Inlined rather than importing src/episteme/_profile_audit_ack.py —
+    same pattern as _profile_audit_line below: hooks run as standalone
+    scripts with no guaranteed sys.path of src/episteme/.
+    """
+    path = Path.home() / ".episteme" / "state" / "profile_audit_acks.jsonl"
+    if not path.exists():
+        return False
+    state: str | None = None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                s = line.strip()
+                if not s:
+                    continue
+                try:
+                    rec = json.loads(s)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(rec, dict):
+                    continue
+                payload = rec.get("payload", {})
+                if not isinstance(payload, dict):
+                    continue
+                if payload.get("audit_id") != run_id:
+                    continue
+                etype = payload.get("type")
+                if etype == "profile_audit_ack":
+                    state = "ack"
+                elif etype == "profile_audit_ack_revoke":
+                    state = "revoke"
+    except OSError:
+        return False
+    return state == "ack"
+
+
 def _profile_audit_line() -> str | None:
     """Return a re-elicitation prompt string from the latest unacknowledged
     profile-audit record, or None when nothing to surface.
@@ -191,6 +232,12 @@ def _profile_audit_line() -> str | None:
     if not drifts:
         return None
     run_id = record.get("run_id", "unknown")
+    # CP-AUDIT-ACK-01 / Event 78: also suppress if the run_id is acked
+    # in the ack-store at ~/.episteme/state/profile_audit_acks.jsonl.
+    # Inlined per the hooks-stay-self-contained convention — no
+    # sys.path setup required.
+    if _is_acked_in_store(run_id):
+        return None
     if len(drifts) == 1:
         a = drifts[0]
         return (
