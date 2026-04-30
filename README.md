@@ -113,6 +113,7 @@ This architecture also counters **Cognitive Deskilling** — the erosion of the 
 
 | Goal                                                | Command / pointer                                                   |
 |-----------------------------------------------------|---------------------------------------------------------------------|
+| See the bidirectional symbiosis loop (agent and human debug each other's intent) | [`demos/04_symbiosis/`](./demos/04_symbiosis/) · [`scripts/demo_symbiosis.sh`](./scripts/demo_symbiosis.sh) |
 | See the Thinking Framework *off vs on* on the same prompt      | [`demos/03_differential/`](./demos/03_differential/) · [`scripts/demo_posture.sh`](./scripts/demo_posture.sh) |
 | See what the framework produces end-to-end                     | [`demos/01_attribution-audit/`](./demos/01_attribution-audit/) · [`demos/02_debug_slow_endpoint/`](./demos/02_debug_slow_endpoint/) |
 | Install as a Claude Code plugin (one line)          | `/plugin marketplace add junjslee/episteme`                     |
@@ -132,8 +133,9 @@ This architecture also counters **Cognitive Deskilling** — the erosion of the 
 
 Live site + visual dashboard — both rendered against the kernel's own `cp7-chained-v1` hash chain. See [`web/README.md`](./web/README.md) for the Vercel deploy guide.
 
-Three demos, increasing in what they prove:
+Four demos, increasing in what they prove:
 
+- **[`demos/04_symbiosis/`](./demos/04_symbiosis/) — the demo for the project's thesis.** *Agent and human debug each other's intent.* A user asks for a Redis cache; the Reasoning Surface forces the agent to name the hidden cache-shape premise as a falsifiable Unknown; the advisory surfaces it back to the user; the user refines their own prompt; the framework synthesizes a context-fit protocol that fires automatically on the next matching call a week later. Six acts, ~90 seconds. [`DIFF.md`](./demos/04_symbiosis/DIFF.md) compares the two cycles side-by-side.
 - **[`demos/03_differential/`](./demos/03_differential/) — the demo that converts skeptics.** *Exact same prompt, Thinking Framework OFF vs. ON.* A PM asks for a 2-sprint semantic-search scope; off answers *how*; on answers *whether*. [`DIFF.md`](./demos/03_differential/DIFF.md) shows which named failure modes the framework caught.
 - [`demos/02_debug_slow_endpoint/`](./demos/02_debug_slow_endpoint/) — framework applied to a realistic p95 regression. The fluent-wrong *"add a cache"* answer is rejected at the Core Question gate; a schema-level root cause is produced instead.
 - [`demos/01_attribution-audit/`](./demos/01_attribution-audit/) — canonical four-artifact shape (reasoning-surface → decision-trace → verification → handoff). The kernel applied to itself, auditing whether every borrowed concept is traceable to a primary source.
@@ -454,6 +456,7 @@ Authority hierarchy: **project docs > operator profile > kernel defaults > runti
 | Kernel distillation (30 lines)             | [`kernel/SUMMARY.md`](./kernel/SUMMARY.md)                       |
 | What the kernel produces                   | [`demos/01_attribution-audit/`](./demos/01_attribution-audit/) · [`demos/02_debug_slow_endpoint/`](./demos/02_debug_slow_endpoint/) |
 | Same prompt, framework off vs. on            | [`demos/03_differential/`](./demos/03_differential/)             |
+| Bidirectional symbiosis — agent and human debug each other's intent | [`demos/04_symbiosis/`](./demos/04_symbiosis/) |
 | Install paths (marketplace, CLI, dev)      | [`INSTALL.md`](./INSTALL.md)                                     |
 | Benchmark with disconfirmation target      | [`benchmarks/kernel_v1/`](./benchmarks/kernel_v1/)               |
 | Substrate bridge (mem0, memori, noop)      | [`docs/SUBSTRATE_BRIDGE.md`](./docs/SUBSTRATE_BRIDGE.md)         |
