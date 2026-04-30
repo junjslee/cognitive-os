@@ -1,0 +1,50 @@
+{
+  "schema": "episteme/reasoning-surface@1",
+  "decision_id": "2026-04-30-orders-perf-regression",
+  "operator": "default",
+  "timestamp": "2026-04-30T03:15:00Z",
+  "domain": "complicated",
+  "tacit_call": false,
+  "core_question": "Is the p95 regression on /api/orders bottlenecked on a cache-shaped read pattern, or on a non-cache-shaped pattern (N+1 query, lock contention, network egress, GC pause) where adding Redis would mask the symptom without fixing the cause?",
+  "knowns": [
+    "p95 latency on /api/orders has crossed the 800ms SLO threshold for 20 consecutive minutes per the PagerDuty incident.",
+    "/api/orders fans out to two tables (orders + line_items) via the ORM's default relation loader.",
+    "Redis is already provisioned in this project's infrastructure — adding a cache layer is a hours-of-work change, not a days-of-work change.",
+    "The user's first prompt proposed Redis caching as the fix without referencing any measurement that names the bottleneck shape."
+  ],
+  "unknowns": [
+    "Whether the per-request query plan shows a single SELECT with N row fetches (cache-amenable) or N+1 individual SELECTs (cache would mask, not fix). The query plan has not been pulled.",
+    "Whether the regression correlates with a recent deploy, a traffic-pattern change, or a data-volume threshold. The deploy-vs-regression timeline has not been checked.",
+    "Whether the load-bearing slowness is read latency (cache-amenable) or write contention (cache makes worse via stale-read window). The read-vs-write breakdown has not been measured."
+  ],
+  "assumptions": [
+    {
+      "claim": "The user's framing — 'add a Redis cache to fix it' — implicitly assumes the bottleneck is cache-shaped. This is the load-bearing premise of the request.",
+      "falsification": "Falsified if the query plan shows N+1 ORM iteration, lock contention on a hot row, GC pauses, or network egress saturation as the dominant time component."
+    },
+    {
+      "claim": "Redis as proposed (read-through cache, 60s TTL) reduces p95 by ≥ 50% within a 24h staging soak window.",
+      "falsification": "Falsified if p95 is unchanged or worse after the cache lands in staging under representative load."
+    },
+    {
+      "claim": "The cache invalidation pattern is solvable within the scope of this fix without introducing a stale-read window that breaks order-state consistency for downstream consumers.",
+      "falsification": "Falsified if order status changes (paid → shipped → delivered) become visible to clients with > 5s latency, or if the inventory consumer reports phantom rows."
+    }
+  ],
+  "disconfirmation": "p95 latency on /api/orders is unchanged or worse after the Redis read-through cache deploys to staging and runs for 24 hours under load comparable to production peak.",
+  "hypothesis": "The bottleneck is more likely an N+1 ORM query at the schema/code level than a cache-shaped read pattern. Recommendation: pull the query plan and run a 5-minute production trace BEFORE writing any caching code. If the trace confirms cache-amenable shape, proceed with cache. If not, the fix is at the ORM layer (eager loading, dataloader pattern, or schema denormalization) and adding Redis would mask the symptom without resolving the cause.",
+  "constraint_regime": {
+    "allowed": [
+      "read-only diagnostic queries against staging replica",
+      "production query-plan capture via EXPLAIN ANALYZE",
+      "5-minute trace via the existing APM tool"
+    ],
+    "forbidden": [
+      "schema migrations during the incident window",
+      "writing Redis integration code before the bottleneck shape is verified",
+      "deploying to production without staging soak"
+    ],
+    "cost_limit": "diagnosis must complete within 30 minutes; if no clear bottleneck shape by then, escalate to the senior engineer on-call"
+  },
+  "decision_type": "reversible (diagnostic queries; no state change)"
+}

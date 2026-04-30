@@ -1,0 +1,33 @@
+────────────────────────────────────────────────────────────────────────────────
+[episteme] Reasoning Surface accepted · 2026-04-30-orders-perf-regression
+────────────────────────────────────────────────────────────────────────────────
+
+  Hidden premise detected and named explicitly:
+
+    "The bottleneck is cache-shaped"
+      ↳ stated only as a solution shape ("add a Redis cache")
+      ↳ not yet verified against the query plan or trace
+
+  This plan pre-commits to a falsifiable disconfirmation condition:
+
+    "p95 latency on /api/orders is unchanged or worse after the Redis
+     read-through cache deploys to staging and runs for 24 hours under
+     load comparable to production peak."
+
+  ↑ The advisory above is what the operator's request would have looked like
+    if the operator had named their assumption before stating their fix.
+  ↓ The operator can refine the request now, before any tool runs:
+
+    Option A (proceed)  — accept the disconfirmation, ship the cache anyway,
+                          revert if p95 is unchanged after the staging soak.
+    Option B (refine)   — pull the query plan first; if the bottleneck is
+                          N+1 ORM iteration, the fix is at the schema layer,
+                          not the cache layer. Caching would mask the symptom.
+    Option C (escalate) — surface the diagnosis question to the senior
+                          on-call before any code is written.
+
+  Active guidance from the framework: the project's protocol stream has not
+  yet recorded a protocol matching this context signature. This decision will
+  produce one if the disconfirmation fires.
+
+────────────────────────────────────────────────────────────────────────────────
