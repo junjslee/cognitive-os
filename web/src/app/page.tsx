@@ -5,6 +5,7 @@ import { LiveExhibit } from "@/components/site/LiveExhibit";
 import { FrameworkExplainer } from "@/components/site/FrameworkExplainer";
 import { ProtocolsSection } from "@/components/site/ProtocolsSection";
 import { CodeSample } from "@/components/site/CodeSample";
+import { SymbiosisTimeline } from "@/components/site/SymbiosisTimeline";
 import { CTASection } from "@/components/site/CTASection";
 import { Footer } from "@/components/site/Footer";
 
@@ -19,6 +20,7 @@ export default function Home() {
         <FrameworkExplainer />
         <ProtocolsSection />
         <CodeSample />
+        <SymbiosisTimeline />
         <CTASection />
       </main>
       <Footer />
