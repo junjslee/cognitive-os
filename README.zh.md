@@ -77,6 +77,27 @@
 
 ---
 
+## 零信任执行
+
+[**OWASP Top 10 for Agentic Applications (2026)**](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) — 由 100 多位业界专家同行评议 — 将 prompt injection、goal hijacking、overreach、memory poisoning、unbounded action 列为自主代理的主要风险类别。Knowns / Unknowns / Assumptions / Disconfirmation 结构对每一项都是*结构性*反制：
+
+| OWASP Agentic Risk (2026) | episteme 的反制 |
+|---|---|
+| 直接目标操纵 / prompt injection | 执行前声明 Core Question；偏差以 Unknowns 形式浮现 |
+| 间接指令注入 | Knowns / Disconfirmation 将可信状态与 prompt 内容分离；代理在依据检索到的输入行动之前承诺一个可证伪的结果 |
+| Overreach / unbounded action | 在 Frame 中声明约束规则；强制 reversible-first 策略 |
+| 流畅幻觉 | Unknowns 字段不可为空；行动前必须命名假设 |
+| 内存投毒 | Pillar 2 hash-chained protocols — append-only、tamper-evident；对先前状态的静默重写由 `verify_chain` 检测 |
+| 无限规划循环 | Disconfirmation 条件必填；证据触发时循环退出 |
+
+未命名的假设不被信任。未声明前提条件 (Knowns) 与约束规则之前不采取任何行动。kernel 是意图与执行之间的验证层。
+
+### 业界收敛 — 2025–2026
+
+同一时间窗内的主要框架与学术论文，正向 kernel 已交付的相同架构模式收敛：文件系统层的 pre-invocation checkpoint ([Capsule Security ClawGuard](https://www.businesswire.com/news/home/20260415670902/), 2026)、hash-chained 防篡改内存 ([SSGM](https://arxiv.org/abs/2603.11768) — Lam et al., 2026)、基于理由而非规则清单的对齐 ([Anthropic Claude Constitution](https://www.anthropic.com/constitution), 2026-01-22)、带治理层的五阶段认知循环 ([SCL R-CCAM](https://arxiv.org/abs/2511.17673) — Kim, 2025)、五支柱 agent integrity ([Proofpoint Agent Integrity Framework 2026](https://www.proofpoint.com/us/resources/white-papers/agent-integrity-framework))。kernel 早于这些出版物 (CP1 于 2026-04-21 交付；v1.0.0 GA 于 2026-04-28)；这种收敛是独立验证，并非血统。完整 attribution map 见 [`kernel/REFERENCES.md`](./kernel/REFERENCES.md) 中 *Convergent contemporary work* 章节。
+
+---
+
 ## Cognitive Arms — v1.1+
 
 上述四个 Blueprint 和三个 Pillar — Cognitive Blueprints · Append-Only Hash Chain · Framework Synthesis & Active Guidance — 是 v1.0 *不变的结构基础*。Pillar 不会移动。v1.1 在其之上加入了 **3 Cognitive Arms**：随着时间推移、不断重构 kernel 自身知识的流动型主动引擎。

@@ -154,6 +154,27 @@ episteme doctor
 
 ---
 
+## 제로 트러스트 실행
+
+[**OWASP Top 10 for Agentic Applications (2026)**](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) — 100명 이상의 업계 전문가가 동료 검토한 자율 에이전트의 주요 위험 분류 — 는 prompt injection, goal hijacking, overreach, memory poisoning, unbounded action을 핵심 위험 클래스로 식별한다. Knowns / Unknowns / Assumptions / Disconfirmation 구조는 각각에 대한 *구조적* 반박이다:
+
+| OWASP Agentic Risk (2026) | episteme의 반박 |
+|---|---|
+| 직접 목표 조작 / prompt injection | 실행 전 Core Question 선언; 이탈은 Unknowns로 표면화 |
+| 간접 명령 주입 | Knowns / Disconfirmation이 신뢰 가능한 상태와 prompt 내용을 분리; 검색된 입력에 따라 행동하기 전 falsifiable한 결과에 commit |
+| Overreach / unbounded action | Frame에서 제약 체제 선언; reversible-first 정책 강제 |
+| 유창한 환각 | Unknowns 필드는 비워둘 수 없음; 행동 전 가정은 명명되어야 함 |
+| 메모리 오염 | Pillar 2 hash-chained protocols — append-only, tamper-evident; 사전 상태의 침묵 재작성은 `verify_chain`이 감지 |
+| 무한 계획 루프 | Disconfirmation 조건 필수; 증거 발화 시 루프 종료 |
+
+명명되지 않은 가정은 신뢰되지 않는다. 전제조건(Knowns)과 제약 체제가 선언되지 않은 한 어떤 행동도 취해지지 않는다. 커널은 의도와 실행 사이의 검증 레이어다.
+
+### 업계 수렴 — 2025–2026
+
+같은 시기의 주요 프레임워크와 학술 논문이 커널이 출하한 동일한 아키텍처 패턴으로 수렴하고 있다: 파일 시스템 수준의 사전 호출 체크포인트 ([Capsule Security ClawGuard](https://www.businesswire.com/news/home/20260415670902/), 2026), hash-chained tamper-evident memory ([SSGM](https://arxiv.org/abs/2603.11768) — Lam et al., 2026), 규칙 목록 대신 이유 기반 정렬 ([Anthropic Claude Constitution](https://www.anthropic.com/constitution), 2026-01-22), 거버넌스 레이어를 갖춘 5단계 인지 루프 ([SCL R-CCAM](https://arxiv.org/abs/2511.17673) — Kim, 2025), 5-pillar agent integrity ([Proofpoint Agent Integrity Framework 2026](https://www.proofpoint.com/us/resources/white-papers/agent-integrity-framework)). 커널은 이러한 출판물보다 앞선다 (CP1 2026-04-21 출하; v1.0.0 GA 2026-04-28); 수렴은 독립적 검증이지 계보가 아니다. 전체 attribution map은 [`kernel/REFERENCES.md`](./kernel/REFERENCES.md) *Convergent contemporary work* 섹션 참조.
+
+---
+
 ## 이 아키텍처가 해결하는 실패 모드
 
 `kernel/FAILURE_MODES.md`는 11가지 명명된 실패 모드를 정의한다 — **Kahneman**의 6가지 추론 모드(WYSIATI, question substitution, anchoring, narrative fallacy, planning fallacy, overconfidence)에 3가지 거버넌스 모드(Chesterton's fence, Goodhart drift, Ashby variety mismatch)와 v1.0 RC의 2가지 추가 모드(framework-as-Doxa, cascade-theater)를 더한 것이다.

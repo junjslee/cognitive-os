@@ -77,6 +77,27 @@ El resultado: **un Thinking Framework específico de tu proyecto que se acumula*
 
 ---
 
+## Ejecución zero-trust
+
+El [**OWASP Top 10 for Agentic Applications (2026)**](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) — revisado por más de 100 expertos de la industria — identifica prompt injection, goal hijacking, overreach, memory poisoning y unbounded action como las principales clases de riesgo para agentes autónomos. La estructura Knowns / Unknowns / Assumptions / Disconfirmation es un contador *estructural* a cada uno:
+
+| OWASP Agentic Risk (2026) | contador de episteme |
+|---|---|
+| Manipulación directa de objetivos / prompt injection | Core Question declarada antes de la ejecución; las desviaciones afloran como Unknowns |
+| Inyección indirecta de instrucciones | Knowns / Disconfirmation separan el estado confiable del contenido del prompt; el agente se compromete a un resultado falsable antes de actuar sobre la entrada recuperada |
+| Overreach / acción no limitada | Régimen de restricciones declarado en Frame; política reversible-first aplicada |
+| Alucinación fluida | El campo Unknowns no puede quedar vacío; las suposiciones deben nombrarse antes de actuar sobre ellas |
+| Envenenamiento de memoria | Protocolos Pillar 2 hash-chained — append-only, tamper-evident; reescrituras silenciosas de estado previo son detectadas por `verify_chain` |
+| Bucles de planificación infinita | Condición de Disconfirmation requerida; el bucle sale cuando la evidencia se dispara |
+
+Ninguna suposición se confía hasta ser nombrada. Ninguna acción se toma sin la precondición (Knowns) y el régimen de restricciones declarados. El kernel es la capa de verificación entre intención y ejecución.
+
+### Convergencia industrial — 2025–2026
+
+Frameworks y artículos académicos importantes en la misma ventana convergen sobre los mismos patrones arquitectónicos que el kernel envía: checkpoints pre-invocación a nivel del sistema de archivos ([Capsule Security ClawGuard](https://www.businesswire.com/news/home/20260415670902/), 2026), memoria hash-chained tamper-evident ([SSGM](https://arxiv.org/abs/2603.11768) — Lam et al., 2026), alineación basada en razones en lugar de listas de reglas ([Anthropic's Claude Constitution](https://www.anthropic.com/constitution), 2026-01-22), bucle cognitivo de cinco fases con capa de gobernanza ([SCL R-CCAM](https://arxiv.org/abs/2511.17673) — Kim, 2025), e integridad de agente de cinco pilares ([Proofpoint Agent Integrity Framework 2026](https://www.proofpoint.com/us/resources/white-papers/agent-integrity-framework)). El kernel precede a estas publicaciones (CP1 enviado 2026-04-21; v1.0.0 GA 2026-04-28); la convergencia es validación independiente, no linaje. Mapa completo de atribución en [`kernel/REFERENCES.md`](./kernel/REFERENCES.md) bajo *Convergent contemporary work*.
+
+---
+
 ## Cognitive Arms — v1.1+
 
 Los cuatro Blueprints (arriba) y los tres Pillars — Cognitive Blueprints · Append-Only Hash Chain · Framework Synthesis & Active Guidance — son la *base estructural inmóvil* de v1.0. Los Pillars no se mueven. v1.1 añade **3 Cognitive Arms** que operan encima: motores activos y fluidos que refactorizan el propio conocimiento del kernel a lo largo del tiempo.
