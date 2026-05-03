@@ -1,77 +1,284 @@
 # Demos
 
-Two demos. The first is the homepage hero; the second is here because the
-homepage should not lead with enforcement.
+Four demos. Each one targets a different class of LLM failure mode. The
+matrix below is the authoritative cross-reference between named modes from
+[`kernel/FAILURE_MODES.md`](../kernel/FAILURE_MODES.md) and the demo that
+exhibits the kernel catching it in operation.
+
+This file is part of the project's governance surface: it is the formal
+reference a contributor uses to verify that a demo earns its place. A demo
+that does not block at least one named failure mode is decoration, not proof.
 
 ---
 
-## ① Posture as thinking — homepage hero
+## How to read this index
 
-`scripts/demo_posture.sh` · ~75 s · cinematic differential.
+The order is **load-bearing first**, not chronological:
 
-Same PM prompt walked twice. Fluent default (*doxa*) versus the
-Reasoning Surface authored field-by-field (*episteme*). The climax is
-the Reasoning Surface itself — Core Question reframed, Unknowns
-enumerated as classifiable failure modes, Disconfirmation pre-committed
-as a falsifiable pivot.
+1. **Demo 04 — Symbiosis.** The thesis demo. Real history on this repository.
+   Both parties (operator, kernel) caught each other's failure shapes inside a
+   single 24-hour window. No fictional API; no synthetic example. The
+   protocol synthesized from the loop is now constitutional in `AGENTS.md`.
+2. **Demo 03 — Differential.** The skeptic-conversion demo. Same prompt,
+   framework off vs. on. The diff isolates the named failure modes the kernel
+   blocks at the Core Question gate.
+3. **Demo 02 — Debug a slow endpoint.** The application-layer demo. Shows the
+   kernel intercepting a fluent-wrong *"add a cache"* answer and forcing a
+   schema-level root-cause investigation instead.
+4. **Demo 01 — Attribution audit.** The recursive demo. Kernel applied to
+   itself, auditing whether every borrowed concept in its own wording is
+   traceable to a primary source. Canonical four-artifact shape.
 
-Beat 3 then runs the surface against the real Reasoning-Surface Guard
-in three rungs:
+A reader who only watches one should watch **04**. A reader who needs to
+verify the framework changes outputs on identical inputs should watch **03**.
 
-1. `"None"` blocks. The shallowest thing the kernel does.
-2. A 43-char fluent-vacuous disconfirmation passes the hot path. The
-   honest kernel limit — structural pass, semantic emptiness.
-3. A concrete falsifiable pivot passes for the right reason. The
-   posture.
+---
 
-Beat 4 closes the circuit: phase 11 promotion catches over time what
-the hot path missed at write; phase 12 (profile-audit) is the loop
-that audits *the operator's claimed cognitive profile* against the
-lived episodic record.
+## Failure-mode coverage matrix
 
-GIF: [`docs/assets/demo_posture.gif`](./assets/demo_posture.gif).
+Failure modes are taken verbatim from `kernel/FAILURE_MODES.md`. The first six
+are the Kahneman-grounded core taxonomy; the final three are the
+governance-layer modes added in v0.11. A check mark means the demo
+demonstrably blocks that mode in operation — not that the demo merely
+discusses it.
 
-## ② Posture as enforcement of the surface
+| Failure mode (with mechanism) | 04 Symbiosis | 03 Differential | 02 Debug | 01 Attribution |
+|---|:---:|:---:|:---:|:---:|
+| **WYSIATI** — agent reasons from what's in context, never flags what's absent | ✓ | ✓ |  | ✓ |
+| **Question substitution** — hard question silently replaced by a nearby easy one | ✓ | ✓ | ✓ |  |
+| **Anchoring** — first framing dominates; later evidence adjusts insufficiently | ✓ |  |  |  |
+| **Narrative fallacy** — sparse data assembled into a coherent causal story |  | ✓ | ✓ |  |
+| **Planning fallacy** — effort/risk underestimated, benefits overestimated |  |  | ✓ |  |
+| **Overconfidence** — expressed confidence consistently exceeds calibrated accuracy |  | ✓ | ✓ | ✓ |
+| **Constraint removal** (governance) — fence dropped without reconstructing its purpose | ✓ |  |  |  |
+| **Measure-as-target drift** (governance) — proxy metric optimized; underlying goal lost |  |  | ✓ |  |
+| **Cognitive deskilling** (governance) — operator's reasoning capacity erodes from over-reliance | ✓ |  |  | ✓ |
 
-`scripts/demo_strict_mode.sh` · three acts.
+Three modes (Anchoring, Constraint removal, Cognitive deskilling) are caught
+exclusively by Demo 04. That is why it is the load-bearing demo.
 
-This demo shows what the kernel does to *protect* a Reasoning Surface
-from being treated as decoration. It is intentionally not the
-homepage hero — leading with enforcement reads as "linter," and the
-product is a Cognitive OS, not a wrist-slapper. Watch this after the
-first demo, with the first demo's framing already in your head.
+---
 
-Three acts:
+## Demo 04 — Symbiosis: agent and human debug each other's intent
 
-1. **The lazy surface is caught.** A surface with `"disconfirmation":
-   "None"` (or `"해당 없음"`, or any other lazy placeholder) is rejected
-   by the semantic validator. The block is the shallowest layer of
-   defense; the surface itself is the load-bearing layer.
-2. **Cross-call indirection is caught.** The agent writes a script
-   that runs an irreversible op, then executes the script in a later
-   tool call. The stateful interceptor (v0.10) reads the script's
-   contents at execute-time via sha256 + deep-scan and blocks. The
-   block protects the surface contract from agent-side workarounds.
-3. **The kernel learns from the praxis.** `episteme evolve friction`
-   pairs prediction-with-outcome telemetry, ranks the unknowns the
-   operator keeps under-naming, and emits a Friction Report that
-   feeds the calibration loop.
+- **Asset.** [`demos/04_symbiosis/`](../demos/04_symbiosis/) — README, six-act
+  scenario directory, alternate-world `DIFF.md`.
+- **Recording.** [`docs/assets/demo_symbiosis.gif`](./assets/demo_symbiosis.gif) ·
+  [`.cast`](./assets/demo_symbiosis.cast) · ~90s.
+- **Script.** [`scripts/demo_symbiosis.sh`](../scripts/demo_symbiosis.sh) —
+  hermetic tempdir; pacing matches the real conversation.
 
-GIF: not shipped — run the script locally to see it. The Cognitive Cascade (demo ①) is the product hero.
+### Plot
 
-## Why two demos, in this order
+It is **2026-04-27**, Day 3.15 of a planned 7-day v1.0.0 RC soak. The operator
+proposes an irreversible bundle: privatize four forward-vision docs, run
+`git filter-repo`, cut the GA tag, end the soak — all today. The proposal is
+shaped by a named noise signature (`status-pressure` + `false-urgency`) the
+operator's own `cognitive_profile.md` already declares. The Reasoning Surface
+required by the kernel — *the same thinking framework the operator built* —
+refuses to allow the bundle to ship without adversarial review. The review
+produces three Critical findings. Independently, the operator's
+profile-audit drift signal had already flagged exactly this failure mode for
+weeks (`asymmetry_posture: loss-averse` running at 20% stop-condition rate
+against a 55% floor). Two pieces of evidence converge. Path C decomposes the
+bundle along reversibility lines. The reversible halves ship; the irreversible
+halves defer to evidence-gated authorization events. A protocol is synthesized
+into the framework. A day later, the operator catches a follow-up failure —
+the rule had been *executed* but not *codified* — and a final event adds the
+discipline to `AGENTS.md` so every future agent inherits it.
 
-The first demo answers *what should the agent be doing differently?*
-The second answers *what does the kernel do when the agent doesn't do
-it?* The order matters: the kernel exists to protect the surface, not
-the other way around. A reader who only watches one should watch the
-first.
+### Blueprints fired
 
-## Recording the hero
+- **Axiomatic Judgment** (Blueprint A) — resolves the conflict between Source A
+  (*"ship the bundle now to lock down IP"*) and Source B (*"reversible-first
+  policy, evidence-gated irreversible ops"*). Resolution hash-chained to
+  `~/.episteme/framework/protocols.jsonl`.
+- **Architectural Cascade** (Blueprint D) — fires on Event 67 when the
+  operator catches that the protocol was executed but not codified. The
+  discipline is added to `AGENTS.md` so every future agent reads it at session
+  start.
 
-Only the Cognitive Cascade ships as a rendered artifact today. `demo_strict_mode.sh` remains runnable locally for the blocking-story audience; its GIF is no longer shipped.
+### What this demo proves that no other demo proves
+
+- **Bidirectional symbiosis.** Every other demo shows the kernel catching the
+  agent. This one shows the kernel catching the *operator*, then the operator
+  catching the *agent's* incomplete codification. Three loops closed in 24
+  hours.
+- **The kernel's telemetry independently predicted the live finding.** The
+  profile-audit drift on `asymmetry_posture` had been firing for weeks. When
+  Munger's latticework ran the live review, it produced the same diagnosis.
+  Two independent epistemic sources, same conclusion. That is what
+  *episteme is bidirectional* means in lived form.
+- **Constitution received forward.** The synthesized protocol is now
+  `AGENTS.md` § *Doc Classification Policy*. Every future agent on this repo
+  inherits the rule through the kernel's constitution.
+
+### What it costs to run
+
+90 seconds to watch. Reading the six-act scenario directory, the alternate-world
+`DIFF.md`, and the cross-references into `AGENTS.md` and the framework
+protocols takes ~20 minutes and is the maintainer's recommended path before
+running episteme in anger on your own repository.
+
+---
+
+## Demo 03 — Differential: same prompt, framework off vs on
+
+- **Asset.** [`demos/03_differential/`](../demos/03_differential/) —
+  `prompt.md`, `kernel_off/`, `kernel_on/`, `DIFF.md`.
+- **Recording.** [`docs/assets/demo_posture.gif`](./assets/demo_posture.gif) · ~75s · cinematic differential.
+- **Script.** [`scripts/demo_posture.sh`](../scripts/demo_posture.sh).
+
+### Plot
+
+A PM asks for a 2-sprint scope on a *"semantic search"* feature. Same prompt
+walked twice. **Off:** the agent answers *how to build it* — fluent, plausible,
+context-blind, and substitutes the easy *"how"* for the hard *"whether."*
+**On:** the agent is forced onto the Reasoning Surface. The Core Question
+reframes from *how to ship* to *whether semantic search is the right shape for
+this corpus*. Unknowns are enumerated as classifiable failure modes.
+Disconfirmation is pre-committed as a falsifiable pivot — *"abandon if
+recall@10 on the eval set is < 0.6 after the embedding-tuning sprint."*
+
+### Blueprints fired
+
+- **Axiomatic Judgment** — resolves the *how* vs *whether* conflict by naming
+  which feature of the context (corpus shape, query distribution, eval set
+  presence) selects between them.
+
+### What this demo proves that no other demo proves
+
+- **Identical input, different output.** The differential isolates the
+  framework's contribution. A reader who suspects the kernel just makes the
+  agent slower can read the off vs on diff and see what the on path *adds* —
+  the falsifiable pivot, the named Unknowns — that the off path does not.
+- **Skeptic conversion.** This is the demo to show a contributor who has not
+  yet decided whether episteme is worth the friction. The off output is the
+  control; the on output is the experiment; the diff is the result.
+
+---
+
+## Demo 02 — Debug a slow endpoint
+
+- **Asset.** [`demos/02_debug_slow_endpoint/`](../demos/02_debug_slow_endpoint/)
+  — full four-artifact shape (reasoning-surface → decision-trace →
+  verification → handoff).
+
+### Plot
+
+A p95 regression on a customer-list endpoint. Backend has been told *"add a
+Redis cache."* The fluent-wrong path: do exactly that, ship, watch p95
+deteriorate further at higher request volume. The framework intercepts at the
+Core Question gate. The Core Question is *"what is causing the p95
+regression"* — not *"how do I add a cache."* Investigation reveals the root
+cause is a missing index on the `customers(org_id, created_at)` composite
+sort order; the cache would have masked the symptom and made the underlying
+cost worse under load. The decision trace pre-commits a Disconfirmation: if
+adding the index does not move p95 below 200ms within a 15-min staging soak,
+the diagnosis is wrong and the cache hypothesis is reopened.
+
+### Blueprints fired
+
+- **Consequence Chain** (Blueprint C) — decomposes the irreversible (*"add a
+  cache"*) operation into first-order effect (latency masked at low load),
+  second-order effect (cost amplified at high load via stale reads + cache
+  invalidation churn), failure-mode inversion (what does failure look like
+  *with* the cache vs *without*), and base-rate reference (cache-as-first-fix
+  base rate is high; cache-as-correct-fix base rate is much lower for sort-bound
+  queries).
+
+### What this demo proves that no other demo proves
+
+- **Application-layer interception.** Most demos in the field exhibit kernels
+  catching kernel-level mistakes. This one catches an application-engineering
+  mistake — the kind a working software team makes weekly. The interception
+  is at the Core Question, before any code is written.
+- **Disconfirmation as a falsifiable pivot.** The pre-committed Disconfirmation
+  is the contract that allows the team to move fast on the diagnosis without
+  having to re-litigate it later. If the index does not move p95, the
+  diagnosis is wrong; if the index does move p95, the diagnosis is validated
+  on a falsifiable observable, not on a feeling.
+
+---
+
+## Demo 01 — Attribution audit
+
+- **Asset.** [`demos/01_attribution-audit/`](../demos/01_attribution-audit/) —
+  `reasoning-surface.json`, `decision-trace.md`, `verification.md`,
+  `handoff.md`.
+
+### Plot
+
+The kernel applied to its own `kernel/REFERENCES.md`. Question: is every
+load-bearing concept in the kernel's wording traceable to a primary source?
+The audit walks every term that appears in `kernel/CONSTITUTION.md`,
+`kernel/REASONING_SURFACE.md`, and `kernel/FAILURE_MODES.md` against the
+attribution list in `REFERENCES.md`. Concepts without a primary-source entry
+are flagged for either a citation addition or a wording change. Verification
+is the kernel's own MANIFEST: a concept claimed without attribution violates
+Principle I (*explicit > implicit*).
+
+### Blueprints fired
+
+- **Axiomatic Judgment** — resolves any conflict between the kernel's wording
+  and the cited primary source. The kernel must either match the source or
+  acknowledge the deviation.
+
+### What this demo proves that no other demo proves
+
+- **Recursion.** The kernel can audit itself. The four-artifact shape produced
+  is identical to the shape any user produces when running episteme on a
+  real engineering decision. The kernel does not exempt itself from its own
+  discipline.
+- **Canonical output shape.** This is the demo to read first if you want to
+  know *what artifacts episteme produces* without reading any philosophy.
+  Open the four files in this directory in order; that is the kernel's output
+  contract.
+
+---
+
+## Runnable script demos (appendix)
+
+Two older bash demos remain runnable as local sanity checks. They do not ship
+as rendered GIFs and are not the hero demos; they exist for contributors who
+want to exercise the strict-mode enforcement path on their own machine.
+
+### `scripts/demo_strict_mode.sh`
+
+Three acts, run hermetically in a tempdir:
+
+1. **Lazy surface caught.** A surface with `disconfirmation: "None"` (or any
+   listed lazy token) is rejected by the semantic validator.
+2. **Cross-call indirection caught.** Agent writes a script that runs an
+   irreversible op, executes the script in a later tool call. The stateful
+   interceptor (v0.10) reads the script's contents at execute-time via sha256
+   + deep-scan and blocks.
+3. **Calibration learns from praxis.** `episteme evolve friction` pairs
+   prediction-with-outcome telemetry, ranks the unknowns the operator keeps
+   under-naming, and emits a Friction Report.
+
+### `scripts/demo_posture.sh`
+
+The recording source for Demo 03's GIF. Runs the off vs on differential
+locally with the cinematic pacing the rendered asset uses.
+
+---
+
+## Recording the hero demos
+
+The two rendered GIFs (Demo 04 Symbiosis, Demo 03 Posture-differential) are
+produced from `asciinema` recordings rendered through `agg`. The reproducible
+incantation:
 
 ```bash
+# Demo 04 — Symbiosis
+asciinema rec --cols 100 --rows 32 --idle-time-limit 2 \
+  -c ./scripts/demo_symbiosis.sh \
+  docs/assets/demo_symbiosis.cast
+agg --speed 0.9 --cols 100 --rows 32 --font-size 15 --theme monokai \
+  docs/assets/demo_symbiosis.cast docs/assets/demo_symbiosis.gif
+
+# Demo 03 — Posture differential
 asciinema rec --cols 100 --rows 32 --idle-time-limit 2 \
   -c ./scripts/demo_posture.sh \
   docs/assets/demo_posture.cast
@@ -79,5 +286,19 @@ agg --speed 0.8 --cols 100 --rows 32 --font-size 15 --theme monokai \
   docs/assets/demo_posture.cast docs/assets/demo_posture.gif
 ```
 
-See [`docs/CONTRIBUTING.md`](./CONTRIBUTING.md#recording-the-hero-demo)
-for the full recording workflow.
+Full recording workflow and contributor checklist:
+[`docs/CONTRIBUTING.md`](./CONTRIBUTING.md#recording-the-hero-demo).
+
+---
+
+## Why this index is itself a kernel artifact
+
+A demo that does not block a named failure mode does not earn its place in
+the index. Adding a demo to `demos/` without a row in the matrix above is a
+governance violation: the kernel exists to make implicit constraints
+explicit, and the implicit constraint here is *"every demo proves
+something specific."* If a future contributor adds Demo 05, the matrix gets
+a new column and at least one ✓; otherwise the demo is decoration and must
+either earn the ✓ or be removed.
+
+The matrix is the contract. The demos are evidence under the contract.
