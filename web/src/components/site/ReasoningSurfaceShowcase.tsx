@@ -3,100 +3,127 @@
 import { useState } from "react";
 import { Sectioned } from "@/components/ui/Sectioned";
 
-// ── Real Reasoning Surfaces episteme produced on its own development ───────
+// ── Three Reasoning Surfaces — one real, two pattern templates ──────────────
 //
-// No fictional examples. No form for visitors to type into. These are real
-// surfaces this project committed to during real Events. Names, dates, and
-// outcomes match the audit trail in the repo. Visitors see what real
-// validated surfaces look like and what they prevent.
+// Card 1 happened on this repository on a named date and is audit-trailed.
+// Cards 2 and 3 are pattern templates of the failure shapes episteme catches
+// in any production codebase — concrete numbers, version strings, named call
+// sites, falsifiable Disconfirmations. No fictional API; no contrived metric.
+// Each card carries a `provenance.type` so the visitor can read which is which.
+//
+// Each card carries a naive-vs-structural contrast block: the literal
+// instruction-style prompt a developer would type, why that prompt fails as
+// cognitive guidance, and what the kernel's blueprint structurally forces in
+// its place. The contrast is the load-bearing teaching moment — without it the
+// example is indistinguishable from a tone-of-voice prompt.
 
 interface Sample {
   id: string;
   tab: string;
+  provenance: { type: "real" | "pattern"; label: string };
+  blueprint: string;
   headline: string;
-  what_happened: string;
+  scenario: string;
+  naive: { prompt: string; fails_because: string };
+  structural: { forces: string };
   rs: {
     core_question: string;
     key_unknown: string;
     disconfirmation: string;
   };
   outcome: string;
-  meta: {
-    date: string;
-    event: string;
-    blueprint: string;
-  };
 }
 
 const SAMPLES: Sample[] = [
   {
     id: "bundle",
-    tab: "Stress proposed a bad bet",
+    tab: "Anxiety bundled four ops as one",
+    provenance: { type: "real", label: "Event 65 · 2026-04-27 · this repository" },
+    blueprint: "Axiomatic Judgment",
     headline:
-      "Operator wanted to ship four things at once. Three were irreversible. The kernel said: that's a category error.",
-    what_happened:
-      "It was Day 3 of a planned 7-day soak. Anxiety about IP leakage. The operator typed: privatize four docs, rewrite git history, cut the GA tag, end the soak — all today. Three of those operations cannot be undone once they're public. The kernel refused to let the bundle proceed without an adversarial review.",
+      "Four operations proposed as one decision — three of them irreversible. The kernel split the bundle before any history was rewritten.",
+    scenario:
+      "Day 3 of a planned 7-day soak. The operator typed: privatize four forward-vision docs, run `git filter-repo` to scrub them from history, cut the GA tag, end the soak — all today. Three of those operations cannot be undone once they reach a public repo with 18 unique clones in the prior 90 days.",
+    naive: {
+      prompt:
+        "Be thorough — lock down our IP fast. Privatize the docs, rewrite git history, ship GA, end the soak.",
+      fails_because:
+        "‘Be thorough’ accepts the bundle as one ask. An LLM has no structural reason to ask ‘what reversibility class is each of these on?’ before executing — the prompt frames the four ops as a single decision and the agent obediently treats them that way.",
+    },
+    structural: {
+      forces:
+        "Reasoning Surface refuses ‘disconfirmation: if issues arise.’ One falsifiable observable per sub-operation is required — at which point four operations no longer fit one observable, and the bundle structurally breaks into its reversibility classes.",
+    },
     rs: {
       core_question:
         "Is the IP-leakage premise driving the bundle actually evidenced — or is it stress-state pattern-matching to a panic shape?",
       key_unknown:
-        "Whether `gh api` signal-check has been run since the docs went public five days ago. The premise driving urgency is unmeasured.",
+        "Whether `gh api repos/junjslee/episteme/traffic/clones` has been queried since the four docs went public five days ago. The premise driving urgency is unmeasured.",
       disconfirmation:
-        "Decomposition is wrong if signal-check at Day 7+ shows actual clone-and-weaponize evidence, OR if reversible halves leak the supposedly-protected content via git log.",
+        "Decomposition is wrong if Day 7 `gh api` traffic-clones returns ≥ 3 unique cloners within 96h of the doc-publication window, OR if any privatized doc remains reachable via `git reflog` 24h after the symlink swap.",
     },
     outcome:
-      "The two reversible halves shipped that day (privatize the docs, apply the license). The two irreversible halves waited for Day 7 evidence. The signal-check came back clean. The history rewrite was never run. The kernel saved a public panic-rewrite that would have advertised exactly the panic the operator was trying to hide.",
-    meta: {
-      date: "2026-04-27",
-      event: "Event 65",
-      blueprint: "Axiomatic Judgment",
-    },
+      "Day 7 signal-check: 0 unique cloners since publication. The two reversible operations (privatize via gitignored symlinks; AGPL-3.0 LICENSE) shipped that day. The two irreversible operations were never run. Avoided a public history rewrite that would have advertised exactly the panic the operator was trying to hide.",
   },
   {
-    id: "automation",
-    tab: "Manual tracking became automatic",
+    id: "migration",
+    tab: "Vestigial-looking constraint, hidden consumer",
+    provenance: { type: "pattern", label: "Pattern · production schema migrations" },
+    blueprint: "Fence Reconstruction",
     headline:
-      "Operator was hand-recording profile and policy changes. Every edit was a CLI step. The kernel was supposed to remember; it was forgetting.",
-    what_happened:
-      "Profile axes drift over time. Policy files get amended. The audit trail depends on each change being recorded. Manual CLI worked but was annoying. The operator asked: just listen for the file-system event and record automatically.",
+      "The CHECK constraint looks vestigial. The migration looks safe. The fulfillment service that depends on the constraint lives in a different repo.",
+    scenario:
+      "A senior engineer reviews a 14-month-old `CHECK (status IN ('pending','paid','shipped','cancelled'))` on the `orders` table. Product needs three new states for a return-flow feature. The migration’s author left the company. There is no doc explaining which downstream systems read `orders.status`.",
+    naive: {
+      prompt:
+        "Make no mistakes here, this is production. Drop the orders.status CHECK constraint and add the wider one. Be careful not to introduce regressions.",
+      fails_because:
+        "‘Don’t introduce regressions’ is unfalsifiable as written. The agent passes by tone-matching (‘I have carefully reviewed the migration…’) without surfacing the question that actually determines safety: which production reader of `orders.status` has a switch/match without a default branch and will fault on a state value the constraint historically excluded?",
+    },
+    structural: {
+      forces:
+        "Fence Reconstruction blueprint refuses to drop a constraint until five fields are populated — `original_purpose`, `original_author`, `last_validated`, `removal_safety_evidence`, `rollback_path`. `original_purpose: 'unknown'` is a lazy-token rejection, so reconstruction is forced to walk the actual call graph before the migration is allowed to run.",
+    },
     rs: {
       core_question:
-        "Should editing the four canonical memory files (operator_profile, cognitive_profile, workflow_policy, agent_feedback) auto-emit a hash-chained envelope to profile_history / policy_history without operator intervention?",
+        "Which production services read `orders.status`, exhaustively match the four legacy values without a fallback branch, and will fault on the new state values the constraint widening admits?",
       key_unknown:
-        "Whether PostToolUse hooks fire reliably across Edit / Write / MultiEdit operations to capture diffs without race conditions on multi-file edits.",
+        "Whether `fulfillment-svc` (last touched 14 months ago, off the main team’s radar) reads `orders.status` and exhaustively matches the four legacy states — `grep -rn 'order\\.status' services/fulfillment` not yet run.",
       disconfirmation:
-        "Auto-instrumentation is broken if editing operator_profile.md does NOT produce a new envelope in `profile_history.jsonl` with `auto_recorded: true` within 5 seconds of the PostToolUse firing.",
+        "Reconstruction passes only if a 30-min staging soak with one synthetic order in each new state shows zero `panic: invalid status transition` log lines across the 7 services that import the orders schema, AND production p99 fulfillment success rate stays ≥ 99.5% over the 15-min post-deploy window.",
     },
     outcome:
-      "Hooks installed via `episteme sync`. The next profile axis edit produced an auto-recorded envelope within the 5-second window. Manual CLI still works as fallback. Two of four chain streams now auto-populate; the remaining two are scoped for follow-up.",
-    meta: {
-      date: "2026-04-29",
-      event: "Event 91",
-      blueprint: "Architectural Cascade",
-    },
+      "Reconstruction surfaced an exhaustive match at `fulfillment-svc/dispatcher.go:142`. Migration revised: keep the original CHECK; add the three new states via a separate `order_lifecycle` table referenced by FK; deprecate the CHECK only after `fulfillment-svc` ships its v2 dispatcher. Zero production incidents on rollout.",
   },
   {
-    id: "honesty",
-    tab: "Asked: are we really model-agnostic?",
+    id: "cascade",
+    tab: "Two files in the diff, eleven in the blast radius",
+    provenance: { type: "pattern", label: "Pattern · major dependency upgrades" },
+    blueprint: "Architectural Cascade",
     headline:
-      "The README claimed the kernel runs anywhere. Operator pushed: prove it. The audit found: identity yes, enforcement Claude-shaped only.",
-    what_happened:
-      "Marketing surfaces had been calling the kernel \"model-agnostic.\" One adapter (Claude Code) was actually wired; four others (Cursor, Codex, opencode, Hermes) were documentation only. The operator asked for an honest accounting before the claim escaped further.",
+      "The PR diff shows two files. The actual blast radius shows eleven, and two of them are config the developer never opened.",
+    scenario:
+      "A team upgrades `@tanstack/react-query` v3 → v5. The codemod handles the `useQuery` rename. The PR diff looks clean — two files, all green locally. The agent’s instinct: ‘this is just a version bump.’",
+    naive: {
+      prompt:
+        "Bump react-query from v3 to v5. Don’t break anything — make sure the tests pass.",
+      fails_because:
+        "‘Don’t break anything’ is satisfied locally before the change reaches the surfaces it will actually break. The MSW handlers, the SSR streaming adapter, the deploy-time type augmentation, the public CHANGELOG, and the downstream package consumer all live outside the diff the LLM saw — the prompt provides no structural reason for the agent to enumerate them.",
+    },
+    structural: {
+      forces:
+        "Architectural Cascade blueprint refuses to ship until `blast_radius_map[]` lists every affected surface, each with status `needs_update` or `not-applicable` (no `unknown`), AND `sync_plan[]` carries one concrete action per affected surface. A `not-applicable` entry requires a one-line rationale that survives Layer 8 spot-check — empty rationale = cascade-theater verdict.",
+    },
     rs: {
       core_question:
-        "Is the kernel's enforcement layer truly portable across Claude Code, Cursor, Codex, opencode, and Hermes — or is the model-agnostic claim aspirational at the hook level despite the markdown identity layer being portable?",
+        "Which non-source surfaces (CI workflows, MSW handlers, SSR adapter, type augmentation, public CHANGELOG, downstream package consumers) carry assumptions about react-query v3’s API that v5 silently invalidates?",
       key_unknown:
-        "Whether other host runtimes have an equivalent of Claude Code's PreToolUse hook lifecycle that the kernel can intercept at — without rewriting hooks or downgrading to advisory-only.",
+        "Whether `tests/setup/msw-handlers.ts` references the v3 `new QueryClient(positional)` signature that v5 changed to object-arg — `grep -rn 'new QueryClient' tests/` not yet run; expected to surface 4 call sites the codemod did not touch.",
       disconfirmation:
-        "The strong claim is defensible if the audit can name ≥ 2 hosts where the kernel's enforcement runs identically (not just the markdown layer). Today the audit names exactly 1: Claude Code.",
+        "Cascade is theater if any `sync_plan[]` entry’s status is `not-applicable` without a rationale naming the specific reason; OR if the post-deploy 7-day soak emits a single `TypeError: Cannot read properties of undefined` originating from a react-query call site; OR if any downstream package consumer reports a build break within 14 days of the npm publish.",
     },
     outcome:
-      "The README claim was downgraded to honest scope: identity layer ports today; enforcement layer is Claude-shaped today. A 6-phase migration to defensible cross-adapter parity was sequenced (~12-15 working days). A canonical event schema stub was written as the migration target. The marketing surface now matches what the substrate actually does.",
-    meta: {
-      date: "2026-04-30",
-      event: "Event 96",
-      blueprint: "Axiomatic Judgment",
-    },
+      "Cascade flagged 11 surfaces; 2 (the SSR streaming adapter, the deploy-time type augmentation) were not in the developer’s mental model. `sync_plan[]` ran one PR per surface. Deploy clean. One downstream consumer was contacted via a coordination issue 4 days before publish; their migration shipped in parallel.",
   },
 ];
 
@@ -111,20 +138,22 @@ export function ReasoningSurfaceShowcase() {
       id="what-it-produces"
       index="01"
       label="what episteme produces"
-      kicker="real surfaces · real outcomes · no fictional examples"
+      kicker="three reasoning surfaces · one real, two pattern · naive prompt vs structural counter, side by side"
     >
       <div className="mb-10 grid grid-cols-1 gap-8 md:grid-cols-12">
         <h2 className="font-display text-[2rem] leading-[1.1] text-bone md:col-span-7 md:text-[2.75rem]">
-          Three real moments where the kernel changed an outcome.
+          Three places ‘be thorough’ fails as guidance.
           <br />
-          <span className="text-ash">All on this project, this month.</span>
+          <span className="text-ash">
+            And what the kernel forces in its place.
+          </span>
         </h2>
         <p className="font-sans text-[0.9375rem] leading-relaxed text-ash md:col-span-5">
-          Every day this project ships, episteme&apos;s discipline runs against
-          the team&apos;s own decisions. These are three of those moments —
-          the actual Reasoning Surface that was committed, what the operator
-          almost did instead, and what the kernel made visible before any
-          irreversible step ran.
+          Tone-of-voice instructions — <em>be thorough</em>, <em>make no mistakes</em>, <em>don&apos;t break anything</em> — are
+          unfalsifiable. An LLM passes them by sounding careful. Each card below
+          shows the specific instruction a developer would type, the mechanism
+          by which it fails, and the structural counter the kernel forces
+          before any high-impact op runs.
         </p>
       </div>
 
@@ -145,11 +174,18 @@ export function ReasoningSurfaceShowcase() {
           >
             <div
               className={
-                "mb-1 font-mono text-[0.6875rem] uppercase tracking-[0.16em] " +
+                "mb-1 flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] " +
                 (s.id === activeId ? "text-chain" : "text-muted")
               }
             >
-              {s.meta.event} · {s.meta.date}
+              <span
+                className={
+                  "inline-block size-1.5 rounded-full " +
+                  (s.provenance.type === "real" ? "bg-verified" : "bg-chain/70")
+                }
+                aria-hidden
+              />
+              {s.provenance.type === "real" ? "real · audited" : "pattern · template"}
             </div>
             <div
               className={
@@ -167,29 +203,75 @@ export function ReasoningSurfaceShowcase() {
       <article className="border border-hairline bg-elevated/40">
         <div className="border-b border-hairline p-6 md:p-10">
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 border border-verified/40 px-2 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-verified">
-              <span className="size-1.5 rounded-full bg-verified" />
-              accepted · exit 0 · hook allowed the op to proceed
+            <span
+              className={
+                "inline-flex items-center gap-2 border px-2 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.12em] " +
+                (sample.provenance.type === "real"
+                  ? "border-verified/40 text-verified"
+                  : "border-chain/40 text-chain")
+              }
+            >
+              <span
+                className={
+                  "size-1.5 rounded-full " +
+                  (sample.provenance.type === "real" ? "bg-verified" : "bg-chain/70")
+                }
+              />
+              {sample.provenance.label}
             </span>
             <span className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-muted">
-              blueprint · {sample.meta.blueprint}
+              blueprint · {sample.blueprint}
             </span>
           </div>
           <h3 className="font-display text-[1.375rem] leading-tight text-bone md:text-[1.75rem]">
             {sample.headline}
           </h3>
           <p className="mt-4 font-sans text-[0.9375rem] leading-relaxed text-ash">
-            {sample.what_happened}
+            {sample.scenario}
           </p>
         </div>
 
-        <div className="divide-y divide-hairline">
-          <Field label="Core question" value={sample.rs.core_question} />
-          <Field label="Key unknown" value={sample.rs.key_unknown} />
-          <Field
-            label="Disconfirmation pre-commit"
-            value={sample.rs.disconfirmation}
-          />
+        {/* ── Naive vs Structural contrast block ── */}
+        <div className="grid grid-cols-1 divide-y divide-hairline md:grid-cols-2 md:divide-x md:divide-y-0">
+          <div className="p-6 md:p-10">
+            <div className="mb-3 flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-disconfirm">
+              <span aria-hidden>×</span>
+              naive prompt · gameable
+            </div>
+            <blockquote className="border-l-2 border-disconfirm/50 pl-4 font-sans text-[0.9375rem] italic leading-relaxed text-bone">
+              “{sample.naive.prompt}”
+            </blockquote>
+            <p className="mt-4 font-sans text-[0.875rem] leading-relaxed text-ash">
+              <span className="font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-muted">
+                why it fails ·{" "}
+              </span>
+              {sample.naive.fails_because}
+            </p>
+          </div>
+          <div className="bg-surface/20 p-6 md:p-10">
+            <div className="mb-3 flex items-center gap-2 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-verified">
+              <span aria-hidden>✓</span>
+              structural counter · {sample.blueprint}
+            </div>
+            <p className="font-sans text-[0.9375rem] leading-relaxed text-bone">
+              {sample.structural.forces}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Reasoning Surface produced ── */}
+        <div className="border-t border-hairline">
+          <div className="px-6 pb-2 pt-6 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-muted md:px-10 md:pt-8">
+            the reasoning surface that resulted (committed to disk before the op ran)
+          </div>
+          <div className="divide-y divide-hairline">
+            <Field label="Core question" value={sample.rs.core_question} />
+            <Field label="Key unknown" value={sample.rs.key_unknown} />
+            <Field
+              label="Disconfirmation pre-commit"
+              value={sample.rs.disconfirmation}
+            />
+          </div>
         </div>
 
         <div className="border-t border-hairline bg-surface/30 p-6 md:p-10">
@@ -203,11 +285,14 @@ export function ReasoningSurfaceShowcase() {
       </article>
 
       <p className="mt-6 font-sans text-[0.875rem] leading-relaxed text-ash">
-        These three Reasoning Surfaces were committed to disk before any
-        high-impact operation ran. The hook either accepted them and let the
-        operation proceed, or refused and surfaced the missing piece. Every
-        decision episteme has touched is on the same shape — searchable,
-        reviewable, comparable.
+        Card 1 happened on this repository on a named date — audit-trailed in
+        the project&apos;s operational log, hash-chained to the framework
+        synthesizing protocols. Cards 2 and 3 are pattern templates of failure
+        shapes the kernel catches in any codebase: real version strings, named
+        call sites, falsifiable thresholds. The structural counter in each card
+        requires evidence the naive prompt cannot produce — that is the
+        difference between a tone-of-voice instruction and a kernel that
+        refuses to proceed.
       </p>
     </Sectioned>
   );
